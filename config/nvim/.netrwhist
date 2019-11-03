@@ -1,0 +1,12 @@
+let g:netrw_dirhistmax  =10
+let g:netrw_dirhistcnt =4
+let g:netrw_dirhist_4='/Users/gil0mendes/.dotfiles'
+let g:netrw_dirhist_3='/Users/gil0mendes/Documents/projects/ronin/kusari'
+let g:netrw_dirhist_2='/Users/gil0mendes/Documents/projects/hquality/api'
+let g:netrw_dirhist_1='/Users/gil0mendes/Documents/projects/hquality/api/modules'
+let g:netrw_dirhist_0='/Users/gil0mendes/Documents/projects/hquality/api'
+let g:netrw_dirhist_9='/Users/gil0mendes/Documents/projects/hquality/api/modules/private/models'
+let g:netrw_dirhist_8='/Users/gil0mendes/Documents/projects/hquality/api/modules/private'
+let g:netrw_dirhist_7='/Users/gil0mendes/Documents/projects/hquality/api/modules'
+let g:netrw_dirhist_6='/Users/gil0mendes/Documents/projects/hquality/api'
+let g:netrw_dirhist_5='/Users/gil0mendes/Documents/projects/ronin/kusanagi'
