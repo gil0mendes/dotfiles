@@ -1,12 +1,13 @@
-export ZSH=$DOTFLES/zsh
+export ZSH=$DOTFILES/zsh
 
 # Load all config files
 if [[ -d $DOTFILES/zsh/functions ]]; then
   for func in $DOTFILES/zsh/functions/*(:t); autoload -U $func
 fi
 
-# Load all stock functions
-autoload -U compaudit compinit
+for file ($ZSH/lib/*.zsh); do
+  source $file
+done
 
 ########################################################
 # Configuration
@@ -18,11 +19,32 @@ else
   export TERM=tmux-256color-italic
 fi
 
+# initialize autocomplete
+autoload -U compaudit compinit add-zsh-hook
+compinit
+
+# Prepend directories to the global PATH var
+prepend_path /usr/local/opt/grep/libexec/gnubin
+prepend_path /usr/local/sbin
+prepend_path $DOTFILES/bin
+prepend_path $HOME/bin
+
+# display how long all tasks over 10 seconds take
+export REPORTTIME=10
+
+setopt NO_BG_NICE
+setopt NO_HUP
+setopt NO_LIST_BEEP
+setopt LOCAL_OPTIONS
+setopt LOCAL_TRAPS
+setopt PROMPT_SUBST
+
+setopt COMPLETE_ALIASES
+
 ########################################################
 # Plugins
 ########################################################
 
-#################### Zplug ####################
 source ~/.zplug/init.zsh
 
 # oh-my-zsh plugins
@@ -48,9 +70,26 @@ if ! zplug check --verbose; then
     fi
 fi
 
+[[ -e ~/.terminfo ]] && export TERMINFO_DIRS=~/.terminfo:/usr/share/terminfo
+
+########################################################
+# Setup
+########################################################
+
+if [[ -a ~/.localrc ]]; then
+    source ~/.localrc
+fi
+
 # Then, source plugins and add commands to $PATH
 zplug load
 
-# Alias
+########################################################
+# Aliases
+########################################################
+
+
+# use nvim, but don't make me think about it
+alias vim="nvim"
+
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help="tldr"
