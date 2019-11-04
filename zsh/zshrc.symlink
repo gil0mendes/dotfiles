@@ -102,3 +102,9 @@ alias vim="nvim"
 
 alias du="ncdu --color dark -rr -x --exclude .git --exclude node_modules"
 alias help="tldr"
+
+# tmux aliases
+alias ta='tmux attach'
+alias tls='tmux ls'
+alias tat='tmux attach -t'
+alias tns='tmux new-session -s'
