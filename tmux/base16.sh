@@ -17,12 +17,20 @@ base0D='#6A9FB5' # - Functions, Methods, Attribute IDs, Headings
 base0E='#AA759F' # - Keywords, Storage, Selector, Markup Italic, Diff Changed
 base0F='#8F5536' # - Deprecated, Opening/Closing Embedded Language Tags, e.g. <? php ?>
 
+# extra colors
+color_cpu='#a0e5e5'
+color_mem='#a0a0e5'
+
 set -g status-left-length 32
 set -g status-right-length 150
 set -g status-interval 5
 
+# set default color settings 
+set -g status-bg black
+set -g status-fg white
+
 # default statusbar colors
-set-option -g status-style fg=$base02,bg=$base00,default
+set-option -g status-style fg=$base02,bg=$base02
 
 set-window-option -g window-status-style fg=$base03,bg=$base00
 set-window-option -g window-status-format " #I #W"
@@ -53,6 +61,6 @@ set -g status-left "$tm_session_name"
 tm_tunes="#[bg=$base00,fg=$base0D] ♫ #(osascript -l JavaScript $DOTFILES/scripts/tunes.js)"
 tm_battery="#[fg=$base0F,bg=$base00] ♥ #(battery)"
 tm_date="#[default,bg=$base00,fg=$base0C] %R"
-tm_cpu_percentage="#[bg=$base00,fg=$base0b] C#(cpu_percentage)"
-tm_mem_usage="#[bg=$base00,fg=$base0b] M#(mem_usage)"
-set -g status-right "$tm_mem_usage $tm_cpu_percentage $tm_tunes $tm_battery $tm_date"
+tm_cpu_percentage="#[bg=$base00,fg=$color_cpu] C#(cpu_percentage)"
+tm_mem_usage="#[bg=$base00,fg=$color_mem] M#(mem_usage)"
+set -g status-right "$tm_tunes $tm_mem_usage $tm_cpu_percentage $tm_battery $tm_date"

@@ -9,6 +9,9 @@ DOTFILES=$HOME/.dotfiles
 source ./install/common.sh
 source ./install/links.sh
 
+echo "creating vim directories"
+mkdir -p ~/.local/share/nvim/plugged
+
 if ! command_exists zsh; then
   echo "zsh not found. Please install and then re-run installation scripts"
   exit 1
