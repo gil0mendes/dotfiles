@@ -9,6 +9,9 @@ Plug 'ntk148v/vim-horizon'
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
+" tmux integration for vim
+Plug 'benmills/vimux'
+
 " Better Visual Guide
 Plug 'Yggdroot/indentLine'
 
@@ -18,15 +21,8 @@ Plug 'terryma/vim-multiple-cursors'
 " Enable colors
 Plug 'chrisbra/Colorizer'
 
-" maybe the best git wrapper
-Plug 'tpope/vim-fugitive'
-
 " Add extra language support
 Plug 'sheerun/vim-polyglot'
-
-" Enable fuzzy search
-Plug '/usr/local/opt/fzf'
-Plug 'junegunn/fzf.vim'
 
 " Enable autocompletion
 Plug 'ncm2/ncm2'
@@ -52,9 +48,6 @@ Plug 'jiangmiao/auto-pairs'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'kristijanhusak/vim-js-file-import', {'do': 'npm install'}
 
-" Initalize  plugin system
-call plug#end()
-
 " enable ncm2 for all buffers
 autocmd BufEnter * call ncm2#enable_for_buffer()
 
@@ -73,19 +66,6 @@ let g:python3_host_prog = '/usr/local/bin/python3'
 """"""""""""""""""""""""""""""""""
 " general
 """"""""""""""""""""""""""""""""""
-
-filetype plugin indent on
-
-" Enable syntax
-syntax on
-syntax enable
-
-" Set default encoding to UTF-8
-set encoding=utf-8
-
-" Define theme
-colorscheme horizon 
-set background=dark
 
 " True Color Support if it's avaiable in terminal
 if has("termguicolors")
@@ -141,11 +121,9 @@ set autoindent " enable out indent of a new line
 set ttyfast " fast redraw
 set diffopt+=vertical,iwhite,internal,algorithm:patience,hiddenoff
 set laststatus=2 " show the status line all the time
-set wildmenu " enhanced command line completion
 set hidden " current buffer can be put into background
 set showcmd " show incomplete commands
 set noshowmode " don't show which mode disabled for PowerLine
-set wildmode=list:longest " complete files like a shell
 set shell=$SHELL
 set cmdheight=1 " command bar height
 set title " set terminal title
@@ -161,6 +139,13 @@ set expandtab
 set tabstop=2
 set softtabstop=2 " edit as if the tabs are 2 characters wide
 set shiftwidth=2
+
+" code folding syntax
+set foldmethod=syntax " fold based on indent
+set foldlevelstart=99
+set foldnestmax=10 " deepest fold is 10 levels
+set nofoldenable " don't fold by default
+set foldlevel=1
 
 " toggle invisible characters
 set list
@@ -236,14 +221,111 @@ nnoremap <silent> k gk
 nnoremap <silent> ^ g^
 nnoremap <silent> $ g$
 
-" Fuzzy search
-nnoremap <c-p> :Files<cr>
+" close buffers but keep splits
+Plug 'moll/vim-bbye'
+nmap <leader>b :Bdelete<cr>
 
-" Search in all dirs
-nnoremap <c-f> :Ag<space>
+" NERDTree {{{
+  Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
+  Plug 'Xuyuanp/nerdtree-git-plugin'
+  Plug 'ryanoasis/vim-devicons'
+  Plug 'tiagofumo/vim-nerdtree-syntax-highlight'
+
+  let g:WebDevIconsOS = 'Darwin'
+  let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+  let g:DevIconsEnableFoldersOpenClose = 1
+  let g:DevIconsEnableFolderExtensionPatternMatching = 1
+  let NERDTreeDirArrowExpandable = "\u00a0" " make arrows invisible
+  let NERDTreeDirArrowCollapsible = "\u00a0" " make arrows invisible
+  let NERDTreeNodeDelimiter = "\u263a" " smiley face
+
+  augroup nerdtree
+    autocmd!
+    autocmd FileType nerdtree setlocal nolist " turn off whitespace characters
+    autocmd FileType nerdtree setlocal nocursorline " turn off line highlighting for performance
+  augroup END
+
+  " Toggle NERDTree
+  function! ToggleNerdTree()
+    if @% != "" && @% !~ "Startify" && (!exists("g:NERDTree") || (g:NERDTree.ExistsForTab() && !g:NERDTree.IsOpen()))
+      :NERDTreeFind
+    else
+      :NERDTreeToggle
+    endif
+  endfunction
+
+  " toggle nerd tree
+  nmap <silent> <leader>k :call ToggleNerdTree()<cr>
+
+  " find the current file in nerdtree without needing to reload the drawer
+  nmap <silent> <leader>y :NERDTreeFind<cr>
+
+  let NERDTreeShowHidden=1
+
+  let g:NERDTreeIndicatorMapCustom = {
+  \ "Modified"  : "✹",
+  \ "Staged"    : "✚",
+  \ "Untracked" : "✭",
+  \ "Renamed"   : "➜",
+  \ "Unmerged"  : "═",
+  \ "Deleted"   : "✖",
+  \ "Dirty"     : "✗",
+  \ "Clean"     : "✔︎",
+  \ 'Ignored'   : '☒',
+  \ "Unknown"   : "?"
+  \ }
+" }}}
+
+" FZF {{{
+  " Enable fuzzy search
+  Plug '/usr/local/opt/fzf'
+  Plug 'junegunn/fzf.vim'
+
+  let g:fzf_layout = { 'down': '~25%' }
+
+  if isdirectory(".git")
+    " if in a git project, use :GFiles
+    nmap <silent> <c-p> :GitFiles --cached --others --exclude-standard<cr>
+  else
+    " otherwise, use :FZF
+    nmap <silent> <c-p> :FZF<cr>
+  endif
+
+  " Search in all dirs
+  nnoremap <c-f> :Ag<space>
+" }}}
+
+" Git Fugituve {{{
+  " maybe the best git wrapper
+  Plug 'tpope/vim-fugitive'
+
+  nmap <silent> <leader>gs :Gstatus<cr>
+  nmap <leader>ge :Gedit<cr>
+  nmap <silent><leader>gr :Gread<cr>
+  nmap <silent><leader>gb :Gblame<cr>
+" }}}
 
 " Save during insertion
 inoremap <c-s> <esc>:w<cr>
 
 " Toggle fix cursor on center if possible
 nnoremap <leader>ll :let &scrolloff=999-&scrolloff<CR>
+
+call plug#end()
+
+filetype plugin indent on
+
+" Enable syntax
+syntax on
+syntax enable
+
+" Set default encoding to UTF-8
+set encoding=utf-8
+
+" Define theme
+colorscheme horizon 
+set background=dark
+
+" make the highlighting of tabs and other non-text less annoying
+" highlight SpecialKey ctermfg=19 guifg=#333333
+" highlight NonText ctermfg=19 guifg=#333333
