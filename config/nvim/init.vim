@@ -370,7 +370,20 @@ nmap <leader>b :Bdelete<cr>
   " rename
   nmap <silent> <leader>rn <Plug>(coc-rename)
 
-"" }}}
+" }}}
+
+" better manage buffers {{{
+  Plug 'jeetsukumaran/vim-buffergator'
+
+  " Use the right side of the screen
+  let g:buffergator_viewport_split_policy = 'R'
+
+  " View the entire list of buffers open
+  nmap <leader>bl :BuffergatorOpen<cr>
+
+  " close buffer
+  nmap <C-w> :bp <BAR> bd #<cr>
+" }}}
 
 " Save during insertion
 inoremap <c-s> <esc>:w<cr>
