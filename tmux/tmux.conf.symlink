@@ -45,6 +45,9 @@ bind-key M split-window -h "vim ~/.tmux.conf"
 bind | split-window -h -c "#{pane_current_path}"
 bind - split-window -v -c "#{pane_current_path}"
 
+# make use the current path when creating a new window
+bind c new-window -c "#{pane_current_path}"
+
 # synchronize all panes in a window
 bind y setw synchronize-panes
 
