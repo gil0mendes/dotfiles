@@ -25,18 +25,18 @@ Plug 'chrisbra/Colorizer'
 Plug 'sheerun/vim-polyglot'
 
 " Enable autocompletion
-Plug 'ncm2/ncm2'
-Plug 'roxma/nvim-yarp'
+"Plug 'ncm2/ncm2'
+"Plug 'roxma/nvim-yarp'
 
 " Completion sources
-Plug 'ncm2/ncm2-bufword'
-Plug 'ncm2/ncm2-path'
+"Plug 'ncm2/ncm2-bufword'
+"Plug 'ncm2/ncm2-path'
 
 "" CSS
-Plug 'ncm2/ncm2-cssomni'
+"Plug 'ncm2/ncm2-cssomni'
 
 "" JavaScript
-Plug 'ncm2/ncm2-tern',  {'do': 'npm install'}
+"Plug 'ncm2/ncm2-tern',  {'do': 'npm install'}
 
 " Enable Lint
 Plug 'w0rp/ale'
@@ -49,7 +49,7 @@ Plug 'ludovicchabant/vim-gutentags'
 Plug 'kristijanhusak/vim-js-file-import', {'do': 'npm install'}
 
 " enable ncm2 for all buffers
-autocmd BufEnter * call ncm2#enable_for_buffer()
+" autocmd BufEnter * call ncm2#enable_for_buffer()
 
 " Autocomplete
 set completeopt=noinsert,menuone,noselect
@@ -303,7 +303,41 @@ nmap <leader>b :Bdelete<cr>
   nmap <leader>ge :Gedit<cr>
   nmap <silent><leader>gr :Gread<cr>
   nmap <silent><leader>gb :Gblame<cr>
+
+  Plug 'junegunn/gv.vim'
 " }}}
+
+" coc {{{
+  Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}
+
+  let g:coc_global_extensions = [
+  \ 'coc-css',
+  \ 'coc-json',
+  \ 'coc-tsserver',
+  \ 'coc-git',
+  \ 'coc-eslint',
+  \ 'coc-tslint-plugin',
+  \ 'coc-pairs',
+  \ 'coc-sh',
+  \ 'coc-vimlsp',
+  \ 'coc-emmet',
+  \ 'coc-prettier',
+  \ 'coc-ultisnips'
+  \ ]
+
+  autocmd CursorHold * silent call CocActionAsync('highlight')
+ 
+  "remap keys for gotos
+  nmap <silent> gd <Plug>(coc-definition)
+  nmap <silent> gy <Plug>(coc-type-definition)
+  nmap <silent> gi <Plug>(coc-implementation)
+  nmap <silent> gr <Plug>(coc-references)
+  nmap <silent> gh <Plug>(coc-doHover)
+
+  " rename
+  nmap <silent> <leader>rn <Plug>(coc-rename)
+
+"" }}}
 
 " Save during insertion
 inoremap <c-s> <esc>:w<cr>
