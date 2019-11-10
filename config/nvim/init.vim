@@ -5,10 +5,6 @@ call plug#begin('~/.local/share/nvim/plugged')
 " Theme
 Plug 'ntk148v/vim-horizon'
 
-" Install airline
-Plug 'vim-airline/vim-airline'
-Plug 'vim-airline/vim-airline-themes'
-
 " tmux integration for vim
 Plug 'benmills/vimux'
 
@@ -76,11 +72,6 @@ if has("gui_running")
 endif
 
 set autoread " defect when a file is changed
-
-" Turn off backup
-set nobackup
-set noswapfile
-set nowritebackup
 
 " set backspace=indent,eol,start " make backspace behave in a sane manner
 set clipboard=unnamedplus " maps system keyboard to Vim's past buffer
@@ -224,6 +215,48 @@ nnoremap <silent> $ g$
 " close buffers but keep splits
 Plug 'moll/vim-bbye'
 nmap <leader>b :Bdelete<cr>
+
+" LightLine {{{
+  Plug 'itchyny/lightline.vim'
+  let g:lightline = {
+  \   'colorscheme': 'jellybeans',
+  \   'active': {
+  \       'left': [ [ 'mode', 'paste' ],
+  \               [ 'gitbranch' ],
+  \               [ 'readonly', 'filetype', 'filename' ]],
+  \       'right': [ [ 'percent' ], [ 'lineinfo' ],
+  \               [ 'fileformat', 'fileencoding' ],
+  \               [ 'gitblame', 'currentfunction',  'cocstatus', 'linter_errors', 'linter_warnings' ]]
+  \   },
+  \   'component_expand': {
+  \   },
+  \   'component_type': {
+  \       'readonly': 'error',
+  \       'linter_warnings': 'warning',
+  \       'linter_errors': 'error'
+  \   },
+  \   'component_function': {
+  \       'fileencoding': 'helpers#lightline#fileEncoding',
+  \       'filename': 'helpers#lightline#fileName',
+  \       'fileformat': 'helpers#lightline#fileFormat',
+  \       'filetype': 'helpers#lightline#fileType',
+  \       'gitbranch': 'helpers#lightline#gitBranch',
+  \       'cocstatus': 'coc#status',
+  \       'currentfunction': 'helpers#lightline#currentFunction',
+  \       'gitblame': 'helpers#lightline#gitBlame'
+  \   },
+  \   'tabline': {
+  \       'left': [ [ 'tabs' ] ],
+  \       'right': [ [ 'close' ] ]
+  \   },
+  \   'tab': {
+  \       'active': [ 'filename', 'modified' ],
+  \       'inactive': [ 'filename', 'modified' ],
+  \   },
+  \   'separator': { 'left': '', 'right': '' },
+  \   'subseparator': { 'left': '', 'right': '' }
+  \ }
+" }}}
 
 " NERDTree {{{
   Plug 'scrooloose/nerdtree', { 'on': ['NERDTreeToggle', 'NERDTreeFind'] }
