@@ -184,6 +184,10 @@ let mapleader="\<space>"
 nnoremap <leader>ec :vsplit ~/.config/nvim/init.vim<cr>
 nnoremap <leader>rc :source ~/.config/nvim/init.vim<cr>
 
+" allow to save using crtl-s
+nmap <C-s> :w<cr>
+imap <C-s> <esc>:w<cr>i
+
 " keep visual selection when indenting/outdenting
 vmap < <gv
 vmap > >gv
@@ -211,6 +215,38 @@ nnoremap <silent> j gj
 nnoremap <silent> k gk
 nnoremap <silent> ^ g^
 nnoremap <silent> $ g$
+
+" Startify: Fancy startup screen for vim {{{
+  Plug 'mhinz/vim-startify'
+
+  " Don't change to directory when selecting a file
+  let g:startify_files_number = 5
+  let g:startify_change_to_dir = 0
+  let g:startify_relative_path = 1
+  let g:startify_use_env = 1
+
+  " Custom startup list, only show MRU from current directory/project
+  let g:startify_lists = [
+  \  { 'type': 'dir',       'header': [ 'Files '. getcwd() ] },
+  \  { 'type': function('helpers#startify#listcommits'), 'header': [ 'Recent Commits' ] },
+  \  { 'type': 'sessions',  'header': [ 'Sessions' ]       },
+  \  { 'type': 'bookmarks', 'header': [ 'Bookmarks' ]      },
+  \  { 'type': 'commands',  'header': [ 'Commands' ]       },
+  \ ]
+
+  let g:startify_commands = [
+  \   { 'up': [ 'Update Plugins', ':PlugUpdate' ] },
+  \   { 'ug': [ 'Upgrade Plugin Manager', ':PlugUpgrade' ] },
+  \ ]
+
+  let g:startify_bookmarks = [
+      \ { 'c': '~/.config/nvim/init.vim' },
+      \ { 'g': '~/.gitconfig' },
+      \ { 'z': '~/.zshrc' }
+  \ ]
+
+  autocmd User Startified setlocal cursorline
+" }}}
 
 " close buffers but keep splits
 Plug 'moll/vim-bbye'
