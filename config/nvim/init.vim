@@ -4,6 +4,7 @@ call plug#begin('~/.local/share/nvim/plugged')
 
 " Theme
 Plug 'ntk148v/vim-horizon'
+Plug 'sainnhe/gruvbox-material'
 
 " tmux integration for vim
 Plug 'benmills/vimux'
@@ -123,6 +124,7 @@ set mat=2 " how many tenths of a second to blink
 set updatetime=300
 set signcolumn=yes
 set shortmess+=c
+set nowrap
 
 " Tab and Indent configuration
 set smarttab " tab respects 'tabstop', 'shiftwidth', and 'softtabstop'
@@ -166,14 +168,6 @@ endif
 " highlight conflicts
 match ErrorMsg '^\(<\|=\|>\)\{7\}\([^=].\+\)\?$'
 
-" Airline
-let g:airline_left_sep  = ''
-let g:airline_right_sep = ''
-let g:airline#extensions#ale#enabled = 1
-let airline#extensions#ale#error_symbol = 'E:'
-let airline#extensions#ale#warning_symbol = 'W:'
-let g:airline_theme='base16'
-
 """"""""""""""""""""""""
 " Keymaps
 """"""""""""""""""""""""
@@ -216,6 +210,20 @@ nnoremap <silent> k gk
 nnoremap <silent> ^ g^
 nnoremap <silent> $ g$
 
+" allow moving blocks of likes with Alt+j/k
+nnoremap ¯ :m .+1<CR>==
+nnoremap „ :m .-2<CR>==
+inoremap ¯ <Esc>:m .+1<CR>==gi
+inoremap „ <Esc>:m .-2<CR>==gi
+vnoremap ¯ :m '>+1<CR>gv=gv
+vnoremap „ :m '<-2<CR>gv=gv
+
+" force me to use h, j, k, and l keys
+noremap <Up> <NOP>
+noremap <Down> <NOP>
+noremap <Left> <NOP>
+noremap <Right> <NOP>
+
 " Startify: Fancy startup screen for vim {{{
   Plug 'mhinz/vim-startify'
 
@@ -255,7 +263,7 @@ nmap <leader>b :Bdelete<cr>
 " LightLine {{{
   Plug 'itchyny/lightline.vim'
   let g:lightline = {
-  \   'colorscheme': 'jellybeans',
+  \   'colorscheme': 'gruvbox_material',
   \   'active': {
   \       'left': [ [ 'mode', 'paste' ],
   \               [ 'gitbranch' ],
@@ -406,9 +414,11 @@ nmap <leader>b :Bdelete<cr>
   " rename
   nmap <silent> <leader>rn <Plug>(coc-rename)
 
+  " Use K to show documentation in preview window
+  nnoremap <silent> K :call <SID>show_documentation()<CR>
 " }}}
 
-" better manage buffers {{{
+  " better manage buffers {{{
   Plug 'jeetsukumaran/vim-buffergator'
 
   " Use the right side of the screen
@@ -418,7 +428,7 @@ nmap <leader>b :Bdelete<cr>
   nmap <leader>bl :BuffergatorOpen<cr>
 
   " close buffer
-  nmap <C-w> :bp <BAR> bd #<cr>
+  nmap <leader>wc :bp <BAR> bd #<cr>
 " }}}
 
 " Save during insertion
