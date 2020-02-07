@@ -28,6 +28,8 @@ if [ "$(uname)" == "Darwin" ]; then
   # install neovim pythn libraries
   print_header "Running Neovim Python install"
   pip3 install pynvim
+
+  source ./install/macos.sh
 fi
 
 print_header "creating vim directories"
