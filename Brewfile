@@ -8,6 +8,7 @@ brew "fzf"
 brew "git"
 brew "gnupg"
 brew "htop"
+brew "mas"
 brew "neovim"
 brew "node"
 brew "openssl"
@@ -17,3 +18,14 @@ brew "tmux"
 brew "tmuxinator"
 brew "yarn"
 brew "zsh"
+
+cask "basecamp"
+cask "emacs"
+cask "firefox"
+cask "slack"
+cask "spotify"
+
+mas "1Password", id: 443987910
+mas "Keynote", id: 409183694
+mas "Numbers", id: 409203825
+mas "Pages", id: 409201541
