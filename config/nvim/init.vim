@@ -432,7 +432,7 @@ nmap <leader>b :Bdelete<cr>
 " }}}
 
 " Save during insertion
-inoremap <c-s> <esc>:w<cr>
+inoremap <c-s> <esc>:w<cr>e
 
 " Toggle fix cursor on center if possible
 nnoremap <leader>ll :let &scrolloff=999-&scrolloff<CR>
