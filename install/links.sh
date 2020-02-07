@@ -26,3 +26,13 @@ for config in $config_files; do
     ln -s "$config" "$target"
   fi
 done
+
+print_header "Installing to ~/.emacs.d"
+source="$DOTFILES/emacs"
+target="$HOME/.emacs.d"
+if [ -e "$target" ]; then
+  echo "~${target#$HOME} already exists... Skipping."
+else
+  echo "Creating symlink for $source"
+  ln -s "$source" "$target"
+fi
