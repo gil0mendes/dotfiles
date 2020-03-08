@@ -1,0 +1,40 @@
+;; Apperance configurations
+;;
+
+;; Add custom theme folder to allow us specify our theme
+(add-to-list 'custom-theme-load-path "~/.emacs.d/themes")
+
+;; Set beautiful dark theme
+(load-theme 'exotica t)
+
+;; Font
+(when (member "JetBrains Mono" (font-family-list))
+  (set-face-attribute 'default nil :font "JetBrains Mono 13"))
+
+;; Make cursor blink 10 times and stop
+(blink-cursor-mode 1)
+
+;; set line spacing to the font size
+(setq line-spacing 0)
+
+;; add color to delimiters
+(use-package rainbow-delimiters
+  :config
+  (add-hook 'prog-mode-hook 'rainbow-delimiters-mode))
+
+(setq
+ inhibit-startup-message t            ; Don't show the startup message
+ inhibit-startup-screen t             ; ... or screen
+ cursor-in-non-selected-windows t     ; Hide the cursor in inactive windows
+ echo-keystrokes 0.1                  ; Show keystrokes right away, don't show the message in the scratch buffer
+ initial-scratch-message nil          ; Empty sractch buffer
+ initial-major-mode 'org-mode         ; Org mode by default
+ sentence-end-double-space nil        ; Sentences should end in one space, come on!
+ confirm-kill-emacs 'y-or-n-p         ; y and n instead of yes and no when quitting
+ help-window-select t                 ; Select help window so it's easy to quit it with 'q'
+ )
+
+(fset 'yes-or-no-p 'y-or-n-p)      ; y and n instead of yes and no everywhere else
+(delete-selection-mode 1)          ; Delete selected text when typing
+
+(provide 'setup-appearance)
