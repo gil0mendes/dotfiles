@@ -32,6 +32,10 @@ if [ "$(uname)" == "Darwin" ]; then
   source ./install/macos.sh
 fi
 
+# initialize git sub-modules
+git submodule init
+git submodule update --recursive
+
 print_header "creating vim directories"
 mkdir -p ~/.local/share/nvim/plugged
 
