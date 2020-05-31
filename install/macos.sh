@@ -25,3 +25,6 @@ defaults write com.apple.driver.AppleBluetoothMultitouch.trackpad Clicking -bool
 
 echo "Kill affected applications"
 for app in Finder Dock SystemUIServer; do killall "$app" >/dev/null 2>&1; done
+
+print_header "Installing zplug"
+curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
