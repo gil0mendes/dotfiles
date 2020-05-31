@@ -22,6 +22,7 @@ brew "zsh"
 cask "basecamp"
 cask "emacs"
 cask "firefox"
+cask "iterm2"
 cask "slack"
 cask "spotify"
 
