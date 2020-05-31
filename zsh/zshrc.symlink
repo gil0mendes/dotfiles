@@ -84,6 +84,20 @@ fi
 zplug load
 
 ########################################################
+# Misc
+########################################################
+
+function sleep-in() {
+  local minutes=$1
+  local datetime=`date -v+${minutes}M +"%m/%d/%y %H:%M:%S"`
+  sudo pmset schedule sleep "$datetime"
+}
+
+# Load NVM
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+
+########################################################
 # Aliases
 ########################################################
 
