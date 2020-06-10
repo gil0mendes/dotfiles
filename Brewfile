@@ -18,6 +18,7 @@ brew "qemu"
 brew "rustup"
 brew "tmux"
 brew "tmuxinator"
+brew "starship"
 brew "yarn"
 brew "zsh"
 
