@@ -60,8 +60,15 @@ bind l select-pane -R
 bind -r C-h select-window -t :-
 bind -r C-l select-window -t :+
 
+# resize panes
+bind H resize-pane -L 10
+bind J resize-pane -D 10
+bind K resize-pane -U 10
+bind L resize-pane -R 10
+
 # enable mouse support for switching panes/windows
-setw -g mouse on
+set -g mouse on
+set -g mouse-resize-panel on
 
 ##############################
 ### Color & Style Settings ###
