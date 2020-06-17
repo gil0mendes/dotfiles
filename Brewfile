@@ -29,6 +29,11 @@ cask "font-hack-nerd-font"
 cask "iterm2"
 cask "slack"
 cask "spotify"
+cask "telegram"
+cask "visual-studio-code"
+cask "dbeaver-community"
+cask "transmission"
+cask "fork"
 
 mas "1Password", id: 443987910
 mas "Keynote", id: 409183694
