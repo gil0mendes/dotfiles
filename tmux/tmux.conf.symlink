@@ -68,7 +68,6 @@ bind L resize-pane -R 10
 
 # enable mouse support for switching panes/windows
 set -g mouse on
-set -g mouse-resize-panel on
 
 ##############################
 ### Color & Style Settings ###
