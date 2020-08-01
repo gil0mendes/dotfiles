@@ -33,16 +33,19 @@ nnoremap <silent> ^ g^
 nnoremap <silent> $ g$
 
 " allow moving blocks of likes with Alt+j/k
-nnoremap ¯ :m .+1<CR>==
-nnoremap „ :m .-2<CR>==
-inoremap ¯ <Esc>:m .+1<CR>==gi
-inoremap „ <Esc>:m .-2<CR>==gi
-vnoremap ¯ :m '>+1<CR>gv=gv
-vnoremap „ :m '<-2<CR>gv=gv
+nnoremap <A-j> :m+<CR>==
+nnoremap <A-k> :m-2<CR>==
+inoremap <A-j> <Esc>:m+<CR>==gi
+inoremap <A-k> <Esc>:m-2<CR>==gi
+vnoremap <A-j> :m'>+<CR>gv=gv
+vnoremap <A-k> :m-2<CR>gv=gv
 
 " force me to use h, j, k, and l keys
 noremap <Up> <NOP>
 noremap <Down> <NOP>
 noremap <Left> <NOP>
 noremap <Right> <NOP>
+
+" Toggle fix cursor on center if possible
+nnoremap <leader>ll :let &scrolloff=999-&scrolloff<CR>
 

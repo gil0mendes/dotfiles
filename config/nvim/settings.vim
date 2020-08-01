@@ -229,7 +229,6 @@ augroup END
 " Autocomplete
 set completeopt=noinsert,menuone,noselect
 
-" Config Pyhton path
-let g:python2_host_prog = '/usr/local/bin/python'
-let g:python3_host_prog = '/usr/local/bin/python3'
-
+" Python VirtualEnv
+let g:python_host_prog =  expand('/usr/bin/python')
+let g:python3_host_prog = expand('/usr/bin/python3')

@@ -40,8 +40,27 @@ autocmd  FileType which_key set laststatus=0 noshowmode noruler
 
 
 " Single mappings
+let g:which_key_map[' '] = ['Files', 'Find files in project']
+let g:which_key_map['/'] = ['Commentary'  , 'comment']
 let g:which_key_map['k'] = ['ToggleNerdTree', 'open sidebar']
 
+" buffer group
+let g:which_key_map['b'] = {
+      \ 'name': '+buffer',
+      \ 'b': ['Buffers', 'Open buffers'],
+      \ 'd': ['bd', 'Delete buffer'],
+      \ 'h': ['Startify', 'Home buffer'],
+      \ 'n': ['bnext', 'Next buffer'],
+      \ 'p': ['bprevious', 'Previous buffer']
+      \ }
+
+" Searching group
+let g:which_key_map['s'] = {
+      \ 'name': '+search',
+      \ 'f': ['Files', 'Locate file'],
+      \ 'g': ['GFiles', 'Git files'],
+      \ 's': ['Rg', 'Text on Project']
+      \ }
 
 " Register which key map
 call which_key#register('<Space>', "g:which_key_map")

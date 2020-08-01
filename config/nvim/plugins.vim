@@ -24,12 +24,12 @@ Plug 'mhinz/vim-startify'               " The fancy start screen for Vim.       
 Plug 'godlygeek/tabular'                " Vim script for text filtering and alignment           | https://github.com/godlygeek/tabular
 Plug 'tomtom/tcomment_vim'              " An extensible & universal comment vim-plugin          | https://github.com/tomtom/tcomment_vim
 Plug 'vim-scripts/BufOnly.vim'          " Delete all the buffers except current/named buffer    | https://github.com/vim-scripts/BufOnly.vim
-Plug 'jeetsukumaran/vim-buffergator'    " Open/close/navigate vim's buffers                     | https://github.com/jeetsukumaran/vim-buffergator
 Plug 'moll/vim-bbye'                    " Really close buffers                                  | https://github.com/moll/vim-bbye
 Plug 'ntpeters/vim-better-whitespace'   " Better whitespace highlighting for                    | https://github.com/ntpeters/vim-better-whitespace
 Plug 'machakann/vim-highlightedyank'    " Make the yanked region apparent!                      | https://github.com/machakann/vim-highlightedyank
 Plug 'norcalli/nvim-colorizer.lua'      " The fastest Neovim colorizer.                         | https://github.com/norcalli/nvim-colorizer.lua
 Plug 'liuchengxu/vim-which-key'         " Vim plugin that shows keybindings in popup            | https://github.com/liuchengxu/vim-which-key
+Plug 'wakatime/vim-wakatime'          " Lang and editor time tracker                          | https://github.com/wakatime/vim-wakatime
 
 " Code Completion
 Plug 'neoclide/coc.nvim', {'do': 'yarn install --frozen-lockfile'}                         " Intellisense engine for vim8 & neovim   | https://github.com/neoclide/coc.nvim

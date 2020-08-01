@@ -1,5 +1,12 @@
 " Search Layer
 " This layer contails all things related with search of files, text on the current buffer and on all project files.
+"
+
+" Vim DevIcons
+let g:WebDevIconsOS = 'Darwin'
+let g:WebDevIconsUnicodeDecorateFolderNodes = 1
+let g:DevIconsEnableFoldersOpenClose = 1
+let g:DevIconsEnableFolderExtensionPatternMatching = 1
 
 " FZF
 let g:fzf_tags_command = 'ctags -R'

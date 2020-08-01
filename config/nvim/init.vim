@@ -20,6 +20,7 @@ call LoadConfigFile("settings.vim")
 call LoadConfigFile('layers/nerdtree.vim')
 call LoadConfigFile('layers/search.vim')
 call LoadConfigFile('layers/startify.vim')
+call LoadConfigFile('layers/code.vim')
 
 " Load theme for lightline
 call LoadConfigFile('lightline.vim')
