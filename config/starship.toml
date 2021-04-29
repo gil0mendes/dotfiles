@@ -6,8 +6,3 @@ add_newline = false
 [package]
 symbol = "➜"
 disabled = true
-
-[animation]
-disabled = false
-frames = ["🎶🎷🐛", "🎵🎷🐛"]
-interval = 1
