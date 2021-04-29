@@ -3,13 +3,6 @@ setopt auto_pushd
 setopt pushd_ignore_dups
 setopt pushdminus
 
-# Detect which `ls` flavor is in use
-if ls --color > /dev/null 2>&1; then # GNU `ls`
-    colorflag="--color"
-else # macOS `ls`
-    colorflag="-G"
-fi
-
 # Filesystem aliases
 alias ..='cd ..'
 alias ...='cd ../..'
@@ -40,7 +33,7 @@ function d () {
 #compdef _dirs d
 
 # List directory contents
-alias l="ls -lah ${colorflag}"
-alias la="ls -AF ${colorflag}"
-alias ll="ls -lFh ${colorflag}"
-alias lld="ls -l | grep ^d"
+alias l="exa --icons --all --bytes --long"
+alias la="exa --all --classify"
+alias ll="exa --icons --classify --bytes --long"
+alias lld="exa --long | grep ^d"
