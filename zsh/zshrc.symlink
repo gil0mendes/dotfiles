@@ -52,7 +52,7 @@ setopt COMPLETE_ALIASES
 source ~/.zplug/init.zsh
 
 # oh-my-zsh plugins
-zplug "plugins/cargo", from:oh-my-zsh
+zplug "plugins/rust", from:oh-my-zsh
 zplug "plugins/brew", from:oh-my-zsh
 zplug "plugins/docker", from:oh-my-zsh
 zplug "plugins/docker-compose", from:oh-my-zsh
@@ -138,3 +138,4 @@ eval "$(starship init zsh)"
 
 
 test -e "${HOME}/.iterm2_shell_integration.zsh" && source "${HOME}/.iterm2_shell_integration.zsh"
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
