@@ -25,7 +25,7 @@
 
   # Networking configurations
   networking.dns = [
-    "1.1.1.1",
+    "1.1.1.1"
     "8.8.8.8"
   ];
 

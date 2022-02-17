@@ -47,6 +47,11 @@
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
             home-manager.users.gil0mendes = import ./home.nix;
+
+            # networking config
+            networking.knownNetworkServices = [
+              "Wi-Fi"
+            ];
           }
         ];
       };
