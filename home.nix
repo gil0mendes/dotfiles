@@ -36,7 +36,7 @@
 
     ## rust packages
     rustup
-    # exa
+    exa
     # starship
     tldr
   ];
