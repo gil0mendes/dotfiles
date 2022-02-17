@@ -46,7 +46,7 @@
             # `home-manager` config
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.gil0mendes = import ./home.nix;
+            home-manager.users.gil0mendes = import ./home;
 
             # networking config
             networking.knownNetworkServices = [
