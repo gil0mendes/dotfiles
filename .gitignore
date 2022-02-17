@@ -1,3 +1,6 @@
 Brewfile.lock.json
 config/nvim/autoload/plugged/*
 config/nvim/.netrwhist
+
+# nix related
+/result
