@@ -27,3 +27,8 @@ nix build .#darwinConfigurations.g0m.system
 # Enable the configuration
 ./result/sw/bin/darwin-rebuild switch --flake .#g0m
 ```
+
+## Inspiration
+
+- https://github.com/malob/nixpkgs
+- https://gitlab.com/gil0mendes/dotfiles/

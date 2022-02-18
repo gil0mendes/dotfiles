@@ -13,22 +13,6 @@ source ./install/links.sh
 if [ "$(uname)" == "Darwin" ]; then
   echo -e "\\n\\nRunning on macOS"
 
-  if test ! "$( command -v brew )"; then
-    echo "Installing Homebrew"
-    ruby -e "$( curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install )"
-  fi
-
-  print_header "Install brew dependencies from Brewfile"
-  brew bundle
-
-  # setup FZF
-  print_header "Running FZF install script"
-  /usr/local/opt/fzf/install --all --no-bash --no-fish
-
-  # install neovim pythn libraries
-  print_header "Running Neovim Python install"
-  pip3 install pynvim
-
   print_header "Installing zplug"
   curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 fi
