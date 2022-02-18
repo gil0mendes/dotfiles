@@ -29,12 +29,9 @@ if [ "$(uname)" == "Darwin" ]; then
   print_header "Running Neovim Python install"
   pip3 install pynvim
 
-  source ./install/macos.sh
+  print_header "Installing zplug"
+  curl -sL --proto-redir -all,https https://raw.githubusercontent.com/zplug/installer/master/installer.zsh | zsh
 fi
-
-# initialize git sub-modules
-git submodule init
-git submodule update --recursive
 
 print_header "creating vim directories"
 mkdir -p ~/.local/share/nvim/plugged

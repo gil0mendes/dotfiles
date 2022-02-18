@@ -32,6 +32,7 @@
     tmux
     tmuxinator
     zsh
+    tree
 
     ## rust packages
     rustup
