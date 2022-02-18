@@ -48,6 +48,7 @@ in
     "iterm2"
     "postman"
     "robo-3t"
+    "docker"
   ];
 
   # For cli packages that aren't currently available for macOS in `nixpkgs` or have errors. Packages should be installed 

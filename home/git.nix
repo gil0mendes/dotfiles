@@ -20,7 +20,6 @@
       init.defaultBranch = "main";
       core.editor = "vim";
       diff.colorMoved = "default";
-      credential.helper = "osxkeychain";
       pull.rebase = "true";
       # For supercede
       core.symlinks = true;
