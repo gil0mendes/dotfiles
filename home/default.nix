@@ -25,7 +25,6 @@
     wget
     fzf
     gnupg
-    mas
     neovim
     openssl
     python3
@@ -37,7 +36,7 @@
     ## rust packages
     rustup
     exa # fancy version of `ls`
-    tldr
+    tealdeer # rust implementation of `tldr`
 
     # Useful nix related tools
     comma # run software from without installing it
