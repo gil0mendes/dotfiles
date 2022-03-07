@@ -44,9 +44,8 @@
   ];
 
   # Starship Prompt
-  # TODO: disbaled for now, there is a build error happening
   # https://rycee.gitlab.io/home-manager/options.html#opt-programs.starship.enable
-  programs.starship.enable = false;
+  programs.starship.enable = true;
 
   programs.starship.settings = {
     # See docs here: https://starship.rs/config/

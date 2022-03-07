@@ -25,10 +25,18 @@
         # Sub in x86 version of packages that don't build on Apple Silicon yet
         final: prev: (optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
           inherit (final.pkgs-x86)
-            nix-index;
+            nix-index
+            starship; # TODO: remove when https://github.com/NixOS/nixpkgs/issues/160876 is fixed.
         })
       );
-    }; 
+    };
+
+    primaryUserInfo = {
+      username = "gil0mendes";
+      fullName = "Gil Mendes";
+      email = "gil00mendes@gmail.com";
+      nixConfigDirectory = "/Users/gil0mendes/.dotfiles";
+    };
   in
   {
     # My `nix-darwin` configs
@@ -46,7 +54,7 @@
             # `home-manager` config
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.gil0mendes = import ./home;
+            home-manager.users.${primaryUserInfo.username} = import ./home;
 
             # networking config
             networking.knownNetworkServices = [

@@ -58,10 +58,4 @@ in
     "robo-3t"
     "docker"
   ];
-
-  # For cli packages that aren't currently available for macOS in `nixpkgs` or have errors. Packages should be installed 
-  # in `../home/default.nix` whenever possible.
-  homebrew.brews = [
-    "starship"
-  ];
 }
