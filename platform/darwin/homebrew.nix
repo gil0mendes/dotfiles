@@ -47,6 +47,7 @@ in
     "spotify"
     "telegram"
     "whatsapp"
+    "zoom"
 
     # development
     "dbeaver-community"

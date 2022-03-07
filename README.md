@@ -28,6 +28,12 @@ nix build .#darwinConfigurations.g0m.system
 ./result/sw/bin/darwin-rebuild switch --flake .#g0m
 ```
 
+For rebuilding the configuration run:
+
+```bash
+darwin-rebuild switch --flake .#g0m
+```
+
 ## Inspiration
 
 - https://github.com/malob/nixpkgs
