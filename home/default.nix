@@ -40,6 +40,7 @@
     tealdeer # rust implementation of `tldr`
 
     # Useful nix related tools
+    nixpkgs-fmt
     comma # run software from without installing it
   ];
 
