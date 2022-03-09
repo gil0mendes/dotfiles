@@ -13,10 +13,11 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
   };
 
-  outputs = { self, darwin, nixpkgs, home-manager, ... }@inputs:
+  outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
     let
       inherit (darwin.lib) darwinSystem;
       inherit (inputs.nixpkgs-unstable.lib) attrValues makeOverridable optionalAttrs singleton;
+      inherit (lib.my) mapModulesRec;
 
       # Configuration for `nixpkgs`
       nixpkgsConfig = {
@@ -37,6 +38,10 @@
         email = "gil00mendes@gmail.com";
         nixConfigDirectory = "/Users/gil0mendes/.dotfiles";
       };
+
+      pkgs = nixpkgs;
+      lib = nixpkgs.lib.extend
+        (self: super: { my = import ./lib { inherit pkgs inputs; lib = self; }; });
     in
     {
       # My `nix-darwin` configs
