@@ -7,17 +7,20 @@
     nixpkgs-unstable.url = github:NixOS/nixpkgs/nixpkgs-unstable;
 
     # Environment/system management
-    darwin.url = "github:lnl7/nix-darwin/master";
-    darwin.inputs.nixpkgs.follows = "nixpkgs-unstable";
-    home-manager.url = "github:nix-community/home-manager";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    darwin = {
+      url = "github:lnl7/nix-darwin/master";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    home-manager = {
+      url = "github:nix-community/home-manager";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
     let
       inherit (darwin.lib) darwinSystem;
       inherit (inputs.nixpkgs-unstable.lib) attrValues makeOverridable optionalAttrs singleton;
-      inherit (lib.my) mapModulesRec;
 
       # Configuration for `nixpkgs`
       nixpkgsConfig = {
@@ -32,6 +35,8 @@
         );
       };
 
+      homeManagerStateVersion = "22.05";
+
       primaryUserInfo = {
         username = "gil0mendes";
         fullName = "Gil Mendes";
@@ -39,29 +44,47 @@
         nixConfigDirectory = "/Users/gil0mendes/.dotfiles";
       };
 
-      pkgs = nixpkgs;
-      lib = nixpkgs.lib.extend
-        (self: super: { my = import ./lib { inherit pkgs inputs; lib = self; }; });
+      # Modules shared by most `nix-darwin` personal configurations.
+      nixDarwinCommonModules = attrValues self.darwinModules ++ [
+        # `home-manager` module
+        home-manager.darwinModules.home-manager
+        (
+          { config, lib, pkgs, ... }:
+          let
+            inherit (config.users) primaryUser;
+          in
+          {
+            nixpkgs = nixpkgsConfig;
+
+            # `home-manager` config
+            users.users.${primaryUser.username}.home = "/Users/${primaryUser.username}";
+            home-manager.useGlobalPkgs = true;
+            home-manager.useUserPackages = true;
+            home-manager.users.${primaryUserInfo.username} = {
+              imports = attrValues self.homeManagerModules;
+              home.stateVersion = homeManagerStateVersion;
+              home.user-info = config.users.primaryUser;
+            };
+
+            # Add a registry entry for this flake
+            nix.registry.my.flake = self;
+          }
+        )
+      ];
     in
     {
       # My `nix-darwin` configs
 
       darwinConfigurations = rec {
+        # My Apple Silicon macOS laptop config
         g0m = darwinSystem {
           system = "aarch64-darwin";
-          modules = attrValues self.darwinModules ++ [
-            # Main `nix-darwin` config
-            ./platform/darwin/default.nix
-            # `home-manager` module
-            home-manager.darwinModules.home-manager
+          modules = nixDarwinCommonModules ++ [
             {
-              nixpkgs = nixpkgsConfig;
-              # `home-manager` config
-              home-manager.useGlobalPkgs = true;
-              home-manager.useUserPackages = true;
-              home-manager.users.${primaryUserInfo.username} = import ./home;
+              users.primaryUser = primaryUserInfo;
 
-              # networking config
+              networking.computerName = "Gil 💻";
+              networking.hostName = "GilBookPro";
               networking.knownNetworkServices = [
                 "Wi-Fi"
               ];
@@ -82,68 +105,29 @@
         };
       };
 
-      # My `nix-darwin` modules that are pending upstream, or patched versions waiting on upstream fixes.
       darwinModules = {
-        security-pam =
-          # Upstream PR: https://github.com/LnL7/nix-darwin/pull/228
-          { config, lib, pkgs, ... }:
+        # My configurations
+        g0m-bootstrap = import ./darwin/bootstrap.nix;
+        g0m-defaults = import ./darwin/defaults.nix;
+        g0m-general = import ./darwin/general.nix;
+        g0m-homebrew = import ./darwin/homebrew.nix;
 
-            with lib;
+        # Modules pending upstream
+        security-pam = import ./modules/darwin/security/pam.nix;
+        users-primaryUser = import ./modules/darwin/users.nix;
+      };
 
-            let
-              cfg = config.security.pam;
+      homeManagerModules = {
+        # My configurations
+        g0m-fish = import ./home/fish.nix;
+        g0m-git = import ./home/git.nix;
+        g0m-packages = import ./home/packages.nix;
+        g0m-starship = import ./home/starship.nix;
+        g0m-starship-symbols = import ./home/starship-symbols.nix;
 
-              # Implementation Notes
-              #
-              # We don't use `environment.etc` because this would require that the user manually delete `/etc/pam.d/sudo` 
-              # which seems unwise given that applying the nix-darwin configuration requires sudo. We also can't use 
-              # `system.patchs` since it only runs once, and so won't patch in the changes again after OS updates (which 
-              # remove modifications to this file).
-              #
-              # As such, we resort to line addition/deletion in place using `sed`. We add a comment to the added line that 
-              # includes the name of the option, to make it easier to identify the line that should be deleted when the 
-              # option is disabled.
-              mkSudoTouchIdAuthScript = isEnabled:
-                let
-                  file = "/etc/pam.d/sudo";
-                  option = "security.pam.enableSudoTouchIdAuth";
-                in
-                ''
-                  ${if isEnabled then ''
-                    # Enable sudo Touch ID authentication, if not already enabled
-                    if ! grep 'pam_tid.so' ${file} > /dev/null; then
-                      sed -i "" '2i\
-                    auth       sufficient     pam_tid.so # nix-darwin: ${option}
-                      ' ${file}
-                    fi
-                  '' else ''
-                    # Disable sudo Touch ID authentication, if added by nix-darwin
-                    if grep '${option}' ${file} > /dev/null; then
-                      sed -i "" '/${option}/d' ${file}
-                    fi
-                  ''}
-                '';
-            in
-
-            {
-              options = {
-                security.pam.enableSudoTouchIdAuth = mkEnableOption ''
-                  Enable sudo authentication with Touch ID
-                  When enabled, this option adds the following line to /etc/pam.d/sudo:
-                      auth       sufficient     pam_tid.so
-                  (Note that macOS resets this file when doing a system update. As such, sudo authentication with Touch ID 
-                  won't work after a system update until the nix-darwin configuration is reapplied.)
-                '';
-              };
-
-              config = {
-                system.activationScripts.extraActivation.text = ''
-                  # PAM settings
-                  echo >&2 "setting up pam..."
-                  ${mkSudoTouchIdAuthScript cfg.enableSudoTouchIdAuth}
-                '';
-              };
-            };
+        home-user-info = { lib, ... }: {
+          options.home.user-info = (self.darwinModules.users-primaryUser { inherit lib; }).options.users.primaryUser;
+        };
       };
     };
 }
