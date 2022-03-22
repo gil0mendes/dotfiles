@@ -150,6 +150,7 @@
         g0m-packages = import ./home/packages.nix;
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
+        g0m-zsh = import ./home/zsh.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
         programs-neovim-extras = import ./modules/home/programs/neovim/extras.nix;

@@ -1,7 +1,19 @@
-export ZSH=$DOTFILES/zsh
+export DOTFILES=$HOME/.dotfiles
+export CACHEDIR="$HOME/.local/share"
+export ZSH=$DOTFILES/configs/zsh
 
-# load profiler
-. $ZSH/lib/profiler.start
+[[ -d "$CACHEDIR" ]] || mkdir -p "$CAHCEDIR"
+
+fpath=(
+    $DOTFILES/zsh/functions
+    /usr/local/share/zsh/site-functions
+    $fpath
+)
+
+typeset -aU path
+
+export EDITOR='nvim'
+export GIT_EDITOR='nvim'
 
 # Load all config files
 if [[ -d $DOTFILES/zsh/functions ]]; then
@@ -129,9 +141,6 @@ alias tat='tmux attach -t'
 alias tns='tmux new-session -s'
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
-
-# Stop profiler
-. $ZSH/lib/profiler.stop
 
 # start starship
 eval "$(starship init zsh)"
