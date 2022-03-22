@@ -24,7 +24,6 @@ in
     wget
     fzf
     gnupg
-    neovim
     openssl
     python3
     qemu

@@ -15,6 +15,9 @@
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+
+    # Other sources
+    moses-lua = { url = github:Yonaba/Moses; flake = false; };
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
@@ -103,6 +106,27 @@
             inherit (nixpkgsConfig) config;
           };
         };
+
+        # Overlay that adds various additional utility functions to `vimUtils`
+        vimUtils = import ./overlays/vimUtils.nix;
+
+        # Overlay that adds some additional Neovim plugins
+        vimPlugins = final: prev:
+          let
+            inherit (self.overlays.vimUtils final prev) vimUtils;
+          in
+          {
+            vimPlugins = prev.vimPlugins.extend (super: self:
+              (vimUtils.buildVimPluginsFromFlakeInputs inputs [
+                # Add plugins here
+              ]) // {
+                moses-nvim = vimUtils.buildNeovimLuaPackagePluginFromFlakeInput inputs "moses-lua";
+              }
+            );
+          };
+
+        # Overlay that adds `lib.colors` to reference colors elsewhere in system configs
+        colors = import ./overlays/colors.nix;
       };
 
       darwinModules = {
@@ -121,10 +145,14 @@
         # My configurations
         g0m-fish = import ./home/fish.nix;
         g0m-git = import ./home/git.nix;
+        g0m-kitty = import ./home/kitty.nix;
+        g0m-neovim = import ./home/neovim.nix;
         g0m-packages = import ./home/packages.nix;
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
 
+        programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
+        programs-neovim-extras = import ./modules/home/programs/neovim/extras.nix;
         home-user-info = { lib, ... }: {
           options.home.user-info = (self.darwinModules.users-primaryUser { inherit lib; }).options.users.primaryUser;
         };

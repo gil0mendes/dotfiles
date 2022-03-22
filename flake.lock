@@ -41,6 +41,22 @@
         "type": "github"
       }
     },
+    "moses-lua": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1573371081,
+        "narHash": "sha256-n/ca2MxiZPk6FZHvQGS6TTl1AZx6ZdDmR7viJFgttik=",
+        "owner": "Yonaba",
+        "repo": "Moses",
+        "rev": "6fe8d76d50a22d85fe064aaa80390b72381befed",
+        "type": "github"
+      },
+      "original": {
+        "owner": "Yonaba",
+        "repo": "Moses",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1647089892,
@@ -77,6 +93,7 @@
       "inputs": {
         "darwin": "darwin",
         "home-manager": "home-manager",
+        "moses-lua": "moses-lua",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable"
       }
