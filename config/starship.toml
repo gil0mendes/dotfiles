@@ -1,8 +1,0 @@
-# https://starship.rs/config/
-
-# Don't print a new line at the start of the prompt
-add_newline = false
-
-[package]
-symbol = "➜"
-disabled = true
