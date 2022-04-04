@@ -94,6 +94,22 @@
             }
           ];
         };
+
+        # My Personal MacBook Pro from 2015
+        pmbp = darwinSystem {
+          system = "x86_64-darwin";
+          modules = nixDarwinCommonModules ++ [
+            {
+              users.primaryUser = primaryUserInfo;
+
+              networking.computerName = "Personal Gil 💻";
+              networking.hostName = "PersonalGilBookPro";
+              networking.knownNetworkServices = [
+                "Wi-Fi"
+              ];
+            }
+          ];
+        };
       };
 
       # --- Overlays
