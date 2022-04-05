@@ -40,6 +40,13 @@
 
       homeManagerStateVersion = "22.05";
 
+      workUserInfo = {
+        username = "gmendes";
+        fullName = "Gil Mendes";
+        email = "gmendes@barracuda.com";
+        nixConfigDirectory = "/Users/gmendes/.dotfiles";
+      };
+
       primaryUserInfo = {
         username = "gil0mendes";
         fullName = "Gil Mendes";
@@ -59,11 +66,12 @@
           {
             nixpkgs = nixpkgsConfig;
 
+
             # `home-manager` config
             users.users.${primaryUser.username}.home = "/Users/${primaryUser.username}";
             home-manager.useGlobalPkgs = true;
             home-manager.useUserPackages = true;
-            home-manager.users.${primaryUserInfo.username} = {
+            home-manager.users.${primaryUser.username} = {
               imports = attrValues self.homeManagerModules;
               home.stateVersion = homeManagerStateVersion;
               home.user-info = config.users.primaryUser;
@@ -104,6 +112,22 @@
 
               networking.computerName = "Personal Gil 💻";
               networking.hostName = "PersonalGilBookPro";
+              networking.knownNetworkServices = [
+                "Wi-Fi"
+              ];
+            }
+          ];
+        };
+
+        # My Work MacBook Pro from 2019
+        work = darwinSystem {
+          system = "x86_64-darwin";
+          modules = nixDarwinCommonModules ++ [
+            {
+              users.primaryUser = workUserInfo;
+
+              networking.computerName = "Gil Mendes Barracuda 💻";
+              networking.hostName = "ENG-GMENDES-MB";
               networking.knownNetworkServices = [
                 "Wi-Fi"
               ];
