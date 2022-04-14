@@ -13,6 +13,19 @@ in
   # Add Fish plugins
   home.packages = [ pkgs.fishPlugins.done ];
 
+  programs.fish.plugins = [
+    # Make Bash utilities usable in Fish shell 
+    {
+      name = "bass";
+      src = pkgs.fetchFromGitHub {
+        owner = "edc";
+        repo = "bass";
+        rev = "2fd3d2157d5271ca3575b13daec975ca4c10577a";
+        sha256 = "sha256-fl4/Pgtkojk5AE52wpGDnuLajQxHoVqyphE90IIPYFU=";
+      };
+    }
+  ];
+
   # Fish functions --- {{{
 
   programs.fish.functions = {
@@ -122,6 +135,11 @@ in
   programs.fish.shellInit = ''
     set -U fish_term24bit 1
     ${optionalString pkgs.stdenv.isDarwin "set-background-to-macOS"}
+
+    # Load .fish-local if file exists
+    if test -e ~/.local.fish
+      source ~/.local.fish
+    end
   '';
 
   programs.fish.interactiveShellInit = ''
