@@ -45,7 +45,13 @@ in
     tab_title_template = "Tab {index}: {title}";
     active_tab_font_style = "bold";
     inactive_tab_font_style = "normal";
-    tab_activity_symbol = "";
+    tab_activity_symbol = "";  
+  };
+
+  # Keybindings
+  programs.kitty.keybindings = {
+    # Open new tab on the current directory
+    "cmd+t" = "new_tab_with_cwd";
   };
 
   # TODO: add support for italic fonts
