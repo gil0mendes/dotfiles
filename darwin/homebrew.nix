@@ -76,6 +76,7 @@ in
     "postman"
     "robo-3t"
     "docker"
+    "virtualbox"
   ]
   ++ (if isWork then
     [ ]
