@@ -28,15 +28,6 @@ in
     "homebrew/services"
   ];
 
-  homebrew.masApps = (if isWork then
-    { } else
-    {
-      Keynote = 409183694;
-      Numbers = 409203825;
-      Pages = 409201541;
-    }
-  );
-
   # NOTE: this is only required for work
   homebrew.brews = [ ] ++ (if isWork then
     [
@@ -48,7 +39,6 @@ in
       "shellcheck"
       "quilt"
       "watchman"
-      "yarn"
       "coreutils"
     ]
   else
