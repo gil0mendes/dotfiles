@@ -28,6 +28,8 @@ in
       pull.rebase = true;
       # For supercede
       core.symlinks = true;
+      # Automatically set upstream
+      push.autoSetupRemote = true;
     };
 
     # PGP signing for work
