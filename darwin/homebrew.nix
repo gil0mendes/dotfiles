@@ -53,6 +53,7 @@ in
     "transmission"
     "1password"
     "emacs"
+    "thunderbird"
 
     # social & media
     "spotify"
