@@ -35,6 +35,7 @@ in
     rustup
     exa # fancy version of `ls`
     tealdeer # rust implementation of `tldr`
+    starship # shell prompt
 
     # Useful nix related tools
     nixpkgs-fmt
