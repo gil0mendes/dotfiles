@@ -14,8 +14,8 @@ in
   '';
 
   homebrew.enable = true;
-  homebrew.onActivation.autoUpdate = true;
-  homebrew.onActivation.cleanup = "zap";
+  homebrew.autoUpdate = true;
+  homebrew.cleanup = "zap";
   homebrew.global.brewfile = true;
   homebrew.global.noLock = true;
 
