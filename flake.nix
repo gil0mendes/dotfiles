@@ -18,6 +18,7 @@
 
     # Other sources
     moses-lua = { url = github:Yonaba/Moses; flake = false; };
+    emacs.url = github:nix-community/emacs-overlay;
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
@@ -37,7 +38,7 @@
         );
       };
 
-      homeManagerStateVersion = "22.05";
+      homeManagerStateVersion = "23.05";
 
       workUserInfo = {
         username = "gmendes";
@@ -176,12 +177,12 @@
         g0m-homebrew = import ./darwin/homebrew.nix;
 
         # Modules pending upstream
-        security-pam = import ./modules/darwin/security/pam.nix;
         users-primaryUser = import ./modules/darwin/users.nix;
       };
 
       homeManagerModules = {
         # My configurations
+        g0m-emacs = import ./home/emacs.nix;
         g0m-fish = import ./home/fish.nix;
         g0m-git = import ./home/git.nix;
         g0m-gpg = import ./home/gpg.nix;

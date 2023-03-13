@@ -7,7 +7,8 @@
     # See docs here: https://starship.rs/config/
     # Symbols config configured ./starship-symbols.nix.
 
-    battery.display.threshold = 25; # display battery information if charge is <= 25%
+    # FIXME: the package is outdated, and the batery prop is no longer a map
+    # battery.display.threshold = 25; # display battery information if charge is <= 25%
     directory.fish_style_pwd_dir_length = 1; # turn on fish directory truncation
     directory.truncation_length = 2; # number of directories not to truncate
     gcloud.disabled = true; # annoying to always have on

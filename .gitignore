@@ -1,5 +1,11 @@
+# Vim
 config/nvim/autoload/plugged/*
 config/nvim/.netrwhist
+
+# Emacs
+config/emacs/auto-save-list/
+config/emacs/config.el
+
 .zsh_history
 
 # nix related

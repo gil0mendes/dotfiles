@@ -3,7 +3,7 @@
 {
   system.defaults.NSGlobalDomain = {
     AppleShowAllExtensions = true;
-    "com.apple.trackpad.scaling" = "3.0";
+    "com.apple.trackpad.scaling" = 3.0;
     AppleInterfaceStyleSwitchesAutomatically = true;
     AppleMeasurementUnits = "Centimeters";
     AppleMetricUnits = 1;

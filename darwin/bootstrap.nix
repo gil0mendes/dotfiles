@@ -1,16 +1,18 @@
 { config, pkgs, lib, ... }:
 
 {
-  nix.binaryCaches = [
-    "https://cache.nixos.org/"
-  ];
-  nix.binaryCachePublicKeys = [
-    "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
-  ];
-  nix.trustedUsers = [
-    "@admin"
-  ];
-  users.nix.configureBuildUsers = true;
+  nix.settings = {
+    substituters = [
+      "https://cache.nixos.org/"
+    ];
+    trusted-public-keys = [
+      "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY="
+    ];
+    trusted-users = [
+      "@admin"
+    ];
+  };
+  nix.configureBuildUsers = true;
 
   # Enable experimental nix command and flakes
   nix.extraOptions = ''
