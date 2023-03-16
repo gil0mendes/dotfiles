@@ -30,6 +30,7 @@ in
     tmux
     tmuxinator
     tree
+    jq
 
     ## rust packages
     rustup

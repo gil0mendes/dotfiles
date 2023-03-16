@@ -175,6 +175,8 @@
         g0m-defaults = import ./darwin/defaults.nix;
         g0m-general = import ./darwin/general.nix;
         g0m-homebrew = import ./darwin/homebrew.nix;
+        g0m-yabai = import ./darwin/yabai.nix;
+        g0m-skhd = import ./darwin/skhd.nix;
 
         # Modules pending upstream
         users-primaryUser = import ./modules/darwin/users.nix;
