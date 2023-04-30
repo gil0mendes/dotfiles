@@ -175,8 +175,6 @@
         g0m-defaults = import ./darwin/defaults.nix;
         g0m-general = import ./darwin/general.nix;
         g0m-homebrew = import ./darwin/homebrew.nix;
-        g0m-yabai = import ./darwin/yabai.nix;
-        g0m-skhd = import ./darwin/skhd.nix;
 
         # Modules pending upstream
         users-primaryUser = import ./modules/darwin/users.nix;
@@ -194,6 +192,7 @@
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
         g0m-zsh = import ./home/zsh.nix;
+        # g0m-direnv = import ./home/direnv.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
         programs-neovim-extras = import ./modules/home/programs/neovim/extras.nix;
