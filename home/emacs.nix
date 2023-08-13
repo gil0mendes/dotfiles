@@ -7,7 +7,7 @@ in
 {
   programs.emacs = {
     enable = true;
-    package = pkgs.emacsMacport;
+    package = pkgs.emacs29-gtk3;
     extraConfig = "(package-initialize) (org-babel-load-file \" ~/.config/emacs/config.org \")";
   };
 
