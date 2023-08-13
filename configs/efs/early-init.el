@@ -1,0 +1,8 @@
+;; Tangled from dotfiles/configs/efs/README.org
+
+(message "🥱 Loading early-init.el")
+
+(add-hook 'before-init-hook (lambda () (message "🪝 Before init")))
+(add-hook 'after-init-hook (lambda () (message "🪝 After init")))
+(add-hook 'emacs-startup-hook (lambda () (message "🪝 Emacs startup")))
+(add-hook 'window-setup-hook (lambda () (message "🪝 Window setup")))

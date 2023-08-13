@@ -3,8 +3,8 @@ config/nvim/autoload/plugged/*
 config/nvim/.netrwhist
 
 # Emacs
-config/emacs/auto-save-list/
-config/emacs/config.el
+configs/efs/eln-cache
+configs/efs/elpa
 
 .zsh_history
 

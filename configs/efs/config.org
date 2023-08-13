@@ -1,0 +1,239 @@
+#+OPTIONS: html5-fancy:t
+#+HTML_DOCTYPE: html5
+#+STARTUP: overview
+#+TITLE: My Emacs Cofiguration
+#+AUTHOR: Gil Mendes
+#+EMAIL: gil00mendes@gmail.com
+
+This is my literate configuration for [[https://www.gnu.org/software/emacs/][Emacs]].
+
+
+* Pre configurations
+
+** Tangle providence notice
+
+#+begin_src elisp :noweb-ref tangle-providence
+;; Tangled from dotfiles/configs/efs/README.org
+
+#+end_src
+
+*** early-init.el
+
+#+begin_src elisp :tangle early-init.el :noweb yes
+  <<tangle-providence>>
+#+end_src
+
+*** init.el
+
+#+begin_src elisp :tangle init.el :noweb yes
+  <<tangle-providence>>
+#+end_src
+
+** early-init.el
+
+The [[file:early-init.el]] will be loaded before the "read configuration" is evaliated. Some configuration settings may have to be set at this stage but this should be used sparingly as it may be an inication of poor configuration when one has to resort too ofen to configuring at this state.
+
+#+begin_src elist :tangle early-init.el
+  (message "🥱 Loading early-init.el")
+
+  (add-hook 'before-init-hook (lambda () (message "🪝 Before init")))
+  (add-hook 'after-init-hook (lambda () (message "🪝 After init")))
+  (add-hook 'emacs-startup-hook (lambda () (message "🪝 Emacs startup")))
+  (add-hook 'window-setup-hook (lambda () (message "🪝 Window setup")))
+#+end_src
+
+** init.el
+
+We enable lexical binding, since some packages (e.g.: consult) will require this.
+
+#+begin_src elisp :tangle init.el
+  ;; -*- lexical-binding: t -*-
+
+  (message "🚜 Loading init.el")
+#+end_src
+
+** Package manager
+
+Melpa is the big package repo that nearly /everything/ can be found. It's a must for emacs configs.
+
+#+begin_src elisp :tangle init.el
+  (require 'package)
+  (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
+  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
+  (package-initialize)
+#+end_src
+
+Configure =setup.el=.
+
+#+begin_src elisp :tangle init.el
+  (package-install 'setup)
+  (require 'setup)
+#+end_src
+
+** Startup
+
+Time the startup and display the startup time after completed.
+
+#+begin_src elist :tangle init.el
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  (setq gc-cons-threshold (* 50 1000 1000))
+
+  ;; Profile emacs startup
+  (add-hook 'emacs-startup-hook
+	    (lambda ()
+	      (message "*** Emacs loaded in %s seconds with %d garbage collection."
+		       (emacs-init-time "%.2f")
+		       gcs-done)))
+#+end_src
+
+Temporarily reduce garbage colletion to gain some performance boot during startup.
+
+#+begin_src elisp :tangle init.el
+  (let ((normal-gc-cons-threshold gc-cons-threshold)
+      (normal-gc-cons-percentage gc-cons-percentage)
+      (normal-file-name-handler-alist file-name-handler-alist)
+      (init-gc-cons-threshold most-positive-fixnum)
+      (init-gc-cons-percentage 0.6))
+  (setq gc-cons-threshold init-gc-cons-threshold
+        gc-cons-percentage init-gc-cons-percentage
+        file-name-handler-alist nil)
+  (add-hook 'after-init-hook
+            `(lambda ()
+               (setq gc-cons-threshold ,normal-gc-cons-threshold
+                     gc-cons-percentage ,normal-gc-cons-percentage
+                     file-name-handler-alist ',normal-file-name-handler-alist))))
+#+end_src
+
+Inhibit startup screen and messages.
+
+#+begin_src elisp :tangle init.el
+  (setq inhibit-startup-echo-area-message t)
+  (setq inhibit-startup-screen t)
+  (setq initial-scratch-message nil)
+#+end_src
+
+Performance tweaks. Don't load default library and use =fundamental-mode= to reduce amount of hooks.
+
+#+begin_src elist :tangle init.el
+  (setq inhibit-default-init t)
+  (setq initial-major-mode 'fundamental-mode)
+#+end_src
+
+** Server mode
+
+Start the Emacs server from this instance so that all =emacsclient= calls are routed here.
+
+#+begin_src elisp :tangle init.el
+(server-start)
+#+end_src
+
+** UI
+
+Disable GUI components.
+
+#+begin_src elisp :tangle init.el
+  (setq use-dialog-box nil)
+  (push '(menu-bar-lines . 0) default-frame-alist)
+  (push '(tool-bar-lines . 0) default-frame-alist)
+
+  (scroll-bar-mode -1)
+  (tool-bar-mode -1)
+  (tooltip-mode -1)
+  (set-fringe-mode 10)
+  (menu-bar-mode -1)
+  (blink-cursor-mode -1)
+  (show-paren-mode 1)
+#+end_src
+
+* Apperance
+
+This section will deal with some of the visual trappings of Emacs. My desing goal is to arrive at a rather minimal, or rather clean design.
+
+** Rule column indicator
+
+Display a border at the position to indicate where the right margin is drawn.
+
+#+begin_src elisp :tangle init.el
+  ;; https://www.emacswiki.org/emacs/FillColumnIndicator
+  (setq display-fill-column-indicator-column 119)
+  (global-display-fill-column-indicator-mode 1)
+#+end_src
+
+** Text
+
+*** Set the font
+
+#+begin_src elisp :tangle init.el
+  (set-face-attribute 'default nil :font "Comic Code Ligatures" :height 120)
+
+  ;; Set the fixed pitch face
+  (set-face-attribute 'fixed-pitch nil
+		     :font "Comic Code Ligatures"
+		     :height 120)
+
+  ;; Set the variable pitch face
+  (set-face-attribute 'variable-pitch nil
+		    :font "Comic Code Ligatures")
+#+end_src
+
+*** Default text scale
+
+For global text scaling, the [[https://github.com/purcell/default-text-scale][default-text-scale]] package can be used. Without this package, scaling may require one to resize the text in every buffer independently which is an arduous task.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/purcell/default-text-scale
+  (setup (:package default-text-scale)
+    (:hook default-text-scale-mode))
+#+end_src
+
+** Themes
+
+A nice gallery of Emacs themes can be found at https://emacsthemes.com/. I based the following function on https://yannesposito.com/posts/0014-change-emacs-theme-automatically/index.html.
+
+#+begin_src elisp :tangle init.el
+  (setq doom-theme 'doom-nord-light)
+  (setup (:package doom-themes))
+
+  (defun g/auto-update-theme ()
+    "depending on time use different theme"
+    ;; very early => gruvbox-light, solarized-light, nord-light
+    (let* ((hour (nth 2 (decode-time (current-time))))
+	   (theme (cond ((<= 7 hour 8)   'doom-gruvbox-light)
+			((= 9 hour)      'doom-solarized-light)
+			((<= 10 hour 16) 'doom-nord-light)
+			((<= 17 hour 18) 'doom-gruvbox-light)
+			((<= 19 hour 22) 'doom-oceanic-next)
+			(t               'doom-laserwave))))
+      (when (not (equal doom-theme theme))
+	(setq doom-theme theme)
+	(load-theme doom-theme t))
+      ;; run that function again next hour
+      (run-at-time (format "%02d:%02d" (+ hour 1) 0) nil 'g/auto-update-theme)))
+
+  (g/auto-update-theme)
+#+end_src
+
+** svg-tag-mode
+
+#+begin_src elisp :tangle init.el
+  (setup (:package svg-tag-mode))
+#+end_src
+
+** Comment Dired-k
+
+The standard Emacs directory editor named dired doesn't ship with convenient highlighting or coloring of the listed files. The dired-k package adds some flair to the dired ouput.
+
+#+begin_src elisp :tangle init.el
+  (setup (:package dired-k)
+    (setq dired-k-style 'git)
+    (:hook dired-initial-position-hook))
+#+end_src
+
+** Icons: all the icons
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/domtronn/all-the-icons.el
+  (setup (:package all-the-icons))
+#+end_src
+
+Post-installation, don't forget to run ~all-the-icons-install-fonts~.
