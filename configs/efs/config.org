@@ -160,31 +160,32 @@ Personally, I opt to ensure all the configuration I use for my environment is de
 As such, the following configuration sets the ~custom-file~ to be a random temporary file created each time Emacs starts.
 This means any customizations made interactively are discarded entirely.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src elisp :tangle init.el
 (setq custom-file (make-temp-file ""))
-#+END_SRC
+#+end_src
 
 ** Just use 'y' or 'n' instead of 'yes' or 'no'
 
 You'll find =yes-or-no= prompts coming up in Emacs a lot.
 I'd much rather just type =y= or =n= than =yes= or =no= every time...
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src elisp :tangle init.el
 (fset 'yes-or-no-p 'y-or-n-p)
-#+END_SRC
+#+end_src
 
 ** Confirm quit
 
 This adds a confirmation prompt when quitting Emacs - because I'm only human.
 
-#+BEGIN_SRC emacs-lisp
+#+begin_src elisp :tangle init.el
 (setq confirm-kill-emacs 'yes-or-no-p)
-#+END_SRC
+#+end_src
 
 ** Set the scratch buffer string
 Set the scratch buffer's initial contents to include a comment with a timestamp of creation.
 Not really all that useful, but cleaner than the default comment, and I like having something there.
-#+BEGIN_SRC emacs-lisp
+
+#+BEGIN_SRC elisp :tangle init.el
 (setq initial-scratch-message (format ";; Scratch buffer - started on %s\n\n" (current-time-string)))
 #+END_SRC
 
@@ -210,7 +211,7 @@ Disable GUI components.
 
 This section will deal with some of the visual trappings of Emacs. My desing goal is to arrive at a rather minimal, or rather clean design.
 
-** GLobably hightlight the current line
+** Globably hightlight the current line
 
 #+begin_src elisp :tangle init.el
   (global-hl-line-mode)
@@ -333,82 +334,6 @@ In order to [[https://www.emacswiki.org/emacs/SmoothScrolling][facilitate smooth
 
 💡 If you want to center the cursor (or point in Emacs vernacular), the ~evil-scroll-line-to-center~ command bound to =z z= is your friend.
 
-* Misc
-
-** About me
-
-Tell Emacs who's driving.
-
-#+begin_src elisp :tangle init.el
-  (setq user-full-name      "Gil Mendes"
-        user-mail-address   "gil00mendes@gmail.com")
-#+end_src
-
-** Undo
-
-Simple, stable linear undo with redo for Emacs.
-
-#+begin_src elisp :tangle init.el
-  ;; https://github.com/emacsmirror/undo-fu
-  (use-package undo-fu
-  :straight (undo-fu :type git
-                     :host github
-                     :repo "emacsmirror/undo-fu"))
-#+end_src
-
-** <<async>> Async
-
-Emacs is single-threaded and this makes sense considering that many packages navigate the live buffers or affect change to these buffers. Just imagine the mess if these packages attempted to conduct these operations on Emacs buffers concurrently. 😧
-
-[[https://github.com/jwiegley/emacs-async][Emacs async]] allows for some async code execution which can come in handy for logic that may otherwise have blocked the Emacs main thread for too long.
-
-#+begin_src elisp :tangle init.el
-  (use-package async
-    :straight (async :type git
-                   :host github
-                   :repo "jwiegley/emacs-async"))
-#+end_src
-
-** <<evil>> Evil
-
-In order to save my hands some pain, it is helpful to use vi-like bindings that keep your hands around the home row more often and minimizes the need for your hands to pull acrobatic maneuvers 🎪 that could incur some strain -- those Emacs /key-chords/. I use the [[https://github.com/emacs-evil/evil][extensible vi layer, inconveniently but mischievously abbreviated to Evil]], to help me to vi-bindings while in Emacs.
-
-Consult the [[https://github.com/noctuid/evil-guide][guide]] for more information on evil. Note that the vi commands started with colon such a =:e=, =:s= and =:g= are mapped through evil-ex (see [[https://gist.github.com/agzam/acd3b5e311f8f7e87e21b550856f65e1][agzam's write up]] on these evil-ex commands for reference).
-
-#+begin_src elisp :tangle init.el
-    ;; https://github.com/emacs-evil/evil
-    ;; https://github.com/noctuid/evil-guide
-    (use-package evil
-      :straight (evil :type git
-		    :host github
-		    :repo "emacs-evil/evil")
-      :after
-      undo-fu
-      :init
-      ;; pre-set some evil vars prior to package load
-      (setq evil-respect-visual-line-mode t)
-      (setq evil-undo-system 'undo-fu)
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
-      (setq evil-mode-line-format nil)
-      :config
-      (message "😈 Configured evil-mode"))
-#+end_src
-
-#+begin_src elisp :tangle init.el
-  (use-package evil-collection
-    :straight (evil-collection :type git
-			       :host github
-			       :repo "emacs-evil/evil-collection")
-    :after evil
-    :custom
-    (evil-collection-setup-minibuffer t)
-    :config
-    (evil-mode 1)
-    (message "😈 Enable evil-mode")
-    (evil-collection-init))
-#+end_src
-
 * ORG mode
 
 Various pieces of configuration for the mighty org-mode.
@@ -490,3 +415,79 @@ Toggle visibility of hidden Org mode element parts upon entering and leaving an 
                           :repo "awth13/org-appear")
     :hook (org-mode . org-appear-mode))
 #+end_src
+* Misc
+
+** About me
+
+Tell Emacs who's driving.
+
+#+begin_src elisp :tangle init.el
+  (setq user-full-name      "Gil Mendes"
+        user-mail-address   "gil00mendes@gmail.com")
+#+end_src
+
+** Undo
+
+Simple, stable linear undo with redo for Emacs.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/emacsmirror/undo-fu
+  (use-package undo-fu
+  :straight (undo-fu :type git
+                     :host github
+                     :repo "emacsmirror/undo-fu"))
+#+end_src
+
+** <<async>> Async
+
+Emacs is single-threaded and this makes sense considering that many packages navigate the live buffers or affect change to these buffers. Just imagine the mess if these packages attempted to conduct these operations on Emacs buffers concurrently. 😧
+
+[[https://github.com/jwiegley/emacs-async][Emacs async]] allows for some async code execution which can come in handy for logic that may otherwise have blocked the Emacs main thread for too long.
+
+#+begin_src elisp :tangle init.el
+  (use-package async
+    :straight (async :type git
+                   :host github
+                   :repo "jwiegley/emacs-async"))
+#+end_src
+
+** <<evil>> Evil
+
+In order to save my hands some pain, it is helpful to use vi-like bindings that keep your hands around the home row more often and minimizes the need for your hands to pull acrobatic maneuvers 🎪 that could incur some strain -- those Emacs /key-chords/. I use the [[https://github.com/emacs-evil/evil][extensible vi layer, inconveniently but mischievously abbreviated to Evil]], to help me to vi-bindings while in Emacs.
+
+Consult the [[https://github.com/noctuid/evil-guide][guide]] for more information on evil. Note that the vi commands started with colon such a =:e=, =:s= and =:g= are mapped through evil-ex (see [[https://gist.github.com/agzam/acd3b5e311f8f7e87e21b550856f65e1][agzam's write up]] on these evil-ex commands for reference).
+
+#+begin_src elisp :tangle init.el
+    ;; https://github.com/emacs-evil/evil
+    ;; https://github.com/noctuid/evil-guide
+    (use-package evil
+      :straight (evil :type git
+		    :host github
+		    :repo "emacs-evil/evil")
+      :after
+      undo-fu
+      :init
+      ;; pre-set some evil vars prior to package load
+      (setq evil-respect-visual-line-mode t)
+      (setq evil-undo-system 'undo-fu)
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-mode-line-format nil)
+      :config
+      (message "😈 Configured evil-mode"))
+#+end_src
+
+#+begin_src elisp :tangle init.el
+  (use-package evil-collection
+    :straight (evil-collection :type git
+			       :host github
+			       :repo "emacs-evil/evil-collection")
+    :after evil
+    :custom
+    (evil-collection-setup-minibuffer t)
+    :config
+    (evil-mode 0)
+    (message "😈 Enable evil-mode")
+    (evil-collection-init))
+#+end_src
+

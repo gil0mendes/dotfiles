@@ -59,6 +59,14 @@
 
   (winner-mode 1)
 
+(setq custom-file (make-temp-file ""))
+
+(fset 'yes-or-no-p 'y-or-n-p)
+
+(setq confirm-kill-emacs 'yes-or-no-p)
+
+(setq initial-scratch-message (format ";; Scratch buffer - started on %s\n\n" (current-time-string)))
+
   (setq use-dialog-box nil)
   (push '(menu-bar-lines . 0) default-frame-alist)
   (push '(tool-bar-lines . 0) default-frame-alist)
@@ -142,50 +150,6 @@
   ;; https://www.emacswiki.org/emacs/SmoothScrolling
   (setq-default scroll-conservatively 100)
 
-  (setq user-full-name      "Gil Mendes"
-        user-mail-address   "gil00mendes@gmail.com")
-
-  ;; https://github.com/emacsmirror/undo-fu
-  (use-package undo-fu
-  :straight (undo-fu :type git
-                     :host github
-                     :repo "emacsmirror/undo-fu"))
-
-  (use-package async
-    :straight (async :type git
-                   :host github
-                   :repo "jwiegley/emacs-async"))
-
-    ;; https://github.com/emacs-evil/evil
-    ;; https://github.com/noctuid/evil-guide
-    (use-package evil
-      :straight (evil :type git
-		    :host github
-		    :repo "emacs-evil/evil")
-      :after
-      undo-fu
-      :init
-      ;; pre-set some evil vars prior to package load
-      (setq evil-respect-visual-line-mode t)
-      (setq evil-undo-system 'undo-fu)
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
-      (setq evil-mode-line-format nil)
-      :config
-      (message "😈 Configured evil-mode"))
-
-  (use-package evil-collection
-    :straight (evil-collection :type git
-			       :host github
-			       :repo "emacs-evil/evil-collection")
-    :after evil
-    :custom
-    (evil-collection-setup-minibuffer t)
-    :config
-    (evil-mode 1)
-    (message "😈 Enable evil-mode")
-    (evil-collection-init))
-
   (use-package org-mode
     :ensure nil
     :hook
@@ -253,3 +217,47 @@
                           :host github
                           :repo "awth13/org-appear")
     :hook (org-mode . org-appear-mode))
+
+  (setq user-full-name      "Gil Mendes"
+        user-mail-address   "gil00mendes@gmail.com")
+
+  ;; https://github.com/emacsmirror/undo-fu
+  (use-package undo-fu
+  :straight (undo-fu :type git
+                     :host github
+                     :repo "emacsmirror/undo-fu"))
+
+  (use-package async
+    :straight (async :type git
+                   :host github
+                   :repo "jwiegley/emacs-async"))
+
+    ;; https://github.com/emacs-evil/evil
+    ;; https://github.com/noctuid/evil-guide
+    (use-package evil
+      :straight (evil :type git
+		    :host github
+		    :repo "emacs-evil/evil")
+      :after
+      undo-fu
+      :init
+      ;; pre-set some evil vars prior to package load
+      (setq evil-respect-visual-line-mode t)
+      (setq evil-undo-system 'undo-fu)
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-mode-line-format nil)
+      :config
+      (message "😈 Configured evil-mode"))
+
+  (use-package evil-collection
+    :straight (evil-collection :type git
+			       :host github
+			       :repo "emacs-evil/evil-collection")
+    :after evil
+    :custom
+    (evil-collection-setup-minibuffer t)
+    :config
+    (evil-mode 0)
+    (message "😈 Enable evil-mode")
+    (evil-collection-init))
