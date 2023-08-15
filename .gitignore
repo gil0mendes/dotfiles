@@ -5,6 +5,7 @@ config/nvim/.netrwhist
 # Emacs
 configs/efs/eln-cache
 configs/efs/elpa
+configs/efs/straight
 
 .zsh_history
 

@@ -7,7 +7,6 @@
 
 This is my literate configuration for [[https://www.gnu.org/software/emacs/][Emacs]].
 
-
 * Pre configurations
 
 ** Tangle providence notice
@@ -36,6 +35,10 @@ The [[file:early-init.el]] will be loaded before the "read configuration" is eva
 #+begin_src elist :tangle early-init.el
   (message "🥱 Loading early-init.el")
 
+  (setq package-enable-at-startup nil)
+
+  (setq use-package-verbose t)
+
   (add-hook 'before-init-hook (lambda () (message "🪝 Before init")))
   (add-hook 'after-init-hook (lambda () (message "🪝 After init")))
   (add-hook 'emacs-startup-hook (lambda () (message "🪝 Emacs startup")))
@@ -54,27 +57,38 @@ We enable lexical binding, since some packages (e.g.: consult) will require this
 
 ** Package manager
 
-Melpa is the big package repo that nearly /everything/ can be found. It's a must for emacs configs.
+[[https://github.com/radian-software/straight.el#getting-started][Straight.el]] 🍀 is a popular package manager used to manage Emacs packages.
 
 #+begin_src elisp :tangle init.el
-  (require 'package)
-  (add-to-list 'package-archives '("gnu"   . "https://elpa.gnu.org/packages/"))
-  (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
-  (package-initialize)
+  ;; https://github.com/radian-software/straight.el#getting-started
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+	 (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+	(bootstrap-version 6))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+	  (url-retrieve-synchronously
+	   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+	   'silent 'inhibit-cookies)
+	(goto-char (point-max))
+	(eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
 #+end_src
 
-Configure =setup.el=.
+*** Enabling the commonly-used *use-package* interface
+
+For [[use-package-format][convenience]], we configure *straight.el* to use the *use-package* interface.
 
 #+begin_src elisp :tangle init.el
-  (package-install 'setup)
-  (require 'setup)
+  ;; https://github.com/radian-software/straight.el#integration-with-use-package
+  (straight-use-package 'use-package)
 #+end_src
 
 ** Startup
 
 Time the startup and display the startup time after completed.
 
-#+begin_src elist :tangle init.el
+#+begin_src elisp :tangle init.el
   ;; The default is 800 kilobytes.  Measured in bytes.
   (setq gc-cons-threshold (* 50 1000 1000))
 
@@ -114,7 +128,7 @@ Inhibit startup screen and messages.
 
 Performance tweaks. Don't load default library and use =fundamental-mode= to reduce amount of hooks.
 
-#+begin_src elist :tangle init.el
+#+begin_src elisp :tangle init.el
   (setq inhibit-default-init t)
   (setq initial-major-mode 'fundamental-mode)
 #+end_src
@@ -126,6 +140,53 @@ Start the Emacs server from this instance so that all =emacsclient= calls are ro
 #+begin_src elisp :tangle init.el
 (server-start)
 #+end_src
+
+** Disable autosaving and ring bell
+
+#+begin_src elisp :tangle init.el
+  (setq auto-save-default nil
+  ring-bell-function 'ignore)
+#+end_src
+
+** Winner mode
+
+#+begin_src elisp :tangle init.el
+  (winner-mode 1)
+#+end_src
+
+** Discard customizations
+Emacs has a comprehensive customization system that allows configuration changes interactively.
+Personally, I opt to ensure all the configuration I use for my environment is declarative.
+As such, the following configuration sets the ~custom-file~ to be a random temporary file created each time Emacs starts.
+This means any customizations made interactively are discarded entirely.
+
+#+BEGIN_SRC emacs-lisp
+(setq custom-file (make-temp-file ""))
+#+END_SRC
+
+** Just use 'y' or 'n' instead of 'yes' or 'no'
+
+You'll find =yes-or-no= prompts coming up in Emacs a lot.
+I'd much rather just type =y= or =n= than =yes= or =no= every time...
+
+#+BEGIN_SRC emacs-lisp
+(fset 'yes-or-no-p 'y-or-n-p)
+#+END_SRC
+
+** Confirm quit
+
+This adds a confirmation prompt when quitting Emacs - because I'm only human.
+
+#+BEGIN_SRC emacs-lisp
+(setq confirm-kill-emacs 'yes-or-no-p)
+#+END_SRC
+
+** Set the scratch buffer string
+Set the scratch buffer's initial contents to include a comment with a timestamp of creation.
+Not really all that useful, but cleaner than the default comment, and I like having something there.
+#+BEGIN_SRC emacs-lisp
+(setq initial-scratch-message (format ";; Scratch buffer - started on %s\n\n" (current-time-string)))
+#+END_SRC
 
 ** UI
 
@@ -148,6 +209,12 @@ Disable GUI components.
 * Apperance
 
 This section will deal with some of the visual trappings of Emacs. My desing goal is to arrive at a rather minimal, or rather clean design.
+
+** GLobably hightlight the current line
+
+#+begin_src elisp :tangle init.el
+  (global-hl-line-mode)
+#+end_src
 
 ** Rule column indicator
 
@@ -182,8 +249,11 @@ For global text scaling, the [[https://github.com/purcell/default-text-scale][de
 
 #+begin_src elisp :tangle init.el
   ;; https://github.com/purcell/default-text-scale
-  (setup (:package default-text-scale)
-    (:hook default-text-scale-mode))
+  (use-package default-text-scale
+    :straight (default-text-scale :type git
+				  :host github
+				  :repo "purcell/default-text-scale")
+    :hook ((after-init . default-text-scale-mode)))
 #+end_src
 
 ** Themes
@@ -192,7 +262,10 @@ A nice gallery of Emacs themes can be found at https://emacsthemes.com/. I based
 
 #+begin_src elisp :tangle init.el
   (setq doom-theme 'doom-nord-light)
-  (setup (:package doom-themes))
+  (use-package doom-themes
+    :straight (doom-themes :type git
+			   :host github
+			   :repo "doomemacs/themes"))
 
   (defun g/auto-update-theme ()
     "depending on time use different theme"
@@ -216,7 +289,10 @@ A nice gallery of Emacs themes can be found at https://emacsthemes.com/. I based
 ** svg-tag-mode
 
 #+begin_src elisp :tangle init.el
-  (setup (:package svg-tag-mode))
+  (use-package svg-tag-mode
+    :straight (svg-tag-mode :type git
+			    :host github
+			    :repo "rougier/svg-tag-mode"))
 #+end_src
 
 ** Comment Dired-k
@@ -224,16 +300,193 @@ A nice gallery of Emacs themes can be found at https://emacsthemes.com/. I based
 The standard Emacs directory editor named dired doesn't ship with convenient highlighting or coloring of the listed files. The dired-k package adds some flair to the dired ouput.
 
 #+begin_src elisp :tangle init.el
-  (setup (:package dired-k)
-    (setq dired-k-style 'git)
-    (:hook dired-initial-position-hook))
+  ;; https://github.com/emacsorphanage/dired-k
+  (use-package dired-k
+  :straight (dired-k :type git
+                     :host github
+                     :repo "emacsorphanage/dired-k")
+  :init
+  (setq dired-k-style 'git)
+  :hook (dired-initial-position-hook . dired-k))
 #+end_src
 
 ** Icons: all the icons
 
 #+begin_src elisp :tangle init.el
   ;; https://github.com/domtronn/all-the-icons.el
-  (setup (:package all-the-icons))
+  (use-package all-the-icons
+    :straight (all-the-icons :type git
+			     :host github
+			     :repo "domtronn/all-the-icons.el"))
 #+end_src
 
 Post-installation, don't forget to run ~all-the-icons-install-fonts~.
+
+** Scrolling
+
+In order to [[https://www.emacswiki.org/emacs/SmoothScrolling][facilitate smoother scrolling]] than the default i.e.: "when scrolling out of view, scroll such that point is in the middle of the buffer", we set =scroll-conservatively= to allow for more line-by-line scrolling.
+
+#+begin_src elisp :tangle init.el
+  ;; https://www.emacswiki.org/emacs/SmoothScrolling
+  (setq-default scroll-conservatively 100)
+#+end_src
+
+💡 If you want to center the cursor (or point in Emacs vernacular), the ~evil-scroll-line-to-center~ command bound to =z z= is your friend.
+
+* Misc
+
+** About me
+
+Tell Emacs who's driving.
+
+#+begin_src elisp :tangle init.el
+  (setq user-full-name      "Gil Mendes"
+        user-mail-address   "gil00mendes@gmail.com")
+#+end_src
+
+** Undo
+
+Simple, stable linear undo with redo for Emacs.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/emacsmirror/undo-fu
+  (use-package undo-fu
+  :straight (undo-fu :type git
+                     :host github
+                     :repo "emacsmirror/undo-fu"))
+#+end_src
+
+** <<async>> Async
+
+Emacs is single-threaded and this makes sense considering that many packages navigate the live buffers or affect change to these buffers. Just imagine the mess if these packages attempted to conduct these operations on Emacs buffers concurrently. 😧
+
+[[https://github.com/jwiegley/emacs-async][Emacs async]] allows for some async code execution which can come in handy for logic that may otherwise have blocked the Emacs main thread for too long.
+
+#+begin_src elisp :tangle init.el
+  (use-package async
+    :straight (async :type git
+                   :host github
+                   :repo "jwiegley/emacs-async"))
+#+end_src
+
+** <<evil>> Evil
+
+In order to save my hands some pain, it is helpful to use vi-like bindings that keep your hands around the home row more often and minimizes the need for your hands to pull acrobatic maneuvers 🎪 that could incur some strain -- those Emacs /key-chords/. I use the [[https://github.com/emacs-evil/evil][extensible vi layer, inconveniently but mischievously abbreviated to Evil]], to help me to vi-bindings while in Emacs.
+
+Consult the [[https://github.com/noctuid/evil-guide][guide]] for more information on evil. Note that the vi commands started with colon such a =:e=, =:s= and =:g= are mapped through evil-ex (see [[https://gist.github.com/agzam/acd3b5e311f8f7e87e21b550856f65e1][agzam's write up]] on these evil-ex commands for reference).
+
+#+begin_src elisp :tangle init.el
+    ;; https://github.com/emacs-evil/evil
+    ;; https://github.com/noctuid/evil-guide
+    (use-package evil
+      :straight (evil :type git
+		    :host github
+		    :repo "emacs-evil/evil")
+      :after
+      undo-fu
+      :init
+      ;; pre-set some evil vars prior to package load
+      (setq evil-respect-visual-line-mode t)
+      (setq evil-undo-system 'undo-fu)
+      (setq evil-want-integration t)
+      (setq evil-want-keybinding nil)
+      (setq evil-mode-line-format nil)
+      :config
+      (message "😈 Configured evil-mode"))
+#+end_src
+
+#+begin_src elisp :tangle init.el
+  (use-package evil-collection
+    :straight (evil-collection :type git
+			       :host github
+			       :repo "emacs-evil/evil-collection")
+    :after evil
+    :custom
+    (evil-collection-setup-minibuffer t)
+    :config
+    (evil-mode 1)
+    (message "😈 Enable evil-mode")
+    (evil-collection-init))
+#+end_src
+
+* ORG mode
+
+Various pieces of configuration for the mighty org-mode.
+
+#+begin_src elisp :tangle init.el
+  (use-package org-mode
+    :ensure nil
+    :hook
+    (org-mode . org-indent-mode)
+    (org-mode . variable-pitch-mode)
+    (org-mode . visual-line-mode)
+          :custom-face
+  (avy-lead             ((t (:inherit fixed-pitch))))
+  (avy-lead-face-0      ((t (:inherit fixed-pitch))))
+  (avy-lead-face-1      ((t (:inherit fixed-pitch))))
+  (avy-lead-face-2      ((t (:inherit fixed-pitch))))
+  (company-tooltip      ((t (:inherit fixed-pitch))))
+  (org-table            ((t (:inherit fixed-pitch))))
+  (org-formula          ((t (:inherit fixed-pitch))))
+  (org-checkbox         ((t (:inherit fixed-pitch))))
+  (org-code             ((t (:inherit fixed-pitch))))
+  (org-verbatim         ((t (:inherit fixed-pitch))))
+  (org-special-keyword  ((t (:inherit fixed-pitch))))
+  (org-meta-line        ((t (:inherit fixed-pitch))))
+  (org-block            ((t (:foreground nil :inherit fixed-pitch))))
+  (org-indent           ((t (:inherit (org-hide fixed-pitch)))))
+  (fixed-pitch          ((t (:family "Menlo" :height 120))))
+  (variable-pitch       ((t (:family "ETBembo" :height 160))))
+
+  :init
+  (setq org-ellipsis " ▾"
+        org-hide-emphasis-markers t
+        org-src-fontify-natively t
+        org-fontify-quote-and-verse-blocks t
+        org-src-tab-acts-natively t
+        org-edit-src-content-indentation 0
+        org-src-preserve-indentation t
+        org-cycle-separator-lines 2
+        org-clock-persist 'history)
+
+  (font-lock-add-keywords 'org-mode
+                        '(("^ *\\([-]\\) "
+                            (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  :config
+  (org-clock-persistence-insinuate)
+
+  (dolist (face '((org-level-1 . 1.2)
+                (org-level-2 . 1.1)
+                (org-level-3 . 1.05)
+                (org-level-4 . 1.0)
+                (org-level-5 . 1.1)
+                (org-level-6 . 1.1)
+                (org-level-7 . 1.1)
+                (org-level-8 . 1.1)))))
+#+end_src
+
+Add custom header indicators to make it look nicer.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/integral-dw/org-superstar-mode
+  (use-package org-superstar
+    :straight (org-superstar :type git
+                             :host github
+                             :repo "integral-dw/org-superstar-mode")
+    :hook (org-mode . org-superstar-mode)
+    :custom
+    (org-superstar-remove-leading-stars t)
+    (org-superstar-headline-bullets-list '("◉" "○" "●" "○" "●" "○" "●")))
+#+end_src
+
+Toggle visibility of hidden Org mode element parts upon entering and leaving an element.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/awth13/org-appear
+  (use-package org-appear
+    :straight (org-appear :type git
+                          :host github
+                          :repo "awth13/org-appear")
+    :hook (org-mode . org-appear-mode))
+#+end_src
