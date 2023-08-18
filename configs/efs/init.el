@@ -109,7 +109,7 @@
 			   :host github
 			   :repo "doomemacs/themes"))
 
-  (defun g/auto-update-theme ()
+  (defun g0m/auto-update-theme ()
     "depending on time use different theme"
     ;; very early => gruvbox-light, solarized-light, nord-light
     (let* ((hour (nth 2 (decode-time (current-time))))
@@ -123,9 +123,9 @@
 	(setq doom-theme theme)
 	(load-theme doom-theme t))
       ;; run that function again next hour
-      (run-at-time (format "%02d:%02d" (+ hour 1) 0) nil 'g/auto-update-theme)))
+      (run-at-time (format "%02d:%02d" (+ hour 1) 0) nil 'g0m/auto-update-theme)))
 
-  (g/auto-update-theme)
+  (g0m/auto-update-theme)
 
   (use-package svg-tag-mode
     :straight (svg-tag-mode :type git
@@ -217,6 +217,35 @@
                           :host github
                           :repo "awth13/org-appear")
     :hook (org-mode . org-appear-mode))
+
+(use-package treesit
+  :commands (treesit-install-language-grammar g0m/treesit-install-all-languages)
+  :init
+  (setq treesit-language-source-alist
+   '((bash . ("https://github.com/tree-sitter/tree-sitter-bash"))
+     (css . ("https://github.com/tree-sitter/tree-sitter-css"))
+     (dockerfile . ("https://github.com/camdencheek/tree-sitter-dockerfile"))
+     (go . ("https://github.com/tree-sitter/tree-sitter-go"))
+     (html . ("https://github.com/tree-sitter/tree-sitter-html"))
+     (javascript . ("https://github.com/tree-sitter/tree-sitter-javascript"))
+     (json . ("https://github.com/tree-sitter/tree-sitter-json"))
+     (make . ("https://github.com/alemuller/tree-sitter-make"))
+     (python . ("https://github.com/tree-sitter/tree-sitter-python"))
+     (typescript . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "typescript/src"))
+     (tsx . ("https://github.com/tree-sitter/tree-sitter-typescript" "master" "tsx/src"))
+     (ruby . ("https://github.com/tree-sitter/tree-sitter-ruby"))
+     (rust . ("https://github.com/tree-sitter/tree-sitter-rust"))
+     (sql . ("https://github.com/m-novikov/tree-sitter-sql"))
+     (toml . ("https://github.com/tree-sitter/tree-sitter-toml"))))
+  :config
+  (defun g0m/treesit-install-all-languages ()
+    "Install all languages specified by `treesit-language-source-alist'."
+    (interactive)
+    (let ((languages (mapcar 'car treesit-language-source-alist)))
+      (dolist (lang languages)
+	      (treesit-install-language-grammar lang)
+	      (message "🤟 `%s' parser was installed." lang)
+	      (sit-for 0.75)))))
 
   (setq user-full-name      "Gil Mendes"
         user-mail-address   "gil00mendes@gmail.com")

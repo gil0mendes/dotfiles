@@ -6,6 +6,8 @@ config/nvim/.netrwhist
 configs/efs/eln-cache
 configs/efs/elpa
 configs/efs/straight
+configs/efs/tree-sitter
+configs/efs/.org-id-locations
 
 .zsh_history
 
