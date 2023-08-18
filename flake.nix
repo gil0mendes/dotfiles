@@ -18,7 +18,10 @@
 
     # Other sources
     moses-lua = { url = github:Yonaba/Moses; flake = false; };
-    emacs.url = github:nix-community/emacs-overlay;
+    emacs = {
+      url = github:nix-community/emacs-overlay;
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
@@ -167,6 +170,8 @@
 
         # Overlay that adds `lib.colors` to reference colors elsewhere in system configs
         colors = import ./overlays/colors.nix;
+
+        emacs = inputs.emacs.overlays.emacs;
       };
 
       darwinModules = {
