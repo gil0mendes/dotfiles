@@ -8,6 +8,7 @@ configs/efs/elpa
 configs/efs/straight
 configs/efs/tree-sitter
 configs/efs/.org-id-locations
+configs/efs/history
 
 .zsh_history
 

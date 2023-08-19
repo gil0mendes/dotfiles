@@ -247,6 +247,58 @@
 	      (message "🤟 `%s' parser was installed." lang)
 	      (sit-for 0.75)))))
 
+(use-package savehist
+  :straight (:type built-in)
+  :init
+  (savehist-mode))
+
+;; https://github.com/minad/vertico
+(use-package vertico
+  :straight (vertico :type git
+		     :host github
+		     :repo "minad/vertico")
+  :init
+  (vertico-mode))
+
+;; https://github.com/minad/corfu
+(use-package corfu
+  :straight (corfu :type git
+		   :host github
+		   :repo "minad/corfu")
+  :bind
+  (:map corfu-map
+	("C-j" . corfu-next)
+	("C-k" . corfu-previous)
+	("TAB" . corfu-inser))
+  :init
+  (global-corfu-mode))
+
+;; https://github.com/oantolin/orderless
+(use-package orderless
+  :straight (orderless :type git
+		       :host github
+		       :repo "oantolin/orderless")
+  :custom
+  (completion-styles '(orderless basic))
+  (completion-category-overrides '((file (styles basic partial-completion)))))
+
+;; https://github.com/minad/marginalia
+(use-package marginalia
+  :straight (marginalia :type git
+			:host github
+			:repo "minad/marginalia")
+  :init
+  (marginalia-mode))
+
+;; https://github.com/justbur/emacs-which-key
+(use-package which-key
+  :straight (which-key :type git
+		       :host github
+		       :repo "justbur/emacs-which-key")
+  :delight
+  :config
+  (which-key-mode))
+
   (setq user-full-name      "Gil Mendes"
         user-mail-address   "gil00mendes@gmail.com")
 
