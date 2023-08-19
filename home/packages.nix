@@ -42,5 +42,10 @@ in
     # Useful nix related tools
     nixpkgs-fmt
     comma # run software from without installing it
+
+    # LSP
+    rnix-lsp
+    nodePackages.typescript-language-server
+    tree-sitter
   ];
 }

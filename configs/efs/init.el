@@ -238,6 +238,16 @@
      (sql . ("https://github.com/m-novikov/tree-sitter-sql"))
      (toml . ("https://github.com/tree-sitter/tree-sitter-toml"))))
   :config
+  (dolist (mapping '((python-mode . python-ts-mode)
+		   (ruby-mode . ruby-ts-mode)
+		   (css-mode . css-ts-mode)
+		   (js-mode . js-ts-mode)
+		   (javascript-mode . js-ts-mode)
+		   (typescript-mode . typescript-ts-mode)
+		   (js-json-mode . json-ts-mode)
+		   (sh-mode . bash-ts-mode)))
+  (add-to-list 'major-mode-remap-alist mapping))
+  (add-to-list 'auto-mode-alist '("\\.[tj]sx?\\'" . tsx-ts-mode))
   (defun g0m/treesit-install-all-languages ()
     "Install all languages specified by `treesit-language-source-alist'."
     (interactive)
@@ -246,6 +256,16 @@
 	      (treesit-install-language-grammar lang)
 	      (message "🤟 `%s' parser was installed." lang)
 	      (sit-for 0.75)))))
+
+(use-package eglot
+  :straight (:type built-in)
+  :custom
+  (read-process-output-max (* 1024 1024))
+  (eglot-autoshutdown t)
+  :hook ((css-ts-mode-hook . eglot-ensure)
+	 (html-mode-hook .eglot-ensure)
+	 (js-base-mode-hook . eglot-ensure)
+	 (tsx-ts-mode-hook . eglot-ensure)))
 
 (use-package savehist
   :straight (:type built-in)
@@ -270,8 +290,29 @@
 	("C-j" . corfu-next)
 	("C-k" . corfu-previous)
 	("TAB" . corfu-inser))
+  :custom
+  ;; Works with `indent-for-tab-command'. Make sure tab doesn't indent when you
+  ;; want to perform completion
+  (tab-always-indent 'complete)
+  (corfu-auto t)
+  (corfu-auto-prefix 2)
+  (corfu-auto-default 0.25)
+  (corfu-count 10)
+  (corfu-scroll-margin 4)
+  (corfu-cycle nil)
+  (corfu-separator ?\s)                 ; Necessary for use with orderless
+  (corfu-quit-no-match 'separator)
+  (corfu-preselect-first t)             ; Preselect first candidate
   :init
   (global-corfu-mode))
+
+;; https://github.com/minad/cape
+(use-package cape
+  :straight (cape :type git
+		  :host github
+		  :repo "minad/cape")
+  :init
+  (add-to-list 'completion-at-point-functions #'cape-elisp-block))
 
 ;; https://github.com/oantolin/orderless
 (use-package orderless
@@ -298,6 +339,31 @@
   :delight
   :config
   (which-key-mode))
+
+;; https://github.com/iyefrat/all-the-icons-completion
+(use-package all-the-icons-completion
+  :straight (all-the-icons-comletion :type git
+				     :host github
+				     :repo "iyefrat/all-the-icons-completion")
+  :after (marginalia all-the-icons)
+  :hook (marginalia-mode . all-the-icons-completion-marginalia-setup)
+  :init
+  (all-the-icons-completion-mode))
+
+;; https://github.com/jdtsmith/kind-icon
+(use-package kind-icon
+  :straight (kind-icon :type git
+		       :host github
+		       :repo "jdtsmith/kind-icon")
+  :after corfu
+  :custom
+  (kind-icons-use-icons t)
+  (kind-icon-default-face 'corfu-default) ; Have background color be the same as `corfu' face background
+  (kind-icon-blend-background nil)
+  (kind-icon-blend-frac 0.08)
+  :config
+  (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
+  )
 
   (setq user-full-name      "Gil Mendes"
         user-mail-address   "gil00mendes@gmail.com")
