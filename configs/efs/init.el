@@ -54,6 +54,8 @@
 
 (server-start)
 
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
   (setq auto-save-default nil
   ring-bell-function 'ignore)
 
@@ -78,6 +80,46 @@
   (menu-bar-mode -1)
   (blink-cursor-mode -1)
   (show-paren-mode 1)
+
+  (setq user-full-name      "Gil Mendes"
+        user-mail-address   "gil00mendes@gmail.com")
+
+  ;; https://github.com/emacsmirror/undo-fu
+  (use-package undo-fu
+  :straight (undo-fu :type git
+                     :host github
+                     :repo "emacsmirror/undo-fu"))
+
+(setq world-clock-list '(("America/Los_Angeles" "Pacific")
+			 ("Europe/Lisbon" "Portugal")
+			 ("Etc/UTC" "UTC"))
+      world-clock-time-format "%a, %d %b %I:%M %p %Z")
+
+(use-package ibuffer
+  :straight (:type built-in)
+  :config
+  (setq ibuffer-expert t
+	ibuffer-display-summary nil
+	ibuffer-show-empty-filter-groups nil
+	ibuffer-use-header-line t
+	ibuffer-formats '((mark modified read-only locked " "
+				(name 30 30 :left :elide)
+				" "
+				(size 9 -1 :right)
+				" "
+				(mode 16 16 :left :elide)
+				" " filename-and-process)
+			  (mark " "
+				(name 16 -1)
+				" " filename)))
+  :bind (("C-x C-b" . ibuffer)))
+
+;; https://github.com/redguardtoo/evil-nerd-commenter
+(use-package evil-nerd-commenter
+  :straight (evil-nerd-commenter :type git
+				 :host github
+				 :repo "redguardtoo/evil-nerd-commenter")
+  :bind (("C-/" . evilnc-comment-or-uncomment-lines)))
 
   (global-hl-line-mode)
 
@@ -217,6 +259,17 @@
                           :host github
                           :repo "awth13/org-appear")
     :hook (org-mode . org-appear-mode))
+
+;; https://github.com/bbatsov/projectile/
+(use-package projectile
+  :straight (projectile :type git
+			:host github
+			:repo "bbatsov/projectile")
+  :custom
+  (projectile-mode-line-prefix "🗄")
+  :hook (after-init .projectile-mode)
+  :bind (:map projectile-mode-map
+	      ("C-x p" .  projectile-command-map)))
 
 (use-package treesit
   :commands (treesit-install-language-grammar g0m/treesit-install-all-languages)
@@ -364,15 +417,6 @@
   :config
   (add-to-list 'corfu-margin-formatters #'kind-icon-margin-formatter) ; Enable `kind-icon'
   )
-
-  (setq user-full-name      "Gil Mendes"
-        user-mail-address   "gil00mendes@gmail.com")
-
-  ;; https://github.com/emacsmirror/undo-fu
-  (use-package undo-fu
-  :straight (undo-fu :type git
-                     :host github
-                     :repo "emacsmirror/undo-fu"))
 
   (use-package async
     :straight (async :type git

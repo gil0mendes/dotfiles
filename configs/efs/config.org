@@ -141,6 +141,12 @@ Start the Emacs server from this instance so that all =emacsclient= calls are ro
 (server-start)
 #+end_src
 
+** ESC cancels all
+
+#+begin_src elisp :tangle init.el
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
+
 ** Disable autosaving and ring bell
 
 #+begin_src elisp :tangle init.el
@@ -205,6 +211,76 @@ Disable GUI components.
   (menu-bar-mode -1)
   (blink-cursor-mode -1)
   (show-paren-mode 1)
+#+end_src
+
+* General configurations
+
+** About me
+
+Tell Emacs who's driving.
+
+#+begin_src elisp :tangle init.el
+  (setq user-full-name      "Gil Mendes"
+        user-mail-address   "gil00mendes@gmail.com")
+#+end_src
+
+** Undo
+
+Simple, stable linear undo with redo for Emacs.
+
+#+begin_src elisp :tangle init.el
+  ;; https://github.com/emacsmirror/undo-fu
+  (use-package undo-fu
+  :straight (undo-fu :type git
+                     :host github
+                     :repo "emacsmirror/undo-fu"))
+#+end_src
+
+** Displaying World Time
+
+I work with people around the globe, so it's interesting to have this at hand. The command ~world-clock~, displays all configured clocks.
+
+#+begin_src elisp :tangle init.el
+(setq world-clock-list '(("America/Los_Angeles" "Pacific")
+			 ("Europe/Lisbon" "Portugal")
+			 ("Etc/UTC" "UTC"))
+      world-clock-time-format "%a, %d %b %I:%M %p %Z")
+#+end_src
+
+** ibuffer adjustments
+
+Adjust ibuffer to make it look more human.
+
+#+begin_src elisp :tangle init.el
+(use-package ibuffer
+  :straight (:type built-in)
+  :config
+  (setq ibuffer-expert t
+	ibuffer-display-summary nil
+	ibuffer-show-empty-filter-groups nil
+	ibuffer-use-header-line t
+	ibuffer-formats '((mark modified read-only locked " "
+				(name 30 30 :left :elide)
+				" "
+				(size 9 -1 :right)
+				" "
+				(mode 16 16 :left :elide)
+				" " filename-and-process)
+			  (mark " "
+				(name 16 -1)
+				" " filename)))
+  :bind (("C-x C-b" . ibuffer)))
+#+end_src
+
+** Commenting Lines
+
+#+begin_src elisp :tangle init.el
+;; https://github.com/redguardtoo/evil-nerd-commenter
+(use-package evil-nerd-commenter
+  :straight (evil-nerd-commenter :type git
+				 :host github
+				 :repo "redguardtoo/evil-nerd-commenter")
+  :bind (("C-/" . evilnc-comment-or-uncomment-lines)))
 #+end_src
 
 * Apperance
@@ -416,6 +492,23 @@ Toggle visibility of hidden Org mode element parts upon entering and leaving an 
     :hook (org-mode . org-appear-mode))
 #+end_src
 * Development
+
+** Projectile
+
+[[https://github.com/bbatsov/projectile/][Projectile]] simplifies working by projects by providing some bindings that infer their behavior from a project-type. This means that we can remember single bindings expore our project trees as well as triggering [[https://docs.projectile.mx/projectile/projects.html#configure-a-projects-lifecycle-commands][project lifecycle commands]] such as configure, compile and run test, and use these generalizations across projects -- allowing ourselves to forget some project-specific details. 😌
+
+#+begin_src elisp :tangle init.el
+;; https://github.com/bbatsov/projectile/
+(use-package projectile
+  :straight (projectile :type git
+			:host github
+			:repo "bbatsov/projectile")
+  :custom
+  (projectile-mode-line-prefix "🗄")
+  :hook (after-init .projectile-mode)
+  :bind (:map projectile-mode-map
+	      ("C-x p" .  projectile-command-map)))
+#+end_src
 
 ** Languages
 
@@ -633,27 +726,6 @@ Makes the completion at position pretty with icons 🎆
 #+end_src
 * Misc
 
-** About me
-
-Tell Emacs who's driving.
-
-#+begin_src elisp :tangle init.el
-  (setq user-full-name      "Gil Mendes"
-        user-mail-address   "gil00mendes@gmail.com")
-#+end_src
-
-** Undo
-
-Simple, stable linear undo with redo for Emacs.
-
-#+begin_src elisp :tangle init.el
-  ;; https://github.com/emacsmirror/undo-fu
-  (use-package undo-fu
-  :straight (undo-fu :type git
-                     :host github
-                     :repo "emacsmirror/undo-fu"))
-#+end_src
-
 ** <<async>> Async
 
 Emacs is single-threaded and this makes sense considering that many packages navigate the live buffers or affect change to these buffers. Just imagine the mess if these packages attempted to conduct these operations on Emacs buffers concurrently. 😧
@@ -706,4 +778,5 @@ Consult the [[https://github.com/noctuid/evil-guide][guide]] for more informatio
     (message "😈 Enable evil-mode")
     (evil-collection-init))
 #+end_src
+
 
