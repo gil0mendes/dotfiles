@@ -20,18 +20,15 @@ in
   homebrew.global.lockfiles = true;
 
   homebrew.taps = [
-    "homebrew/cask"
     "homebrew/cask-drivers"
     "homebrew/cask-fonts"
     "homebrew/cask-versions"
-    "homebrew/core"
     "homebrew/services"
   ];
 
   # NOTE: this is only required for work
   homebrew.brews = [ ] ++ (if isWork then
     [
-      "aria2"
       "jq"
       "yarn"
       "git-lfs"
@@ -53,6 +50,7 @@ in
     "transmission"
     "1password"
     "thunderbird"
+    "inkscape"
 
     # social & media
     "spotify"
@@ -67,6 +65,8 @@ in
     "robo-3t"
     "docker"
     "virtualbox"
+    "dbeaver-community"
+    "yubico-yubikey-manager"
   ]
   ++ (if isWork then
     [ ]

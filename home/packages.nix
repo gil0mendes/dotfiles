@@ -47,5 +47,8 @@ in
     rnix-lsp
     nodePackages.typescript-language-server
     tree-sitter
+
+    # Yubikey
+    yubikey-manager
   ];
 }
