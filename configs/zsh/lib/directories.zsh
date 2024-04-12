@@ -33,7 +33,7 @@ function d () {
 #compdef _dirs d
 
 # List directory contents
-alias l="exa --icons --all --bytes --long"
-alias la="exa --all --classify"
-alias ll="exa --icons --classify --bytes --long"
-alias lld="exa --long | grep ^d"
+alias l="eza --icons --all --bytes --long"
+alias la="eza --all --classify"
+alias ll="eza --icons --classify --bytes --long"
+alias lld="eza --long | grep ^d"

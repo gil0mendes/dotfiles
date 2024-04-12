@@ -126,7 +126,7 @@ in
     la = "ll -a";
     ll = "ls -l --time-style long-iso --icons";
     lld = "ls --long | grep ^d";
-    ls = "${exa}/bin/exa";
+    ls = "${eza}/bin/eza";
     ps = "${procs}/bin/procs";
     tb = "toggle-background";
   };
