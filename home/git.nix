@@ -23,13 +23,35 @@ in
 
     extraConfig = {
       init.defaultBranch = "main";
-      core.editor = "vim";
-      diff.colorMoved = "default";
+      color.ui = "auto";
+      core = {
+        commitgraph = true;
+        abbrev = "9";
+        editor = "vim";
+        # For supercede
+        symlinks = true;
+      };
+      diff = {
+        noprefix = true;
+        colorMoved = "zebra";
+        colorMovedWS = "ignore-space-change";
+      };
+      # this makes the merge conflicts easy to solve
+      merge = {
+        conflictstyle = "diff3";
+        defaultToUpstream = true;
+      };
+      rebase = {
+        stat = true;
+      };
       pull.rebase = true;
-      # For supercede
-      core.symlinks = true;
-      # Automatically set upstream
-      push.autoSetupRemote = true;
+      rerere.enabled = true;
+      column.ui = "auto";
+      push = {
+        default = "current";
+        # Automatically set upstream
+        autoSetupRemote = true;
+      };
     };
 
     # PGP signing for work
