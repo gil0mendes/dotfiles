@@ -16,7 +16,7 @@
 
   # Enable experimental nix command and flakes
   nix.extraOptions = ''
-    auto-optimise-store = true
+    auto-optimise-store = false
     experimental-features = nix-command flakes
   '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
     extra-platforms = x86_64-darwin aarch64-darwin
