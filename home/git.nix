@@ -6,6 +6,11 @@ let
   isWork = config.home.user-info.username == "gmendes";
 in
 {
+  home.packages = with pkgs; [
+    # github tui client
+    gh
+  ];
+
   programs.git = {
     enable = true;
 
