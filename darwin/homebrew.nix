@@ -26,17 +26,19 @@ in
     "homebrew/services"
   ];
 
-  # NOTE: this is only required for work
-  homebrew.brews = [ ] ++ (if isWork then
+  homebrew.brews = [
+    "jq"
+    "python3"
+  ] ++ (if isWork then
     [
-      "jq"
       "yarn"
       "git-lfs"
-      "python3"
       "shellcheck"
       "quilt"
       "watchman"
       "coreutils"
+      "helm"
+      "openlens"
     ]
   else
     [ ]
@@ -51,11 +53,10 @@ in
     "1password"
     "thunderbird"
     "inkscape"
+    "vlc"
 
-    # social & media
+    # media
     "spotify"
-    "telegram"
-    "whatsapp"
 
     # development
     "fork"
@@ -72,8 +73,11 @@ in
     [ ]
   else
     [
+      # productivity
       "google-chrome"
-      # TODO: move into the main set of modules when the sha256 is fixed on the homebrew repo
-      "dbeaver-community"
+
+      # Social
+      "telegram"
+      "whatsapp"
     ]);
 }
