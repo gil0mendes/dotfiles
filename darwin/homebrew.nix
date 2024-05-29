@@ -38,7 +38,6 @@ in
       "watchman"
       "coreutils"
       "helm"
-      "openlens"
     ]
   else
     [ ]
@@ -70,7 +69,9 @@ in
     "yubico-yubikey-manager"
   ]
   ++ (if isWork then
-    [ ]
+    [
+      "openlens"
+    ]
   else
     [
       # productivity

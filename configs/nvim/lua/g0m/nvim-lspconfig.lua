@@ -12,7 +12,6 @@ lspconf.bashls.setup {}
 lspconf.ccls.setup {}
 lspconf.hls.setup {}
 lspconf.jsonls.setup {}
-lspconf.rnix.setup {}
 lspconf.sourcekit.setup {}
 
 local runtime_path = vim.split(package.path, ';')

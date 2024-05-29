@@ -44,7 +44,7 @@ in
     comma # run software from without installing it
 
     # LSP
-    rnix-lsp
+    nixd
     nodePackages.typescript-language-server
     tree-sitter
 

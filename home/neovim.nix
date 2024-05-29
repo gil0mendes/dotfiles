@@ -79,7 +79,6 @@ in
     nodePackages.vim-language-server
     nodePackages.vscode-langservers-extracted
     nodePackages.yaml-language-server
-    rnix-lsp
   ] ++ optional (pkgs.stdenv.system != "x86_64-darwin") sumneko-lua-language-server;
   # }}}
 }
