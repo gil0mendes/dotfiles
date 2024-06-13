@@ -200,7 +200,6 @@
         # g0m-direnv = import ./home/direnv.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
-        programs-neovim-extras = import ./modules/home/programs/neovim/extras.nix;
         home-user-info = { lib, ... }: {
           options.home.user-info = (self.darwinModules.users-primaryUser { inherit lib; }).options.users.primaryUser;
         };

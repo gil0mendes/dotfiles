@@ -27,8 +27,6 @@ in
   ];
 
   homebrew.brews = [
-    "jq"
-    "python3"
   ] ++ (if isWork then
     [
       "yarn"
