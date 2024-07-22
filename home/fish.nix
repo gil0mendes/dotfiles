@@ -34,8 +34,10 @@ in
     toggle-background.body = ''
       if test "$term_background" = light
         set -U term_background dark
+        set -U term_theme macchiato
       else
         set -U term_background light
+        set -U term_theme latte
       end
     '';
 
@@ -45,8 +47,10 @@ in
       # Returns 'Dark' if in dark mode fails otherwise.
       if defaults read -g AppleInterfaceStyle &>/dev/null
         set -U term_background dark
+        set -U term_theme macchiato
       else
         set -U term_background light
+        set -U term_theme latte
       end
     '';
 
@@ -54,7 +58,7 @@ in
     set-shell-colors = {
       body = ''
         # Set LS_COLORS
-        set -xg LS_COLORS (${pkgs.vivid}/bin/vivid generate solarized-$term_background)
+        set -xg LS_COLORS (${pkgs.vivid}/bin/vivid generate catppuccin-$term_theme)
         # Set color variables
         if test "$term_background" = light
           set emphasized_text  brgreen  # base01
@@ -81,7 +85,7 @@ in
         set -g fish_pager_color_selected_description $background
       '' + optionalString config.programs.bat.enable ''
         # Use correct theme for `bat`.
-        set -xg BAT_THEME "Solarized ($term_background)"
+        set -xg BAT_THEME "catppuccin_$term_theme"
       '' + optionalString (elem pkgs.bottom config.home.packages) ''
         # Use correct theme for `btm`.
         if test "$term_background" = light

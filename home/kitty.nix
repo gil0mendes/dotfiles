@@ -31,18 +31,20 @@ in
     # TODO: buy PragmataPro
     # font_family = "PragmataPro Mono Liga";
     font_family = "JetBrainsMono Nerd Font";
+    # font_family = "Comic Code Ligatures";
     font_size = "14.0";
-    adjust_line_height = "140%";
+    adjust_line_height = "100%";
     disable_ligatures = "cursor"; # disable ligatures when cursor is on them
 
     # Window layout
     # hide_window_decorations = "titlebar-only";
-    window_padding_width = "10";
+    window_padding_width = "0";
 
     # Tab bar
-    tab_bar_edge = "top";
+    tab_bar_edge = "bottom";
     tab_bar_style = "powerline";
-    tab_title_template = "Tab {index}: {title}";
+		tab_powerline_style = "slanted";
+    tab_title_template = "{index}: {title}";
     active_tab_font_style = "bold";
     inactive_tab_font_style = "normal";
     tab_activity_symbol = "";  
@@ -52,6 +54,32 @@ in
   programs.kitty.keybindings = {
     # Open new tab on the current directory
     "cmd+t" = "new_tab_with_cwd";
+
+		# Close window
+		"ctrl+backspace" = "close_window_with_confirmation ignore-shell";
+
+		# Toggle layout
+		"ctrl+'" = "toggle_layout stack";
+
+		# Split window
+		"ctrl+\\" = "launch --location=vsplit --cwd=current";
+		"ctrl+enter" = "new_window_with_cwd";
+
+		# Move window
+		"shift+up" = "move_window up";
+		"shift+left" = "move_window left";
+		"shift+right" = "move_window right";
+		"shift+down" = "move_window down";
+
+		# Resize window
+		"ctrl+=" = "resize_window taller 2";
+		"ctrl+-" = "resize_window shorter 2";
+		"ctrl+0" = "resize_window wider 2";
+		"ctrl+9" = "resize_window narrower 2";
+		"ctrl+8" = "resize_window reset";
+
+		# Clear terminal - since we use ctrl-l to navigate
+		"ctrl+;" = "clear_terminal scroll active";
   };
 
   # TODO: add support for italic fonts
@@ -64,7 +92,7 @@ in
     enable = true;
 
     # Colors that aren't dependent on background
-    common = with pkgs.lib.colors.solarized.colors; {
+    common = with pkgs.lib.colors.catppuccin.colors; {
       # black
       color0 = "#${darkBasehl}";
       color8 = "#${darkBase}";
@@ -98,8 +126,8 @@ in
     };
 
     # Background dependent colors
-    dark = backgroundDependantColors solarized.dark;
-    light = backgroundDependantColors solarized.light;
+    dark = backgroundDependantColors catppuccin.dark;
+    light = backgroundDependantColors catppuccin.light;
   };
 
   programs.fish.functions.set-term-colors = {

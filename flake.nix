@@ -3,8 +3,8 @@
 
   inputs = {
     # Package sets
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-23.11-darwin";
-    nixpkgs-unstable.url = github:NixOS/nixpkgs/nixpkgs-unstable;
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-24.05-darwin";
+    nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     # Environment/system management
     darwin = {
@@ -17,9 +17,9 @@
     };
 
     # Other sources
-    moses-lua = { url = github:Yonaba/Moses; flake = false; };
+    moses-lua = { url = "github:Yonaba/Moses"; flake = false; };
     emacs = {
-      url = github:nix-community/emacs-overlay;
+      url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
   };
@@ -27,7 +27,7 @@
   outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
     let
       inherit (darwin.lib) darwinSystem;
-      inherit (inputs.nixpkgs-unstable.lib) attrValues makeOverridable optionalAttrs singleton;
+      inherit (inputs.nixpkgs-unstable.lib) attrValues optionalAttrs singleton;
 
       # Configuration for `nixpkgs`
       nixpkgsConfig = {

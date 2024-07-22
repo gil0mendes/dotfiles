@@ -1,25 +1,6 @@
 # Colors from: https://ethanschoonover.com/solarized
 # Used in Kitty terminal config: `./kitty-configs.nix`
 
-# SOLARIZED HEX     16/8 TERMCOL  XTERM/HEX   L*A*B      RGB         HSB
-# --------- ------- ---- -------  ----------- ---------- ----------- -----------
-# base03    #002b36  8/4 brblack  234 #1c1c1c 15 -12 -12   0  43  54 193 100  21
-# base02    #073642  0/4 black    235 #262626 20 -12 -12   7  54  66 192  90  26
-# base01    #586e75 10/7 brgreen  240 #585858 45 -07 -07  88 110 117 194  25  46
-# base00    #657b83 11/7 bryellow 241 #626262 50 -07 -07 101 123 131 195  23  51
-# base0     #839496 12/6 brblue   244 #808080 60 -06 -03 131 148 150 186  13  59
-# base1     #93a1a1 14/4 brcyan   245 #8a8a8a 65 -05 -02 147 161 161 180   9  63
-# base2     #eee8d5  7/7 white    254 #e4e4e4 92 -00  10 238 232 213  44  11  93
-# base3     #fdf6e3 15/7 brwhite  230 #ffffd7 97  00  10 253 246 227  44  10  99
-# yellow    #b58900  3/3 yellow   136 #af8700 60  10  65 181 137   0  45 100  71
-# orange    #cb4b16  9/3 brred    166 #d75f00 50  50  55 203  75  22  18  89  80
-# red       #dc322f  1/1 red      160 #d70000 50  65  45 220  50  47   1  79  86
-# magenta   #d33682  5/5 magenta  125 #af005f 50  65 -05 211  54 130 331  74  83
-# violet    #6c71c4 13/5 brmagenta 61 #5f5faf 50  15 -45 108 113 196 237  45  77
-# blue      #268bd2  4/4 blue      33 #0087ff 55 -10 -45  38 139 210 205  82  82
-# cyan      #2aa198  6/6 cyan      37 #00afaf 60 -35 -05  42 161 152 175  74  63
-# green     #859900  2/2 green     64 #5f8700 60 -20  65 133 153   0  68 100  60
-
 final: prev: {
   lib = prev.lib // {
     colors = {
@@ -67,6 +48,80 @@ final: prev: {
           inherit (colors) yellow orange red megenta violet blue cyan green;
         };
       };
+			catppuccin = rec {
+        colors = {
+          darkBase = "24273a"; # base03
+          darkBasehl = "073642"; # base02
+          darkestTone = "586e75"; # base01
+          darkTone = "4c4f69"; # base00
+          lightTone = "cad3f5"; # base0
+          lightestTone = "93a1a1"; # base1
+          lightBasehl = "eee8d5"; # base2
+          lightBase = "fdf6e3"; # base3
+          yellow = "df8e1d";
+          orange = "fe640b";
+          red = "d20f39";
+          magenta = "ea76cb";
+          violet = "8839ef";
+          blue = "1e66f5";
+          cyan = "179299";
+          green = "40a02b";
+        };
+
+        light = with colors; {
+          base = "eff1f5";
+          basehl = lightBasehl;
+          invbase = darkBase;
+          invbasehl = darkBasehl;
+          main = "4c4f69";
+          faded = lightTone;
+          muted = "dc8a78";
+          strong = darkestTone;
+          darkBase = "6c6f85"; # base03
+          darkBasehl = "5c5f77"; # base02
+          darkestTone = "40a02b"; # base01
+          darkTone = "df8e1d"; # base00
+          lightTone = "1e66f5"; # base0
+          lightestTone = "179299"; # base1
+          lightBasehl = "acb0be"; # base2
+          lightBase = "bcc0cc"; # base3
+          yellow = "df8e1d";
+          orange = "d20f39";
+          red = "d20f39";
+          magenta = "ea76cb";
+          violet = "ea76cb";
+          blue = "1e66f5";
+          cyan = "179299";
+          green = "40a02b";
+        };
+
+        dark = with colors; {
+          base = "24273a";
+          basehl = "181926";
+          invbase = lightBase;
+          invbasehl = lightBasehl;
+          main = "cad3f5";
+          faded = darkTone;
+          muted = "f4dbd6";
+          strong = lightestTone;
+          darkBase = "5b6078"; # base03
+          darkBasehl = "494d64"; # base02
+          darkestTone = "a6da95"; # base01
+          darkTone = "eed49f"; # base00
+          lightTone = "8aadf4"; # base0
+          lightestTone = "8bd5ca"; # base1
+          lightBasehl = "b8c0e0"; # base2
+          lightBase = "a5adcb"; # base3
+          yellow = "eed49f";
+          orange = "ed8796";
+          red = "ed8796";
+          magenta = "f5bde6";
+          violet = "f5bde6";
+          blue = "8aadf4";
+          cyan = "8bd5ca";
+          green = "a6da95";
+        };
+			};
     };
   };
 }

@@ -12,6 +12,26 @@ in
   programs.bat.config = {
     style = "plain";
   };
+  programs.bat.themes = {
+    catppuccin_latte = {
+      src = pkgs.fetchFromGitHub {
+        owner = "catppuccin";
+        repo = "bat";
+        rev = "d714cc1d358ea51bfc02550dabab693f70cccea0";
+        sha256 = "sha256-Q5B4NDrfCIK3UAMs94vdXnR42k4AXCqZz6sRn8bzmf4=";
+      };
+      file = "themes/Catppuccin Latte.tmTheme";
+    };
+    catppuccin_macchiato = {
+      src = pkgs.fetchFromGitHub {
+        owner = "catppuccin";
+        repo = "bat";
+        rev = "d714cc1d358ea51bfc02550dabab693f70cccea0";
+        sha256 = "sha256-Q5B4NDrfCIK3UAMs94vdXnR42k4AXCqZz6sRn8bzmf4=";
+      };
+      file = "themes/Catppuccin Macchiato.tmTheme";
+    };
+  };
 
   # Htop
   # https://rycee.gitlab.io/home-manager/options.html#opt-programs.htop.enable
@@ -47,6 +67,7 @@ in
     nixd
     nodePackages.typescript-language-server
     tree-sitter
+    eslint_d
 
     # Yubikey
     yubikey-manager
