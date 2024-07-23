@@ -39,6 +39,8 @@ in
   programs.htop.settings.show_program_path = true;
 
   home.packages = with pkgs; [
+    # base tools
+    coreutils
     axel
     curl
     wget
@@ -51,6 +53,8 @@ in
     tmuxinator
     tree
     jq
+    kubernetes-helm
+    vscode
 
     ## rust packages
     rustup

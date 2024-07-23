@@ -20,26 +20,8 @@ in
   homebrew.global.lockfiles = true;
 
   homebrew.taps = [
-    "homebrew/cask-drivers"
-    "homebrew/cask-fonts"
-    "homebrew/cask-versions"
     "homebrew/services"
   ];
-
-  homebrew.brews = [
-  ] ++ (if isWork then
-    [
-      "yarn"
-      "git-lfs"
-      "shellcheck"
-      "quilt"
-      "watchman"
-      "coreutils"
-      "helm"
-    ]
-  else
-    [ ]
-  );
 
   homebrew.casks = [
     # productivity
@@ -48,7 +30,6 @@ in
     "notion"
     "transmission"
     "1password"
-    "thunderbird"
     "inkscape"
     "vlc"
 
@@ -57,12 +38,8 @@ in
 
     # development
     "fork"
-    "visual-studio-code"
-    "iterm2"
     "postman"
-    "robo-3t"
     "docker"
-    "virtualbox"
     "dbeaver-community"
     "yubico-yubikey-manager"
   ]
@@ -74,6 +51,11 @@ in
     [
       # productivity
       "google-chrome"
+      "thunderbird"
+      "virtualbox"
+
+      # development
+      "robo-3t"
 
       # Social
       "telegram"

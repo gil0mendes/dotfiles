@@ -8,7 +8,7 @@
 
     # Environment/system management
     darwin = {
-      url = "github:lnl7/nix-darwin/master";
+      url = "github:lnl7/nix-darwin";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
     home-manager = {
@@ -32,16 +32,10 @@
       # Configuration for `nixpkgs`
       nixpkgsConfig = {
         config = { allowUnfree = true; };
-        overlays = attrValues self.overlays ++ singleton (
-          # Sub in x86 version of packages that don't build on Apple Silicon yet
-          final: prev: (optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
-            inherit (final.pkgs-x86)
-              nix-index;
-          })
-        );
+        overlays = attrValues self.overlays;
       };
 
-      homeManagerStateVersion = "23.05";
+      homeManagerStateVersion = "24.05";
 
       workUserInfo = {
         username = "gmendes";
@@ -122,9 +116,9 @@
           ];
         };
 
-        # My Work MacBook Pro from 2019
-        work = darwinSystem {
-          system = "x86_64-darwin";
+        # My Work MacBook Pro M3
+        "ENG-GMENDES-MB" = darwinSystem {
+          system = "aarch64-darwin";
           modules = nixDarwinCommonModules ++ [
             {
               users.primaryUser = workUserInfo;
@@ -142,14 +136,6 @@
       # --- Overlays
 
       overlays = {
-        # Add access to x86 packages if the system is running Apple Silicon
-        apple-silicon = final: prev: optionalAttrs (prev.stdenv.system == "aarch64-darwin") {
-          pkgs-x86 = import inputs.nixpkgs-unstable {
-            system = "x86_64-darwin";
-            inherit (nixpkgsConfig) config;
-          };
-        };
-
         # Overlay that adds various additional utility functions to `vimUtils`
         vimUtils = import ./overlays/vimUtils.nix;
 
@@ -197,7 +183,7 @@
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
         g0m-zsh = import ./home/zsh.nix;
-        # g0m-direnv = import ./home/direnv.nix;
+        g0m-direnv = import ./home/direnv.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
         home-user-info = { lib, ... }: {
