@@ -16,3 +16,5 @@ configs/efs/.cache
 # nix related
 /result
 configs/zsh/.zcompdump
+configs/zsh/.zsh_sessions/
+configs/zsh/.zcompcache/
