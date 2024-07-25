@@ -56,6 +56,9 @@ in
     kubernetes-helm
     vscode
 
+    # social
+    telegram-desktop
+
     ## rust packages
     rustup
     eza # fancy version of `ls`
@@ -64,16 +67,24 @@ in
     ripgrep
 
     # Useful nix related tools
-    nixpkgs-fmt
     comma # run software from without installing it
 
-    # LSP
-    nixd
-    nodePackages.typescript-language-server
     tree-sitter
-    eslint_d
 
     # Yubikey
     yubikey-manager
+
+    # LSP and Linting tools
+    ## NIX
+    nixpkgs-fmt
+    nil
+    ## JS/TS
+    nodePackages.typescript-language-server
+    eslint_d
+    ## JSON
+    vscode-langservers-extracted
+    ## Lua
+    lua-language-server
+    stylua
   ];
 }

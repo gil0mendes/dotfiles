@@ -43,43 +43,44 @@ in
     # Tab bar
     tab_bar_edge = "bottom";
     tab_bar_style = "powerline";
-		tab_powerline_style = "slanted";
+    tab_powerline_style = "slanted";
     tab_title_template = "{index}: {title}";
     active_tab_font_style = "bold";
     inactive_tab_font_style = "normal";
-    tab_activity_symbol = "";  
+    tab_activity_symbol = "";
   };
 
   # Keybindings
   programs.kitty.keybindings = {
     # Open new tab on the current directory
     "cmd+t" = "new_tab_with_cwd";
+    "kitty_mod+t" = "launch --cwd=current --type=tab";
 
-		# Close window
-		"ctrl+backspace" = "close_window_with_confirmation ignore-shell";
+    # Close window
+    "kitty_mod+backspace" = "close_window_with_confirmation ignore-shell";
 
-		# Toggle layout
-		"ctrl+'" = "toggle_layout stack";
+    # Toggle layout
+    "ctrl+'" = "toggle_layout stack";
 
-		# Split window
-		"ctrl+\\" = "launch --location=vsplit --cwd=current";
-		"ctrl+enter" = "new_window_with_cwd";
+    # Split window
+    "ctrl+\\" = "launch --location=vsplit --cwd=current";
+    "ctrl+enter" = "new_window_with_cwd";
 
-		# Move window
-		"shift+up" = "move_window up";
-		"shift+left" = "move_window left";
-		"shift+right" = "move_window right";
-		"shift+down" = "move_window down";
+    # Move window
+    "shift+up" = "move_window up";
+    "shift+left" = "move_window left";
+    "shift+right" = "move_window right";
+    "shift+down" = "move_window down";
 
-		# Resize window
-		"ctrl+=" = "resize_window taller 2";
-		"ctrl+-" = "resize_window shorter 2";
-		"ctrl+0" = "resize_window wider 2";
-		"ctrl+9" = "resize_window narrower 2";
-		"ctrl+8" = "resize_window reset";
+    # Resize window
+    "ctrl+=" = "resize_window taller 2";
+    "ctrl+-" = "resize_window shorter 2";
+    "ctrl+0" = "resize_window wider 2";
+    "ctrl+9" = "resize_window narrower 2";
+    "ctrl+8" = "resize_window reset";
 
-		# Clear terminal - since we use ctrl-l to navigate
-		"ctrl+;" = "clear_terminal scroll active";
+    # Clear terminal - since we use ctrl-l to navigate
+    "ctrl+;" = "clear_terminal scroll active";
   };
 
   # TODO: add support for italic fonts

@@ -16,6 +16,9 @@
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
 
+    # Allow to fix the CMD+Space search for isntalled applications
+    mac-app-util.url = "github:hraban/mac-app-util";
+
     # Other sources
     moses-lua = { url = "github:Yonaba/Moses"; flake = false; };
     emacs = {
@@ -24,7 +27,7 @@
     };
   };
 
-  outputs = inputs @ { self, darwin, nixpkgs, home-manager, ... }:
+  outputs = inputs @ { self, darwin, nixpkgs, home-manager, mac-app-util, ... }:
     let
       inherit (darwin.lib) darwinSystem;
       inherit (inputs.nixpkgs-unstable.lib) attrValues optionalAttrs singleton;
@@ -55,6 +58,10 @@
       nixDarwinCommonModules = attrValues self.darwinModules ++ [
         # `home-manager` module
         home-manager.darwinModules.home-manager
+
+        # mac-app-util modules
+        mac-app-util.darwinModules.default
+
         (
           { config, lib, pkgs, ... }:
           let
@@ -172,6 +179,9 @@
       };
 
       homeManagerModules = {
+        # import mac-app-util for the user
+        mac-app-util = mac-app-util.homeManagerModules.default;
+
         # My configurations
         g0m-emacs = import ./home/emacs.nix;
         g0m-fish = import ./home/fish.nix;
