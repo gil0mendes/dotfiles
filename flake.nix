@@ -89,33 +89,16 @@
     in
     {
       # My `nix-darwin` configs
-
       darwinConfigurations = rec {
-        # My Apple Silicon macOS laptop config
-        g0m = darwinSystem {
-          system = "aarch64-darwin";
-          modules = nixDarwinCommonModules ++ [
-            {
-              users.primaryUser = primaryUserInfo;
-
-              networking.computerName = "Gil 💻";
-              networking.hostName = "GilBookPro";
-              networking.knownNetworkServices = [
-                "Wi-Fi"
-              ];
-            }
-          ];
-        };
-
-        # My Personal MacBook Pro from 2015
-        pmbp = darwinSystem {
+        # Personal MacBook Pro from 2019
+        "G0M-MBP" = darwinSystem {
           system = "x86_64-darwin";
           modules = nixDarwinCommonModules ++ [
             {
               users.primaryUser = primaryUserInfo;
 
-              networking.computerName = "Personal Gil 💻";
-              networking.hostName = "PersonalGilBookPro";
+              networking.computerName = "Gil Mendes 💻";
+              networking.hostName = "G0M-MBP";
               networking.knownNetworkServices = [
                 "Wi-Fi"
               ];
