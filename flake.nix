@@ -62,6 +62,8 @@
         # mac-app-util modules
         mac-app-util.darwinModules.default
 
+        (import ./modules/services/kanata.nix)
+
         (
           { config, lib, pkgs, ... }:
           let
@@ -126,6 +128,9 @@
       # --- Overlays
 
       overlays = {
+        # load my customer packages
+        customPkgs = import ./overlays/default.nix;
+
         # Overlay that adds various additional utility functions to `vimUtils`
         vimUtils = import ./overlays/vimUtils.nix;
 

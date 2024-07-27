@@ -16,6 +16,21 @@
     emacs
   ];
 
+  services.kanata = {
+    enable = true;
+    config = ''
+      				(defsrc 
+      				 caps
+      				)
+      				(deflayer base
+      				 @cap
+      				)
+      				(defalias
+      					cap (tap-hold-release 1 130 esc lctl)
+      				)
+      		'';
+  };
+
   # Fonts
   fonts.packages = with pkgs; [
     recursive
