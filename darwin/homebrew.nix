@@ -42,6 +42,10 @@ in
     "docker"
     "dbeaver-community"
     "yubico-yubikey-manager"
+
+    # Social
+    "telegram"
+    "whatsapp"
   ]
   ++ (if isWork then
     [
@@ -56,9 +60,5 @@ in
 
       # development
       "robo-3t"
-
-      # Social
-      "telegram"
-      "whatsapp"
     ]);
 }

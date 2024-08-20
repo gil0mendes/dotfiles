@@ -19,16 +19,31 @@
   services.kanata = {
     enable = true;
     config = ''
+      				(defcfg
+      								macos-dev-names-include (
+      								 "Apple Internal Keyboard / Trackpad"
+      								 "Keychron K6")
+      				)
       				(defsrc 
-      				 caps
+      					esc	f1	f2	f3	f4	f5	f6	f7	f8	f9	f10	f11	f12
+      					caps
+      					fn
       				)
       				(deflayer base
-      				 @cap
+      					esc	brdn	brup	_	_	_	_	prev pp	next	mute	vold	volu
+      					@cap
+      					@fnl
+      				)
+      				(deflayer fn
+      					esc	f1	f2	f3	f4	f5	f6	f7	f8	f9	f10	f11	f12
+      					_	
+      					_
       				)
       				(defalias
       					cap (tap-hold-release 1 130 esc lctl)
+      					fnl (tap-hold 200 200 fn (layer-toggle fn))
       				)
-      		'';
+      				'';
   };
 
   # Fonts

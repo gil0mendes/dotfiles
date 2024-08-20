@@ -75,6 +75,8 @@ in
     yubikey-manager
 
     # LSP and Linting tools
+    ## Markdown
+    marksman
     ## NIX
     nixpkgs-fmt
     nil
