@@ -48,6 +48,9 @@ in
     active_tab_font_style = "bold";
     inactive_tab_font_style = "normal";
     tab_activity_symbol = "";
+
+    # configure available layouts
+    enabled_layouts = "splits,stack";
   };
 
   # Keybindings
@@ -63,8 +66,8 @@ in
     "ctrl+'" = "toggle_layout stack";
 
     # Split window
-    "ctrl+\\" = "launch --location=vsplit --cwd=current";
-    "ctrl+enter" = "new_window_with_cwd";
+    "kitty_mod+\\" = "launch --location=vsplit --cwd=current";
+    "kitty_mod+enter" = "launch --location=hsplit --cwd=current";
 
     # Move window
     "shift+up" = "move_window up";

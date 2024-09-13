@@ -88,5 +88,7 @@ in
     ## Lua
     lua-language-server
     stylua
+    ## YAML
+    yaml-language-server
   ];
 }
