@@ -1,5 +1,11 @@
 # My Personal Nix configs
 
+## Requirements
+
+In order to install this dotfiles you must to already have installed:
+- https://brew.sh
+- https://nixos.org/download/
+
 ## Installation
 
 ```bash

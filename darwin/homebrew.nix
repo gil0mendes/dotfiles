@@ -60,5 +60,8 @@ in
 
       # development
       "robo-3t"
+
+      # intertainement
+      "stremio"
     ]);
 }
