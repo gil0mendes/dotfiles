@@ -72,6 +72,7 @@
           {
             nixpkgs = nixpkgsConfig;
 
+            system.stateVersion = 4;
 
             # `home-manager` config
             users.users.${primaryUser.username}.home = "/Users/${primaryUser.username}";
