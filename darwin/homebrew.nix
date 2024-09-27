@@ -32,6 +32,7 @@ in
     "1password"
     "inkscape"
     "vlc"
+    "wezterm"
 
     # media
     "spotify"

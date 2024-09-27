@@ -182,6 +182,7 @@
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
         g0m-zsh = import ./home/zsh.nix;
+        g0m-terminal = import ./home/terminal.nix;
         g0m-direnv = import ./home/direnv.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
