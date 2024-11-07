@@ -55,6 +55,7 @@ in
     jq
     kubernetes-helm
     vscode
+    azure-cli
 
     # social
     telegram-desktop
