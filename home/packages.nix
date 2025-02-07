@@ -56,6 +56,7 @@ in
     kubernetes-helm
     vscode
     azure-cli
+    kubectl
 
     # social
     telegram-desktop
@@ -79,7 +80,7 @@ in
     ## Markdown
     marksman
     ## NIX
-    nixpkgs-fmt
+    nixfmt-rfc-style
     nil
     ## JS/TS
     nodePackages.typescript-language-server

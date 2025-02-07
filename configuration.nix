@@ -12,12 +12,14 @@
   users.nix.configureBuildUsers = true;
 
   # Enable experimental nix command and flakes
-  nix.extraOptions = ''
-    auto-optimise-store = false
-    experimental-features = nix-command flakes
-  '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
-    extra-platforms = x86_64-darwin aarch64-darwin
-  '';
+  nix.extraOptions =
+    ''
+      auto-optimise-store = false
+      experimental-features = nix-command flakes
+    ''
+    + lib.optionalString (pkgs.system == "aarch64-darwin") ''
+      extra-platforms = x86_64-darwin aarch64-darwin
+    '';
 
   # Use packages form the unstable channel
   # nix.package = pkgs.nixUnstable;
@@ -32,7 +34,7 @@
   fonts.enableFontDir = true;
   fonts.packages = with pkgs; [
     recursive
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    nerd-fonts.jetbrains-mono
   ];
 
   # Keyboard

@@ -49,7 +49,7 @@
   # Fonts
   fonts.packages = with pkgs; [
     recursive
-    (nerdfonts.override { fonts = [ "JetBrainsMono" ]; })
+    nerd-fonts.jetbrains-mono
   ];
 
   # Keyboard

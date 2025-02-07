@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 
 let
   inherit (lib) mkIf;
@@ -23,46 +28,49 @@ in
     "homebrew/services"
   ];
 
-  homebrew.casks = [
-    # productivity
-    "firefox"
-    "libreoffice"
-    "notion"
-    "transmission"
-    "1password"
-    "inkscape"
-    "vlc"
-    "wezterm"
-
-    # media
-    "spotify"
-
-    # development
-    "fork"
-    "postman"
-    "docker"
-    "dbeaver-community"
-    "yubico-yubikey-manager"
-
-    # Social
-    "telegram"
-    "whatsapp"
-  ]
-  ++ (if isWork then
-    [
-      "openlens"
-    ]
-  else
+  homebrew.casks =
     [
       # productivity
-      "google-chrome"
-      "thunderbird"
-      "virtualbox"
+      "firefox"
+      "libreoffice"
+      "notion"
+      "transmission"
+      "1password"
+      "inkscape"
+      "vlc"
+      "wezterm"
+
+      # media
+      "spotify"
 
       # development
-      "robo-3t"
+      "fork"
+      "postman"
+      "docker"
+      "dbeaver-community"
+      "yubico-yubikey-manager"
 
-      # intertainement
-      "stremio"
-    ]);
+      # Social
+      "telegram"
+      "whatsapp"
+    ]
+    ++ (
+      if isWork then
+        [
+          "keepassx"
+        ]
+      else
+        [
+          # productivity
+          "google-chrome"
+          "thunderbird"
+          "virtualbox"
+
+          # development
+          "robo-3t"
+
+          # intertainement
+          "stremio"
+        ]
+    );
 }
