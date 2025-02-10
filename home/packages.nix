@@ -31,6 +31,7 @@ in
       };
       file = "themes/Catppuccin Macchiato.tmTheme";
     };
+    # TODO: add rose-pine themes
   };
 
   # Htop

@@ -14,6 +14,7 @@
     kitty
     terminal-notifier
     emacs
+    devenv
   ];
 
   services.kanata = {

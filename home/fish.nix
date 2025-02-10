@@ -138,7 +138,7 @@ in
   # Configuration that should be above `loginShellInit` and `interactiveShellInit`.
   programs.fish.shellInit = ''
     set -U fish_term24bit 1
-    ${optionalString pkgs.stdenv.isDarwin "set-background-to-macOS"}
+    # ${optionalString pkgs.stdenv.isDarwin "set-background-to-macOS"}
 
     # Load .fish-local if file exists
     if test -e ~/.local.fish
