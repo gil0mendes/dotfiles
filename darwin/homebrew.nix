@@ -53,6 +53,9 @@ in
       # Social
       "telegram"
       "whatsapp"
+
+			# Design
+			"figma"
     ]
     ++ (
       if isWork then
