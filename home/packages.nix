@@ -58,6 +58,10 @@ in
     vscode
     azure-cli
     kubectl
+		kubelogin
+		sops
+		age
+		oras
 
     # social
     telegram-desktop
