@@ -1,4 +1,9 @@
-{ config, lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 with lib;
 let
   cfg = config.services.kanata;
@@ -16,10 +21,9 @@ in
   };
 
   config = mkIf cfg.enable {
-    environment.systemPackages = with pkgs;
-      [
-        myKanata
-      ];
+    environment.systemPackages = with pkgs; [
+      myKanata
+    ];
 
     # configuration file
     environment.etc."kanata.cfg".text = cfg.config;
@@ -32,8 +36,8 @@ in
 
     launchd.daemons.kanata = {
       script = ''
-        sudo ${pkgs.myKanata}/bin/kanata -c /etc/kanata.cfg
-        			'';
+        ${pkgs.myKanata}/bin/kanata -c /etc/kanata.cfg
+      '';
       serviceConfig = {
         Label = "org.nixos.kanata";
         RunAtLoad = true;
@@ -52,4 +56,3 @@ in
     '';
   };
 }
-
