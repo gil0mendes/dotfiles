@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 {
   nix.settings = {
@@ -12,18 +17,16 @@
       "@admin"
     ];
   };
-  nix.configureBuildUsers = true;
 
   # Enable experimental nix command and flakes
-  nix.extraOptions = ''
-    auto-optimise-store = false
-    experimental-features = nix-command flakes
-  '' + lib.optionalString (pkgs.system == "aarch64-darwin") ''
-    extra-platforms = x86_64-darwin aarch64-darwin
-  '';
-
-  # Auto upgrade nix package and the daemon service.
-  services.nix-daemon.enable = true;
+  nix.extraOptions =
+    ''
+      auto-optimise-store = false
+      experimental-features = nix-command flakes
+    ''
+    + lib.optionalString (pkgs.system == "aarch64-darwin") ''
+      extra-platforms = x86_64-darwin aarch64-darwin
+    '';
 
   # --- Shells
 

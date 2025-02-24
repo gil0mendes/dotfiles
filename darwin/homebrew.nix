@@ -54,8 +54,8 @@ in
       "telegram"
       "whatsapp"
 
-			# Design
-			"figma"
+      # Design
+      "figma"
     ]
     ++ (
       if isWork then
@@ -76,8 +76,7 @@ in
           "stremio"
         ]
     );
-		homebrew.	masApps = {
-			"Hidden Bar" = 1452453066;
-		};
-
+  homebrew.masApps = {
+    "Hidden Bar" = 1452453066;
+  };
 }
