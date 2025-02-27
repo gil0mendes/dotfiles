@@ -3,6 +3,7 @@
 ## Requirements
 
 In order to install this dotfiles you must to already have installed:
+
 - https://brew.sh
 - https://nixos.org/download/
 
@@ -38,6 +39,16 @@ For rebuilding the configuration run:
 
 ```bash
 darwin-rebuild switch --flake .#g0m
+```
+
+### Extra steps for Kanata
+
+In order to use Kanata we need to manually install the [VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice) driver.
+
+After install the driver execute this command:
+
+```sh
+/Applications/.Karabiner-VirtualHIDDevice-Manager.app/Contents/MacOS/Karabiner-VirtualHIDDevice-Manager activate
 ```
 
 ## Maintenance

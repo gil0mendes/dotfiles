@@ -38,6 +38,7 @@ in
       "1password"
       "inkscape"
       "vlc"
+      "karabiner-elements"
 
       # media
       "spotify"
