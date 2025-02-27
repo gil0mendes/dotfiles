@@ -2,7 +2,7 @@ local wez = require("wezterm")
 
 local appearance = require("lua.appearance")
 local mappings = require("lua.mappings")
-local bar = wez.plugin.require("https://github.com/adriankarlen/bar.wezterm")
+local bar = require("lua.bar")
 
 local config = wez.config_builder()
 
@@ -30,7 +30,7 @@ config.status_update_interval = 2000
 appearance.apply_to_config(config)
 
 -- bar
-bar.apply_to_config(config, {})
+bar.apply_to_config(config)
 
 -- mappings
 mappings.apply_to_config(config)

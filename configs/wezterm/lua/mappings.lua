@@ -65,6 +65,9 @@ local keys = function()
 				win:toast_notification("wezterm", "plugins updated!", nil, 4000)
 			end)
 		),
+
+		-- show the debug overlay
+		keybind({ mod.l }, "d", wez.action.ShowDebugOverlay),
 	}
 
 	-- leader number navigates to the tab

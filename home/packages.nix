@@ -50,6 +50,7 @@ in
     openssl
     python3
     qemu
+		wezterm
     tmux
     tmuxinator
     tree
