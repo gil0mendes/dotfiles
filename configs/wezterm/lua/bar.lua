@@ -106,7 +106,6 @@ wez.on("format-tab-title", function(tab, _, _, conf, _, _)
 end)
 
 wez.on("update-status", function(window, pane)
-	print("HERE")
 	local present, conf = pcall(window.effective_config, window)
 
 	if not present then
