@@ -3,8 +3,8 @@ local wez = require("wezterm")
 local M = {}
 
 M.apply_to_config = function(config)
-	config.color_scheme = "rose-pine"
-	local scheme = wez.color.get_builtin_schemes()["rose-pine"]
+	config.color_scheme = "rose-pine-moon"
+	local scheme = wez.color.get_builtin_schemes()["rose-pine-moon"]
 	config.colors = {
 		split = scheme.ansi[2],
 	}

@@ -64,6 +64,15 @@ in
 		age
 		oras
 
+		# modern and fast alternative to find
+    fd
+		# tools to work with images
+		imagemagick_light
+		# tools to work with PDF
+		ghostscript
+		# tool to render mermaid diagrams
+		mermaid-cli
+
     # social
     telegram-desktop
 
