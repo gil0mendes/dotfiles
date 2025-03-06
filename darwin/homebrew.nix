@@ -39,6 +39,7 @@ in
       "inkscape"
       "vlc"
       "karabiner-elements"
+			"wezterm"
 
       # media
       "spotify"

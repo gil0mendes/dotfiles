@@ -7,6 +7,6 @@ in
 {
   programs.emacs = {
     enable = true;
-    package = pkgs.emacs29-gtk3;
+    package = pkgs.emacs-gtk;
   };
 }
