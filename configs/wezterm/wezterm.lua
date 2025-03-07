@@ -10,10 +10,10 @@ local config = wez.config_builder()
 -- reload wez automatically
 config.automatically_reload_config = true
 
--- General configurations
 -- fonts
 config.font_size = 15
 config.font = wez.font("Comic Code Ligatures")
+config.bold_brightens_ansi_colors = true
 config.font_rules = {
 	{
 		italic = true,

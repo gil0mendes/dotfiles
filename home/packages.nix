@@ -62,6 +62,7 @@ in
 		sops
 		age
 		oras
+		atuin
 
 		# modern and fast alternative to find
     fd
