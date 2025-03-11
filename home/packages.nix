@@ -58,20 +58,21 @@ in
     vscode
     azure-cli
     kubectl
-		kubelogin
-		sops
-		age
-		oras
-		atuin
+    kubelogin
+    sops
+    age
+    oras
+    atuin
 
-		# modern and fast alternative to find
+    # modern and fast alternative to find
     fd
-		# tools to work with images
-		imagemagick_light
-		# tools to work with PDF
-		ghostscript
-		# tool to render mermaid diagrams
-		mermaid-cli
+    # tools to work with images
+    imagemagick_light
+    # tools to work with PDF
+    ghostscript
+    # tool to render mermaid diagrams
+    mermaid-cli
+    lua51Packages.luarocks_bootstrap
 
     # social
     telegram-desktop
