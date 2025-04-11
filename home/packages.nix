@@ -54,15 +54,19 @@ in
     tmuxinator
     tree
     jq
+    yq
     kubernetes-helm
     vscode
-    azure-cli
     kubectl
     kubelogin
     sops
     age
     oras
     atuin
+
+    # clouds tools
+    awscli2
+    azure-cli
 
     # modern and fast alternative to find
     fd

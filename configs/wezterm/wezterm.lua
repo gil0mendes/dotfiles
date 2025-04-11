@@ -4,6 +4,7 @@ local appearance = require("lua.appearance")
 local mappings = require("lua.mappings")
 local bar = require("lua.bar")
 local session = require("lua.session")
+local nvim = require("lua.nvim")
 
 local config = wez.config_builder()
 
@@ -40,5 +41,8 @@ session.apply_to_config(config)
 
 -- mappings
 mappings.apply_to_config(config)
+
+-- NeoVim integration
+nvim.apply_to_config(config)
 
 return config
