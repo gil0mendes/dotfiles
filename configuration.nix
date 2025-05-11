@@ -28,6 +28,7 @@
   # Fonts
   fonts.enableFontDir = true;
   fonts.packages = with pkgs; [
+    aporetic
     recursive
     nerd-fonts.jetbrains-mono
   ];

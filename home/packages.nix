@@ -99,8 +99,9 @@ in
     yubikey-manager
 
     # LSP and Linting tools
-    ## Markdown
+    ## Markdown and other doc types
     marksman
+    pandoc
     ## NIX
     nixfmt-rfc-style
     nil
