@@ -1,6 +1,11 @@
-{ ... }:
+{ config, ... }:
 
+let
+  userName = config.users.primaryUser.username;
+in
 {
+  system.primaryUser = userName;
+
   system.defaults.NSGlobalDomain = {
     AppleShowAllExtensions = true;
     "com.apple.trackpad.scaling" = 3.0;

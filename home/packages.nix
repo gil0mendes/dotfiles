@@ -88,8 +88,6 @@ in
     starship # shell prompt
     ripgrep
 
-    zed-editor
-
     # Useful nix related tools
     comma # run software from without installing it
 

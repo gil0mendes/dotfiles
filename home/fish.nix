@@ -157,7 +157,7 @@ in
 
   programs.fish.interactiveShellInit = ''
         set -g fish_greeting ""
-        ${pkgs.thefuck}/bin/thefuck --alias | source
+        ${pkgs.pay-respects}/bin/pay-respects fish --alias | source
 
     		# Initialize Atuin
     		${pkgs.atuin}/bin/atuin init fish --disable-up-arrow | source

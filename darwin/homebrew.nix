@@ -39,7 +39,7 @@ in
       "inkscape"
       "vlc"
       "karabiner-elements"
-			"wezterm"
+      "wezterm"
 
       # media
       "spotify"
@@ -50,6 +50,7 @@ in
       "docker"
       "dbeaver-community"
       "yubico-yubikey-manager"
+      "zed"
 
       # Social
       "telegram"
