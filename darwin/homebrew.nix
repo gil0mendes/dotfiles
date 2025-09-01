@@ -28,56 +28,54 @@ in
     "homebrew/services"
   ];
 
-  homebrew.casks =
-    [
-      # productivity
-      "firefox"
-      "libreoffice"
-      "notion"
-      "transmission"
-      "1password"
-      "inkscape"
-      "vlc"
-      "karabiner-elements"
-      "wezterm"
+  homebrew.casks = [
+    # productivity
+    "firefox"
+    "libreoffice"
+    "notion"
+    "1password"
+    "inkscape"
+    "vlc"
+    "karabiner-elements"
+    "wezterm"
 
-      # media
-      "spotify"
+    # media
+    "spotify"
 
-      # development
-      "fork"
-      "postman"
-      "docker"
-      "dbeaver-community"
-      "yubico-yubikey-manager"
-      "zed"
+    # development
+    "fork"
+    "postman"
+    "dbeaver-community"
+    "yubico-yubikey-manager"
+    "zed"
 
-      # Social
-      "telegram"
-      "whatsapp"
+    # Design
+    "figma"
+  ]
+  ++ (
+    if isWork then
+      [
+        "keepassx"
+      ]
+    else
+      [
+        # productivity
+        "google-chrome"
+        "thunderbird"
+        "virtualbox"
+        "transmission"
 
-      # Design
-      "figma"
-    ]
-    ++ (
-      if isWork then
-        [
-          "keepassx"
-        ]
-      else
-        [
-          # productivity
-          "google-chrome"
-          "thunderbird"
-          "virtualbox"
+        # development
+        "robo-3t"
 
-          # development
-          "robo-3t"
+        # intertainement
+        "stremio"
 
-          # intertainement
-          "stremio"
-        ]
-    );
+        # Social
+        "telegram"
+        "whatsapp"
+      ]
+  );
   homebrew.masApps = {
     "Hidden Bar" = 1452453066;
   };

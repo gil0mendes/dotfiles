@@ -78,9 +78,6 @@ in
     mermaid-cli
     lua51Packages.luarocks_bootstrap
 
-    # social
-    telegram-desktop
-
     ## rust packages
     rustup
     eza # fancy version of `ls`

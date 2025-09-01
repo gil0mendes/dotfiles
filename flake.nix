@@ -3,7 +3,7 @@
 
   inputs = {
     # Package sets
-    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-24.05-darwin";
+    nixpkgs.url = "github:nixos/nixpkgs/nixpkgs-25.05-darwin";
     nixpkgs-unstable.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
 
     # Environment/system management
@@ -20,21 +20,34 @@
     mac-app-util.url = "github:hraban/mac-app-util";
 
     # Other sources
-    moses-lua = { url = "github:Yonaba/Moses"; flake = false; };
+    moses-lua = {
+      url = "github:Yonaba/Moses";
+      flake = false;
+    };
     emacs = {
       url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
   };
 
-  outputs = inputs @ { self, darwin, nixpkgs, home-manager, mac-app-util, ... }:
+  outputs =
+    inputs@{
+      self,
+      darwin,
+      nixpkgs,
+      home-manager,
+      mac-app-util,
+      ...
+    }:
     let
       inherit (darwin.lib) darwinSystem;
       inherit (inputs.nixpkgs-unstable.lib) attrValues optionalAttrs singleton;
 
       # Configuration for `nixpkgs`
       nixpkgsConfig = {
-        config = { allowUnfree = true; };
+        config = {
+          allowUnfree = true;
+        };
         overlays = attrValues self.overlays;
       };
 
@@ -65,7 +78,12 @@
         (import ./modules/services/kanata.nix)
 
         (
-          { config, lib, pkgs, ... }:
+          {
+            config,
+            lib,
+            pkgs,
+            ...
+          }:
           let
             inherit (config.users) primaryUser;
           in
@@ -136,15 +154,18 @@
         vimUtils = import ./overlays/vimUtils.nix;
 
         # Overlay that adds some additional Neovim plugins
-        vimPlugins = final: prev:
+        vimPlugins =
+          final: prev:
           let
             inherit (self.overlays.vimUtils final prev) vimUtils;
           in
           {
-            vimPlugins = prev.vimPlugins.extend (super: self:
+            vimPlugins = prev.vimPlugins.extend (
+              super: self:
               (vimUtils.buildVimPluginsFromFlakeInputs inputs [
                 # Add plugins here
-              ]) // {
+              ])
+              // {
                 moses-nvim = vimUtils.buildNeovimLuaPackagePluginFromFlakeInput inputs "moses-lua";
               }
             );
@@ -186,9 +207,12 @@
         g0m-direnv = import ./home/direnv.nix;
 
         programs-kitty-extras = import ./modules/home/programs/kitty/extras.nix;
-        home-user-info = { lib, ... }: {
-          options.home.user-info = (self.darwinModules.users-primaryUser { inherit lib; }).options.users.primaryUser;
-        };
+        home-user-info =
+          { lib, ... }:
+          {
+            options.home.user-info =
+              (self.darwinModules.users-primaryUser { inherit lib; }).options.users.primaryUser;
+          };
       };
     };
 }
