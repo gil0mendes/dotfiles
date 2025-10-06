@@ -28,6 +28,10 @@ in
     "homebrew/services"
   ];
 
+  homebrew.brews = [
+    "codex"
+  ];
+
   homebrew.casks = [
     # productivity
     "firefox"
