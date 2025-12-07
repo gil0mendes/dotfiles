@@ -132,8 +132,8 @@ in
     ".." = "cd ..";
     ":q" = "exit";
     cat = "${bat}/bin/bat";
-    du = "${du-dust}/bin/dust";
-    g = "${gitAndTools.git}/bin/git";
+    du = "${dust}/bin/dust";
+    g = "${git}/bin/git";
     l = "ls --icons --all --long";
     la = "ll -a";
     ll = "ls -l --time-style long-iso --icons";

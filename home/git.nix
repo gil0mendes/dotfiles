@@ -19,22 +19,11 @@ in
   programs.git = {
     enable = true;
 
-    userEmail = config.home.user-info.email;
-    userName = config.home.user-info.fullName;
-
-    # Enhanced diffs
-    delta.enable = true;
-
-    ignores = [
-      "*~"
-      "*.swp"
-      ".DS_Store"
-
-      # personal notes
-      "docs/my-notes.md"
-    ];
-
-    extraConfig = {
+    settings = {
+      user = {
+        name = config.home.user-info.fullName;
+        email = config.home.user-info.email;
+      };
       init.defaultBranch = "main";
       color.ui = "auto";
       core = {
@@ -67,6 +56,15 @@ in
       };
     };
 
+    ignores = [
+      "*~"
+      "*.swp"
+      ".DS_Store"
+
+      # personal notes
+      "docs/my-notes.md"
+    ];
+
     # PGP signing for work
     signing = {
       signByDefault = true;
@@ -82,5 +80,11 @@ in
           key = "3C0FFA89D9EB7EF4BDABAB1B8108024DFE52031C";
         }
     );
+  };
+
+  # Enhanced diffs
+  programs.delta = {
+    enable = true;
+    enableGitIntegration = true;
   };
 }

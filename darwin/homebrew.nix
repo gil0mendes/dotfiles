@@ -28,10 +28,6 @@ in
     "homebrew/services"
   ];
 
-  homebrew.brews = [
-    "codex"
-  ];
-
   homebrew.casks = [
     # productivity
     "firefox"
@@ -42,6 +38,7 @@ in
     "vlc"
     "karabiner-elements"
     "wezterm"
+    "codex"
 
     # media
     "spotify"
