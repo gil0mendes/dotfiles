@@ -26,6 +26,12 @@ in
 
   homebrew.taps = [
     "homebrew/services"
+    "anomalyco/tap"
+  ];
+
+  homebrew.brews = [
+    "codex"
+    "opencode"
   ];
 
   homebrew.casks = [
@@ -67,7 +73,7 @@ in
         "transmission"
 
         # development
-        "robo-3t"
+        "studio-3t"
 
         # intertainement
         "stremio"
