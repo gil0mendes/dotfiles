@@ -32,6 +32,7 @@ in
   homebrew.brews = [
     "codex"
     "opencode"
+    "jj"
   ];
 
   homebrew.casks = [

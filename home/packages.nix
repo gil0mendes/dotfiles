@@ -98,7 +98,7 @@ in
     marksman
     pandoc
     ## NIX
-    nixfmt-rfc-style
+    nixfmt
     nil
     ## JS/TS
     nodePackages.typescript-language-server
