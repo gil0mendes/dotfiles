@@ -30,7 +30,6 @@ in
   ];
 
   homebrew.brews = [
-    "codex"
     "opencode"
     "jj"
   ];
@@ -56,6 +55,7 @@ in
     "dbeaver-community"
     "yubico-yubikey-manager"
     "zed"
+    "codex"
 
     # Design
     "figma"
