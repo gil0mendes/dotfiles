@@ -1,13 +1,10 @@
 {
   pkgs,
-  lib,
   config,
   ...
 }:
 
 let
-  inherit (lib) mkIf;
-
   isWork = config.home.user-info.username == "gmendes";
 in
 {

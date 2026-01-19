@@ -197,6 +197,7 @@
         g0m-fish = import ./home/fish.nix;
         g0m-git = import ./home/git.nix;
         g0m-gpg = import ./home/gpg.nix;
+        g0m-jujutsu = import ./home/jujutsu.nix;
         g0m-kitty = import ./home/kitty.nix;
         g0m-neovim = import ./home/neovim.nix;
         g0m-packages = import ./home/packages.nix;
