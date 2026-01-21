@@ -28,6 +28,10 @@
       url = "github:nix-community/emacs-overlay";
       inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
+    jj-starship = {
+      url = "github:dmmulroy/jj-starship";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
   outputs =
@@ -37,6 +41,7 @@
       nixpkgs,
       home-manager,
       mac-app-util,
+      jj-starship,
       ...
     }:
     let
@@ -175,6 +180,8 @@
         colors = import ./overlays/colors.nix;
 
         emacs = inputs.emacs.overlays.emacs;
+
+        jj-starship = inputs.jj-starship.overlays.default;
       };
 
       darwinModules = {
