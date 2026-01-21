@@ -63,6 +63,7 @@ in
     age
     oras
     atuin
+    watchman
 
     # clouds tools
     awscli2

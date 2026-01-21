@@ -148,6 +148,9 @@ in
     set -U fish_term24bit 1
     # ${optionalString pkgs.stdenv.isDarwin "set-background-to-macOS"}
 
+    # Load Jujutsu completions
+    jj util completion fish | source
+
     # Load .fish-local if file exists
     if test -e ~/.local.fish
       source ~/.local.fish
