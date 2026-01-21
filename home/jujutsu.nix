@@ -20,6 +20,7 @@ in
       };
       signing = {
         behavior = "own";
+        backend = "gpg";
       }
       // (
         if isWork then
@@ -31,6 +32,9 @@ in
             key = "3C0FFA89D9EB7EF4BDABAB1B8108024DFE52031C";
           }
       );
+      git = {
+        signOnPush = true;
+      };
     };
   };
 }
