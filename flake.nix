@@ -207,6 +207,7 @@
         g0m-jujutsu = import ./home/jujutsu.nix;
         g0m-kitty = import ./home/kitty.nix;
         g0m-neovim = import ./home/neovim.nix;
+        g0m-opencode = import ./home/opencode.nix;
         g0m-packages = import ./home/packages.nix;
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
