@@ -9,13 +9,9 @@
 
 ### **ENTROPY REMINDER**
 
-This codebase will outlive you. Every shortcut you take becomes
-someone else's burden. Every hack compounds into technical debt
-that slows the whole team down.
+This codebase will outlive you. Every shortcut you take becomes someone else's burden. Every hack compounds into technical debt that slows the whole team down.
 
-You are not just writing code. You are shaping the future of this
-project. The patterns you establish will be copied. The corners
-you cut will be cut again.
+You are not just writing code. You are shaping the future of this project. The patterns you establish will be copied. The corners you cut will be cut again.
 
 **Fight entropy. Leave the codebase better than you found it.**
 
@@ -27,6 +23,7 @@ you cut will be cut again.
 ## SCM, Git, Pull Requests, Commits
 
 - **ALWAYS check for `.jj/` dir before ANY VCS command** - if present, use jj not git
+- **Never** add Claude to attribution or as a contributor PRs, commits, messages, or PR descriptions
 - **gh CLI available** for GitHub operations (PRs, issues, etc.)
 - **glab CLI available** for GitLab operations (PRs, issues, etc.)
 
