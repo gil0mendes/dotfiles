@@ -139,7 +139,7 @@
             {
               users.primaryUser = workUserInfo;
 
-              networking.computerName = "Gil Mendes Barracuda 💻";
+              networking.computerName = "ENG-GMENDES-MB";
               networking.hostName = "ENG-GMENDES-MB";
               networking.knownNetworkServices = [
                 "Wi-Fi"
