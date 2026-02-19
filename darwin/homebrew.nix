@@ -15,14 +15,13 @@ in
 
 {
   environment.shellInit = mkIf brewEnabled ''
-    eval "$(${config.homebrew.brewPrefix}/brew shellenv)"
+    eval "$(${config.homebrew.prefix}/brew shellenv)"
   '';
 
   homebrew.enable = true;
   homebrew.onActivation.autoUpdate = true;
   homebrew.onActivation.cleanup = "zap";
   homebrew.global.brewfile = true;
-  homebrew.global.lockfiles = true;
 
   homebrew.taps = [
     "homebrew/services"
@@ -32,6 +31,7 @@ in
   homebrew.brews = [
     "opencode"
     "jj"
+    "agent-browser"
   ];
 
   homebrew.casks = [
