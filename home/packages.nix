@@ -67,7 +67,6 @@ in
 
     # we use it for OpenCode
     bun
-    gh
 
     # clouds tools
     awscli2

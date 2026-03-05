@@ -140,5 +140,5 @@
 			"enabled": true
 		}
 	},
-	"plugin": ["notification", "background-agents"]
+	"plugin": ["notification", "workspace", "background-agents"]
 }
