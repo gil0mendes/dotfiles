@@ -65,6 +65,10 @@ in
     atuin
     watchman
 
+    # we use it for OpenCode
+    bun
+    gh
+
     # clouds tools
     awscli2
     azure-cli

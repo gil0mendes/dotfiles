@@ -15,7 +15,7 @@ in
 
 {
   environment.shellInit = mkIf brewEnabled ''
-    eval "$(${config.homebrew.prefix}/brew shellenv)"
+    eval "$(${config.homebrew.brewPrefix}/brew shellenv)"
   '';
 
   homebrew.enable = true;
@@ -29,7 +29,7 @@ in
   ];
 
   homebrew.brews = [
-    "opencode"
+    "anomalyco/tap/opencode"
     "jj"
     "agent-browser"
   ];
@@ -56,6 +56,7 @@ in
     "yubico-yubikey-manager"
     "zed"
     "codex"
+    "ast-grep"
 
     # Design
     "figma"
