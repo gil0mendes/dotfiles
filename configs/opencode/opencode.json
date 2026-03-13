@@ -122,7 +122,7 @@
 		"edit": "allow",
 		"webfetch": "allow"
 	},
-	"enabled_providers": ["openai"],
+	"enabled_providers": ["openai", "opencode"],
 	"mcp": {
 		"context7": {
 			"type": "remote",
