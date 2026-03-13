@@ -88,6 +88,7 @@ in
     tealdeer # rust implementation of `tldr`
     starship # shell prompt
     ripgrep
+    ast-grep
 
     # Useful nix related tools
     comma # run software from without installing it

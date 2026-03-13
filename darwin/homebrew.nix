@@ -56,7 +56,6 @@ in
     "yubico-yubikey-manager"
     "zed"
     "codex"
-    "ast-grep"
 
     # Design
     "figma"
