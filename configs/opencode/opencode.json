@@ -139,7 +139,7 @@
       }
     }
   },
-  "enabled_providers": ["openai", "litellm-barracuda"],
+  "enabled_providers": ["openai", "opencode", "litellm-barracuda"],
   "mcp": {
     "context7": {
       "type": "remote",

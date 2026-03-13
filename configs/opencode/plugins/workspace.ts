@@ -108,8 +108,10 @@ function extractMarkdownParts(content: string): ExtractedParts {
 		}
 	}
 
-	// Extract goal (no validation - just extraction)
-	const goalMatch = content.match(/## Goal\n([^\n#]+)/);
+	// Extract goal section body (supports blank line + multi-line text)
+	const goalMatch = content.match(
+		/## Goal\s*\n([\s\S]*?)(?=\n## |\n# |\n---|$)/,
+	);
 	const goal = goalMatch?.[1]?.trim() || null;
 
 	// Extract phases (no validation - just extraction)
