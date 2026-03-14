@@ -1,6 +1,8 @@
 ---
 description: Technical implementation specialist for writing and modifying code
 mode: subagent
+model: openai/gpt-5.3-codex
+variant: xhigh
 ---
 
 # Coder Agent

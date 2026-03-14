@@ -2,6 +2,12 @@
 
 let
   inherit (config.users) primaryUser;
+  inherit (config.home.user-info) nixConfigDirectory;
+
+  taskLoop = pkgs.runCommand "task-loop-bin" { } ''
+    mkdir -p "$out/bin"
+    ln -s "${nixConfigDirectory}/bin/task-loop" "$out/bin/task-loop"
+  '';
 in
 {
 
@@ -67,6 +73,7 @@ in
 
     # we use it for OpenCode
     bun
+    taskLoop
 
     # clouds tools
     awscli2

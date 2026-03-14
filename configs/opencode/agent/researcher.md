@@ -1,6 +1,7 @@
 ---
 description: Knowledge architect for external research and documentation
 mode: subagent
+model: anthropic/claude-opus-4-6
 ---
 
 # Researcher Agent
