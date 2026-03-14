@@ -4,6 +4,10 @@ import { join } from "path";
 export const NotificationPlugin = async ({ $, client }) => {
 	const soundPath = join(homedir(), ".config/opencode/sounds/new-alert.mp3");
 
+	const playNotificationSound = async () => {
+		return $`afplay ${soundPath}`.quiet();
+	};
+
 	// Check if a session is a main (non-subagent) session
 	const isMainSession = async (sessionID) => {
 		try {
@@ -22,13 +26,13 @@ export const NotificationPlugin = async ({ $, client }) => {
 			if (event.type === "session.idle") {
 				const sessionID = event.properties.sessionID;
 				if (await isMainSession(sessionID)) {
-					await $`afplay ${soundPath}`;
+					await playNotificationSound();
 				}
 			}
 
 			// Permission prompt created
 			if (event.type === "permission.asked") {
-				await $`afplay ${soundPath}`;
+				await playNotificationSound();
 			}
 		},
 	};
