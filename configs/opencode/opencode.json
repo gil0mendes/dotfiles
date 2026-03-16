@@ -130,8 +130,11 @@
         "claude-opus-4-6": {
           "id": "bedrock/us.anthropic.claude-opus-4-6-v1"
         },
-        "gpt-5-1-codex": {
-          "id": "azure/gpt-5-1-codex"
+        "claude-sonnet-4-6": {
+          "id": "bedrock/us.anthropic.claude-sonnet-4-6"
+        },
+        "gpt-5-3-codex": {
+          "id": "azure/gpt-5-3-codex"
         }
       },
       "options": {
