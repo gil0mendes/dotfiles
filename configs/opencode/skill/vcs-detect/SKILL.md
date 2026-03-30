@@ -40,8 +40,8 @@ fi
 | Log         | `git log`                | `jj log`                    |
 | Diff        | `git diff`               | `jj diff`                   |
 | Commit      | `git commit`             | `jj commit` / `jj describe` |
-| Branch list | `git branch`             | `jj branch list`            |
-| New branch  | `git checkout -b <name>` | `jj branch create <name>`   |
+| Branch list | `git branch`             | `jj bookmark list`            |
+| New branch  | `git checkout -b <name>` | `jj bookmark create <name>`   |
 | Push        | `git push`               | `jj git push`               |
 | Pull/Fetch  | `git pull` / `git fetch` | `jj git fetch`              |
 | Rebase      | `git rebase`             | `jj rebase`                 |
