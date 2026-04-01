@@ -1,8 +1,8 @@
-import type { createOpencodeClient } from "@opencode-ai/sdk";
+import type { PluginInput } from "@opencode-ai/plugin";
 
 /**
  * OpenCode client instance type.
  *
- * Derived from the factory function return type for type safety.
+ * Derived from the plugin input client type for consistency.
  */
-export type OpencodeClient = ReturnType<typeof createOpencodeClient>;
+export type OpencodeClient = PluginInput["client"];

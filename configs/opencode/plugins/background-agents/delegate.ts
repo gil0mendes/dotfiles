@@ -17,8 +17,8 @@ Use this for:
 - Parallel work that can run in background
 - Any task where you want persistent, retrievable output
 
-On completion, a notification will arrive with the ID, title, description, and result.
-Use \`delegation_read\` with the ID to retrieve the result again if it is lost during compaction.`,
+On completion, a notification will arrive with the ID and terminal summary.
+Use \`delegation_read\` with the ID to retrieve full persisted output (including after compaction).`,
 		args: {
 			prompt: tool.schema
 				.string()
@@ -28,7 +28,7 @@ Use \`delegation_read\` with the ID to retrieve the result again if it is lost d
 			agent: tool.schema
 				.string()
 				.describe(
-					'Agent to delegate to: "explore" (codebase search), "researcher" (external research), "scribe" (docs/commits), or "general".',
+					'Agent to delegate to. Must be a read-only sub-agent (edit/write/bash denied), such as "researcher" or "explore".',
 				),
 		},
 		async execute(args: DelegateArgs, toolCtx: ToolContext): Promise<string> {
@@ -111,8 +111,9 @@ Shows both running and completed delegations.`,
 
 			const lines = delegations.map((d) => {
 				const titlePart = d.title ? ` | ${d.title}` : "";
+				const unreadPart = d.unread ? " [unread]" : "";
 				const descPart = d.description ? `\n  → ${d.description}` : "";
-				return `- **${d.id}**${titlePart} [${d.status}]${descPart}`;
+				return `- **${d.id}**${titlePart} [${d.status}]${unreadPart}${descPart}`;
 			});
 
 			return `## Delegations\n\n${lines.join("\n")}`;

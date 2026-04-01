@@ -1,12 +1,14 @@
-import type { DelegationManager } from "./delegationManager";
+import type { DelegationManager, DelegationStatus } from "./delegationManager";
 
 type DelegationForContext = {
 	id: string;
 	agent?: string;
 	title?: string;
 	description?: string;
-	status: string;
+	status: DelegationStatus;
 	startedAt?: Date;
+	completedAt?: Date;
+	lastHeartbeatAt?: Date;
 	prompt?: string;
 };
 
@@ -15,9 +17,9 @@ type DelegationForContext = {
  * Includes running delegations with notification reminder (only when running exist),
  * and recent completed delegations with full descriptions.
  */
-function formatDelegationContext(
+export function formatDelegationContext(
 	running: DelegationForContext[],
-	completed: DelegationForContext[],
+	unreadCompleted: DelegationForContext[],
 ): string {
 	const sections: string[] = ["<delegation-context>"];
 
@@ -29,6 +31,9 @@ function formatDelegationContext(
 			sections.push(`### \`${d.id}\`${d.agent ? ` (${d.agent})` : ""}`);
 			if (d.startedAt) {
 				sections.push(`**Started:** ${d.startedAt.toISOString()}`);
+			}
+			if (d.lastHeartbeatAt) {
+				sections.push(`**Last heartbeat:** ${d.lastHeartbeatAt.toISOString()}`);
 			}
 			if (d.prompt) {
 				const truncatedPrompt =
@@ -48,11 +53,11 @@ function formatDelegationContext(
 		sections.push("");
 	}
 
-	// Completed delegations (recent)
-	if (completed.length > 0) {
-		sections.push("## Recent Completed Delegations");
+	// Unread completed delegations (recent)
+	if (unreadCompleted.length > 0) {
+		sections.push("## Unread Completed Delegations");
 		sections.push("");
-		for (const d of completed) {
+		for (const d of unreadCompleted) {
 			const statusEmoji =
 				d.status === "complete"
 					? "✅"
@@ -65,10 +70,14 @@ function formatDelegationContext(
 			sections.push(`**Title:** ${d.title || "(no title)"}`);
 			sections.push(`**Status:** ${d.status}`);
 			sections.push(`**Description:** ${d.description || "(no description)"}`);
+			if (d.completedAt) {
+				sections.push(`**Completed:** ${d.completedAt.toISOString()}`);
+			}
+			sections.push(`**Retrieve:** \`delegation_read("${d.id}")\``);
 			sections.push("");
 		}
 		sections.push(
-			"> Use `delegation_list()` to see all delegations for this session.",
+			"> These are unread terminal delegations carried forward through compaction.",
 		);
 		sections.push("");
 	}
@@ -91,38 +100,30 @@ export const sessionCompacting =
 		const rootSessionID = await manager.getRootSessionID(input.sessionID);
 
 		// Get running delegations for this session tree
-		const running = manager
-			.getRunningDelegations()
-			.filter(
-				(d) =>
-					d.parentSessionID === input.sessionID ||
-					d.parentSessionID === rootSessionID,
-			)
-			.map((d) => ({
-				id: d.id,
-				agent: d.agent,
-				title: d.title,
-				description: d.description,
-				status: d.status,
-				startedAt: d.startedAt,
-				prompt: d.prompt,
-			}));
+		const running = manager.getRunningDelegations(rootSessionID).map((d) => ({
+			id: d.id,
+			agent: d.agent,
+			title: d.title,
+			description: d.description,
+			status: d.status,
+			startedAt: d.startedAt,
+			lastHeartbeatAt: d.progress.lastHeartbeatAt,
+			prompt: d.prompt,
+		}));
 
-		// Get recent completed delegations (last 10)
-		const allDelegations = await manager.listDelegations(input.sessionID);
-		const completed = allDelegations
-			.filter((d) => d.status !== "running")
-			.slice(-10)
+		const unreadCompleted = manager
+			.getUnreadCompletedDelegations(rootSessionID)
 			.map((d) => ({
 				id: d.id,
 				agent: d.agent,
 				title: d.title,
 				description: d.description,
 				status: d.status,
+				completedAt: d.completedAt,
 			}));
 
 		// Early exit if nothing to inject
-		if (running.length === 0 && completed.length === 0) return;
+		if (running.length === 0 && unreadCompleted.length === 0) return;
 
-		output.context.push(formatDelegationContext(running, completed));
+		output.context.push(formatDelegationContext(running, unreadCompleted));
 	};

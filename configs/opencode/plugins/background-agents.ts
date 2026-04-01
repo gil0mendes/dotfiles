@@ -18,6 +18,34 @@ import { parseAgentMode } from "./common/parseAgentMode";
 import { injectDelegationRules } from "./background-agents/rules";
 import { sessionCompacting } from "./background-agents/sessionCompacting";
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function extractMessageText(event: Event): string | undefined {
+	if (event.type !== "message.updated") return undefined;
+
+	const properties: unknown = event.properties;
+	if (!isRecord(properties)) return undefined;
+
+	const directText = properties.text;
+	if (typeof directText === "string" && directText.trim().length > 0) {
+		return directText;
+	}
+
+	const parts = properties.parts;
+	if (!Array.isArray(parts)) return undefined;
+
+	const text = parts
+		.filter(isRecord)
+		.map((part) => part.text)
+		.filter((value): value is string => typeof value === "string")
+		.join("\n")
+		.trim();
+
+	return text.length > 0 ? text : undefined;
+}
+
 const toolExecuteBefore =
 	(client: OpencodeClient, log: Logger) =>
 	async (
@@ -37,7 +65,7 @@ const toolExecuteBefore =
 
 		// Parse boundary 1: Check agent mode
 		const { isSubAgent } = await parseAgentMode(
-			client as OpencodeClient,
+			client,
 			agentName,
 			log,
 		);
@@ -47,7 +75,7 @@ const toolExecuteBefore =
 
 		// Parse boundary 2: Check write capability (only for sub-agents)
 		const { isReadOnly } = await parseAgentWriteCapability(
-			client as OpencodeClient,
+			client,
 			agentName,
 			log,
 		);
@@ -59,8 +87,8 @@ const toolExecuteBefore =
 		throw new Error(
 			`❌ Agent '${agentName}' is read-only and should use the delegate tool for async background execution.\n\n` +
 				`Read-only agents have: edit="deny", write="deny", bash={"*":"deny"}\n` +
-				`Use delegate for: researcher, explore\n` +
-				`Use task for: coder, scribe`,
+				`Use delegate for read-only sub-agents\n` +
+				`Use task for write-capable sub-agents`,
 		);
 	};
 
@@ -68,7 +96,7 @@ export const backgroundAgentsPlugin: Plugin = async (ctx) => {
 	const { client, directory } = ctx;
 
 	// Create logger early for all components
-	const log = createLogger(client as OpencodeClient);
+	const log = createLogger(client);
 
 	// Project-level storage directory (shared across sessions)
 	// Uses git root commit hash for cross-worktree consistency
@@ -85,7 +113,7 @@ export const backgroundAgentsPlugin: Plugin = async (ctx) => {
 	// Ensure base directory exists (for debug logs etc)
 	await fs.mkdir(baseDir, { recursive: true });
 
-	const manager = new DelegationManager(client as OpencodeClient, baseDir, log);
+	const manager = new DelegationManager(client, baseDir, log);
 
 	await manager.debugLog(
 		"BackgroundAgentsPlugin initialized with delegation system",
@@ -120,7 +148,7 @@ export const backgroundAgentsPlugin: Plugin = async (ctx) => {
 			if (event.type === "message.updated") {
 				const sessionID = event.properties.info.sessionID;
 				if (sessionID) {
-					manager.handleMessageEvent(sessionID);
+					manager.handleMessageEvent(sessionID, extractMessageText(event));
 				}
 			}
 		},
