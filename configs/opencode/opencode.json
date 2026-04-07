@@ -165,5 +165,5 @@
 			"enabled": false
 		}
 	},
-	"plugin": ["notification", "workspace", "background-agents"]
+	"plugin": ["notification", "workspace", "background-agents", "opencode-pty"]
 }
