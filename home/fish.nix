@@ -15,9 +15,6 @@ in
   # https://rycee.gitlab.io/home-manager/options.html#opt-programs.fish.enable
   programs.fish.enable = true;
 
-  # Add Fish plugins
-  home.packages = [ pkgs.fishPlugins.done ];
-
   programs.fish.plugins = [
     # Make Bash utilities usable in Fish shell
     {
@@ -27,6 +24,16 @@ in
         repo = "bass";
         rev = "2fd3d2157d5271ca3575b13daec975ca4c10577a";
         sha256 = "sha256-fl4/Pgtkojk5AE52wpGDnuLajQxHoVqyphE90IIPYFU=";
+      };
+    }
+    # Notify when long-running commands finish
+    {
+      name = "done";
+      src = pkgs.fetchFromGitHub {
+        owner = "franciscolourenco";
+        repo = "done";
+        rev = "1.20.0";
+        sha256 = "sha256-WA6DBrPBuXRIloO05UBunTJ9N01d6tO1K1uqojjO0mo=";
       };
     }
   ];
