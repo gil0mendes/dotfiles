@@ -37,6 +37,7 @@ This is non-negotiable. The philosophy defines the quality standards your code m
 | `glob`  | Find files by pattern                     |
 | `grep`  | Search for code patterns                  |
 | `bash`  | Run builds, lints, type-checks, and tests |
+| `pty_*` | For long running processes                |
 
 ## Authority: Autonomous Actions
 
