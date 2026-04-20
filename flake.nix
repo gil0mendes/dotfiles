@@ -179,18 +179,6 @@
         # Overlay that adds `lib.colors` to reference colors elsewhere in system configs
         colors = import ./overlays/colors.nix;
 
-        # Skip fish-dependent check phases that get SIGKILL'd in the macOS Nix sandbox
-        skipFishChecks = _final: prev: {
-          direnv = prev.direnv.overrideAttrs (_old: {
-            doCheck = false;
-          });
-          fishPlugins = prev.fishPlugins // {
-            fishtape = prev.fishPlugins.fishtape.overrideAttrs (_old: {
-              doCheck = false;
-            });
-          };
-        };
-
         emacs = inputs.emacs.overlays.emacs;
 
         jj-starship = inputs.jj-starship.overlays.default;
