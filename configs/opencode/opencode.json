@@ -128,20 +128,20 @@
 			"npm": "@ai-sdk/openai-compatible",
 			"models": {
 				"claude-opus-4-6": {
-					"id": "bedrock/us.anthropic.claude-opus-4-6-v1"
+					"id": "claude-opus-4-6"
 				},
 				"claude-sonnet-4-6": {
-					"id": "bedrock/us.anthropic.claude-sonnet-4-6"
+					"id": "claude-sonnet-4-6"
 				},
 				"claude-haiku-4-5": {
-					"id": "claude-haiku-4-5"
+					"id": "azure/claude-haiku-4-5"
 				},
-				"gpt-5-3-codex": {
-					"id": "azure/gpt-5-3-codex"
+				"gpt-5-4": {
+					"id": "azure/gpt-5-4"
 				}
 			},
 			"options": {
-				"baseURL": "https://api.iq.cudasvc.com"
+				"baseURL": "https://eu.api.iq.cudasvc.com"
 			}
 		}
 	},
