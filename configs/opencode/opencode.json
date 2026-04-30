@@ -143,9 +143,27 @@
 			"options": {
 				"baseURL": "https://eu.api.iq.cudasvc.com"
 			}
+		},
+		"lmstudio": {
+			"name": "LM Studio",
+			"npm": "@ai-sdk/openai-compatible",
+			"models": {
+				"qwen3.6-27b": {
+					"id": "qwen/qwen3.6-27b"
+				}
+			},
+			"options": {
+				"baseURL": "http://192.168.1.29:1234/v1"
+			}
 		}
 	},
-	"enabled_providers": ["openai", "opencode", "litellm-barracuda", "anthropic"],
+	"enabled_providers": [
+		"openai",
+		"opencode",
+		"litellm-barracuda",
+		"anthropic",
+		"lmstudio"
+	],
 	"mcp": {
 		"context7": {
 			"type": "remote",
