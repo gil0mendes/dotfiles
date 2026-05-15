@@ -70,7 +70,7 @@ in
     oras
     atuin
     watchman
-    defuddle
+    defuddle-cli
 
     # we use it for OpenCode
     bun

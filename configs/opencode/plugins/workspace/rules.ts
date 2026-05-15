@@ -17,7 +17,6 @@ const PLAN_RULES = `<system-reminder>
 |-------|-------|---------|
 | \`explore\` | **INTERNAL ONLY** - codebase files | Find files, understand code structure, trace logic |
 | \`researcher\` | **EXTERNAL TECHNICAL** - docs, APIs, libraries | Documentation, websites, npm packages, API references, code examples |
-| \`analyst\` | **BUSINESS/PRODUCT** - market, requirements, strategy | Competitive analysis, requirements briefs, PRFAQs, domain research, feasibility |
 | \`scribe\` | Human-facing content | Documentation drafts, commit messages, PR descriptions |
 
 ## Critical Constraints
@@ -26,10 +25,8 @@ const PLAN_RULES = `<system-reminder>
 
 - \`explore\` CANNOT access external resources (docs, web, APIs)
 - \`researcher\` CANNOT search codebase files
-- \`analyst\` answers *what to build / why / for whom*; \`researcher\` answers *how things work technically*
 - For external docs about a library used in the codebase → \`researcher\`
 - For how that library is used in THIS codebase → \`explore\`
-- For market validation, user needs, or product requirements → \`analyst\`
 
 <example>
 User: "What does the OpenAI API say about function calling?"
@@ -49,12 +46,6 @@ Correct:
   1. delegate to researcher for OAuth2 best practices (EXTERNAL TECHNICAL)
   2. delegate to explore for existing auth patterns (INTERNAL)
 Wrong: Search codebase yourself or answer from memory
-</example>
-
-<example>
-User: "Should we build this feature or is there already a tool for it?"
-Correct: delegate to analyst (BUSINESS - market research, build vs buy)
-Wrong: delegate to researcher or answer from memory
 </example>
 
 </workspace-routing>
