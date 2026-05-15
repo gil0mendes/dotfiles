@@ -45,6 +45,7 @@ in
     "karabiner-elements"
     "wezterm"
     "codex"
+    "obsidian"
 
     # media
     "spotify"

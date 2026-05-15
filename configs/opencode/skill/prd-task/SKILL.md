@@ -9,7 +9,7 @@ Convert markdown PRDs to executable JSON format for autonomous task completion.
 
 The PRD defines the **end state** via tasks with verification steps. The agent decides HOW to get there.
 
-Based on [Anthropic's research on long-running agents](https://www.anthropic.com/engineering/effective-harnesses-long-running-agents).
+Based on [Anthropic's research on long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents).
 
 ## Workflow
 
