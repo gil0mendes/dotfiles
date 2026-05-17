@@ -1,0 +1,21 @@
+{
+	"name": "pi",
+	"module": "index.ts",
+	"type": "module",
+	"private": true,
+	"workspaces": [
+		"agent/extensions/*"
+	],
+	"devDependencies": {
+		"@types/bun": "latest"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@earendil-works/pi-ai": "^0.74.1",
+		"@earendil-works/pi-coding-agent": "^0.74.1",
+		"@earendil-works/pi-tui": "^0.74.1",
+		"typebox": "^1.1.38"
+	}
+}

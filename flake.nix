@@ -209,6 +209,7 @@
         g0m-neovim = import ./home/neovim.nix;
         g0m-opencode = import ./home/opencode.nix;
         g0m-packages = import ./home/packages.nix;
+        g0m-pi = import ./home/pi.nix;
         g0m-starship = import ./home/starship.nix;
         g0m-starship-symbols = import ./home/starship-symbols.nix;
         g0m-zsh = import ./home/zsh.nix;
