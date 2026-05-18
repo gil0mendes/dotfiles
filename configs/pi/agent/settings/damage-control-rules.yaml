@@ -8,6 +8,11 @@ strictMode: false
 # When allowed, that path is trusted for the rest of the session.
 askBeforeOutsideCwd: true
 
+# Paths outside the current working directory that have been permanently allowed from the prompt UI.
+# Use a trailing slash for directories.
+allowedOutsideCwdPaths:
+  - "~/.dotfiles/"
+
 bashToolPatterns:
   - pattern: '\brm\s+(-[^\s]*)*-[rRf]'
     reason: rm with recursive or force flags
@@ -63,6 +68,21 @@ bashToolPatterns:
     reason: pkill -9
   - pattern: '\bhistory\s+-c\b'
     reason: clearing shell history
+  - pattern: '\bterraform\s+apply\b'
+    reason: terraform apply can change infrastructure
+    ask: true
+  - pattern: '\bkubectl\s+delete\b'
+    reason: kubectl delete removes Kubernetes resources
+    ask: true
+  - pattern: '\bkubectl\s+drain\b'
+    reason: kubectl drain evicts workloads from a node
+    ask: true
+  - pattern: '\bkubectl\s+replace\s+.*--force\b'
+    reason: kubectl replace --force deletes and recreates resources
+    ask: true
+  - pattern: '\bkubectl\s+scale\s+.*--replicas=0\b'
+    reason: kubectl scale --replicas=0 stops workloads
+    ask: true
   - pattern: '\baws\s+s3\s+rm\s+.*--recursive\b'
     reason: aws s3 rm --recursive deletes many objects
   - pattern: '\baws\s+s3\s+rb\s+.*--force\b'
@@ -98,169 +118,169 @@ bashToolPatterns:
     reason: SQL DELETE without WHERE deletes all rows
 
 zeroAccessPaths:
-  - path: '.env'
+  - path: ".env"
     reason: environment secrets are zero-access
-  - path: '.env.*'
+  - path: ".env.*"
     reason: environment secrets are zero-access
-  - path: '*.env'
+  - path: "*.env"
     reason: environment secrets are zero-access
-  - path: '~/.ssh/'
+  - path: "~/.ssh/"
     reason: SSH keys and config are zero-access
-  - path: '~/.gnupg/'
+  - path: "~/.gnupg/"
     reason: GPG keys are zero-access
-  - path: '~/.aws/'
+  - path: "~/.aws/"
     reason: AWS credentials are zero-access
-  - path: '~/.config/gcloud/'
+  - path: "~/.config/gcloud/"
     reason: GCloud credentials are zero-access
-  - path: '~/.azure/'
+  - path: "~/.azure/"
     reason: Azure credentials are zero-access
-  - path: '~/.kube/'
+  - path: "~/.kube/"
     reason: Kubernetes credentials are zero-access
-  - path: '~/.docker/'
+  - path: "~/.docker/"
     reason: Docker credentials are zero-access
-  - path: '~/.netrc'
+  - path: "~/.netrc"
     reason: netrc credentials are zero-access
-  - path: '~/.npmrc'
+  - path: "~/.npmrc"
     reason: npm credentials are zero-access
-  - path: '~/.pypirc'
+  - path: "~/.pypirc"
     reason: PyPI credentials are zero-access
-  - path: '~/.git-credentials'
+  - path: "~/.git-credentials"
     reason: Git credentials are zero-access
-  - path: '*-credentials.json'
+  - path: "*-credentials.json"
     reason: credential JSON files are zero-access
-  - path: '*serviceAccount*.json'
+  - path: "*serviceAccount*.json"
     reason: service account keys are zero-access
-  - path: '*service-account*.json'
+  - path: "*service-account*.json"
     reason: service account keys are zero-access
-  - path: '*.pem'
+  - path: "*.pem"
     reason: private keys/certificates are zero-access
-  - path: '*.key'
+  - path: "*.key"
     reason: private keys are zero-access
-  - path: '*.p12'
+  - path: "*.p12"
     reason: certificate bundles are zero-access
-  - path: '*.pfx'
+  - path: "*.pfx"
     reason: certificate bundles are zero-access
-  - path: '*.tfstate'
+  - path: "*.tfstate"
     reason: Terraform state may contain secrets
-  - path: '*.tfstate.backup'
+  - path: "*.tfstate.backup"
     reason: Terraform state backups may contain secrets
-  - path: '.terraform/'
+  - path: ".terraform/"
     reason: Terraform working files may contain secrets
-  - path: '.vercel/'
+  - path: ".vercel/"
     reason: Vercel project credentials are zero-access
-  - path: '.netlify/'
+  - path: ".netlify/"
     reason: Netlify project credentials are zero-access
-  - path: '.supabase/'
+  - path: ".supabase/"
     reason: Supabase project credentials are zero-access
-  - path: 'dump.sql'
+  - path: "dump.sql"
     reason: database dumps are zero-access
-  - path: 'backup.sql'
+  - path: "backup.sql"
     reason: database backups are zero-access
-  - path: '*.dump'
+  - path: "*.dump"
     reason: database dumps are zero-access
 
 readOnlyPaths:
-  - path: '/etc/'
+  - path: "/etc/"
     reason: system configuration is read-only
-  - path: '/usr/'
+  - path: "/usr/"
     reason: system directory is read-only
-  - path: '/bin/'
+  - path: "/bin/"
     reason: system directory is read-only
-  - path: '/sbin/'
+  - path: "/sbin/"
     reason: system directory is read-only
-  - path: '/boot/'
+  - path: "/boot/"
     reason: boot files are read-only
-  - path: '/root/'
+  - path: "/root/"
     reason: root home is read-only
-  - path: '~/.bash_history'
+  - path: "~/.bash_history"
     reason: shell history is read-only
-  - path: '~/.zsh_history'
+  - path: "~/.zsh_history"
     reason: shell history is read-only
-  - path: '~/.bashrc'
+  - path: "~/.bashrc"
     reason: shell profile is read-only unless explicitly requested
     ask: true
-  - path: '~/.zshrc'
+  - path: "~/.zshrc"
     reason: shell profile is read-only unless explicitly requested
     ask: true
-  - path: '~/.profile'
+  - path: "~/.profile"
     reason: shell profile is read-only unless explicitly requested
     ask: true
-  - path: 'package-lock.json'
+  - path: "package-lock.json"
     reason: lockfiles are read-only unless explicitly requested
     ask: true
-  - path: 'yarn.lock'
+  - path: "yarn.lock"
     reason: lockfiles are read-only unless explicitly requested
     ask: true
-  - path: 'pnpm-lock.yaml'
+  - path: "pnpm-lock.yaml"
     reason: lockfiles are read-only unless explicitly requested
     ask: true
-  - path: 'bun.lockb'
+  - path: "bun.lockb"
     reason: lockfiles are read-only unless explicitly requested
     ask: true
-  - path: '*.lock'
+  - path: "*.lock"
     reason: lockfiles are read-only unless explicitly requested
     ask: true
-  - path: '*.min.js'
+  - path: "*.min.js"
     reason: minified/generated files are read-only
-  - path: '*.min.css'
+  - path: "*.min.css"
     reason: minified/generated files are read-only
-  - path: 'dist/'
+  - path: "dist/"
     reason: build output is read-only
-  - path: 'build/'
+  - path: "build/"
     reason: build output is read-only
-  - path: '.next/'
+  - path: ".next/"
     reason: build output is read-only
-  - path: '.nuxt/'
+  - path: ".nuxt/"
     reason: build output is read-only
-  - path: '__pycache__/'
+  - path: "__pycache__/"
     reason: generated cache files are read-only
-  - path: '.venv/'
+  - path: ".venv/"
     reason: virtual environments are read-only
-  - path: 'venv/'
+  - path: "venv/"
     reason: virtual environments are read-only
-  - path: 'target/'
+  - path: "target/"
     reason: build output is read-only
 
 noDeletePaths:
-  - path: '~/.pi/'
+  - path: "~/.pi/"
     reason: Pi configuration and sessions must not be deleted
-  - path: '.pi/'
+  - path: ".pi/"
     reason: project Pi configuration must not be deleted
-  - path: '.git/'
+  - path: ".git/"
     reason: Git repository metadata must not be deleted
-  - path: '.gitignore'
+  - path: ".gitignore"
     reason: Git ignore file must not be deleted
-  - path: '.gitattributes'
+  - path: ".gitattributes"
     reason: Git attributes file must not be deleted
-  - path: '.gitmodules'
+  - path: ".gitmodules"
     reason: Git submodule metadata must not be deleted
-  - path: 'README.md'
+  - path: "README.md"
     reason: README must not be deleted
-  - path: 'README.*'
+  - path: "README.*"
     reason: README must not be deleted
-  - path: 'LICENSE'
+  - path: "LICENSE"
     reason: license file must not be deleted
-  - path: 'LICENSE.*'
+  - path: "LICENSE.*"
     reason: license file must not be deleted
-  - path: 'COPYING'
+  - path: "COPYING"
     reason: license file must not be deleted
-  - path: 'NOTICE'
+  - path: "NOTICE"
     reason: notice file must not be deleted
-  - path: 'SECURITY.md'
+  - path: "SECURITY.md"
     reason: security policy must not be deleted
-  - path: 'AGENTS.md'
+  - path: "AGENTS.md"
     reason: agent instructions must not be deleted
-  - path: 'CLAUDE.md'
+  - path: "CLAUDE.md"
     reason: agent instructions must not be deleted
-  - path: '.github/'
+  - path: ".github/"
     reason: CI/project metadata must not be deleted
-  - path: 'Dockerfile'
+  - path: "Dockerfile"
     reason: Dockerfile must not be deleted
-  - path: 'Dockerfile.*'
+  - path: "Dockerfile.*"
     reason: Dockerfile must not be deleted
-  - path: 'docker-compose.yml'
+  - path: "docker-compose.yml"
     reason: Docker compose config must not be deleted
-  - path: 'docker-compose.*.yml'
+  - path: "docker-compose.*.yml"
     reason: Docker compose config must not be deleted
 
 # If strictMode is true, every bash command must match at least one regex here.
