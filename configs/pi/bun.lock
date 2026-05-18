@@ -8,6 +8,7 @@
         "@earendil-works/pi-ai": "^0.74.1",
         "@earendil-works/pi-coding-agent": "^0.74.1",
         "@earendil-works/pi-tui": "^0.74.1",
+        "pi-interview": "^0.8.7",
         "typebox": "^1.1.38",
       },
       "devDependencies": {
@@ -366,6 +367,8 @@
     "path-scurry": ["path-scurry@2.0.2", "", { "dependencies": { "lru-cache": "^11.0.0", "minipass": "^7.1.2" } }, "sha512-3O/iVVsJAPsOnpwWIeD+d6z/7PmqApyQePUtCndjatj/9I5LylHvt5qluFaBT3I5h3r1ejfR056c+FCv+NnNXg=="],
 
     "peberminta": ["peberminta@0.9.0", "", {}, "sha512-XIxfHpEuSJbITd1H3EeQwpcZbTLHc+VVr8ANI9t5sit565tsI4/xK3KWTUFE2e6QiangUkh3B0jihzmGnNrRsQ=="],
+
+    "pi-interview": ["pi-interview@0.8.7", "", { "dependencies": { "typebox": "^1.1.24" }, "bin": { "pi-interview": "bin/install.js" } }, "sha512-25Ti4JodqajFmoBBZ8E/45eIf6kdD0gPNcDY2Lw+JwclTdNo09TpCjIjPOHdMoMKzFk3oX0I7QjFScsiCiBdHA=="],
 
     "pi-web-tools-extension": ["pi-web-tools-extension@workspace:agent/extensions/web-tools"],
 

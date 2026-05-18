@@ -16,6 +16,7 @@
 		"@earendil-works/pi-ai": "^0.74.1",
 		"@earendil-works/pi-coding-agent": "^0.74.1",
 		"@earendil-works/pi-tui": "^0.74.1",
+		"pi-interview": "^0.8.7",
 		"typebox": "^1.1.38"
 	}
 }
