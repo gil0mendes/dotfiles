@@ -148,7 +148,7 @@ For any command execution (bun check, bun test, git operations):
 | Agent | Scope | Use For |
 |-------|-------|---------|
 | \`explore\` | **INTERNAL ONLY** - codebase files | Find files, understand code structure, trace logic |
-| \`researcher\` | **EXTERNAL ONLY** - outside codebase | Documentation, websites, npm packages, APIs, tutorials |
+| \`researcher\` | **EXTERNAL TECHNICAL** - outside codebase | Documentation, websites, npm packages, API references, code examples |
 | \`coder\` | Implementation | Write/edit code, run builds and tests |
 | \`scribe\` | Human-facing content | Documentation, commit messages, PR descriptions |
 

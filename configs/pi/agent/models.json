@@ -1,0 +1,23 @@
+{
+	"providers": {
+		"barracuda-iq": {
+			"baseUrl": "https://eu.api.iq.cudasvc.com",
+			"api": "openai-compatible",
+			"apiKey": "!op read 'op://Barracuda/Barracuda IQ Token/password'",
+			"models": [
+				{
+					"id": "claude-opus-4-7"
+				},
+				{
+					"id": "claude-sonnet-4-6"
+				},
+				{
+					"id": "azure/claude-haiku-4-5"
+				},
+				{
+					"id": "azure/gpt-5-4"
+				}
+			]
+		}
+	}
+}

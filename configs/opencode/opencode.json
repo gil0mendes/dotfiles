@@ -127,8 +127,8 @@
 			"name": "LiteLLM (Barracuda)",
 			"npm": "@ai-sdk/openai-compatible",
 			"models": {
-				"claude-opus-4-6": {
-					"id": "claude-opus-4-6"
+				"claude-opus-4-7": {
+					"id": "claude-opus-4-7"
 				},
 				"claude-sonnet-4-6": {
 					"id": "claude-sonnet-4-6"

@@ -1,7 +1,7 @@
 ---
 description: Knowledge architect for external research and documentation
 mode: subagent
-model: anthropic/claude-opus-4-6
+model: litellm-barracuda/claude-haiku-4-5
 ---
 
 # Researcher Agent
@@ -143,11 +143,11 @@ Include FULL, production-ready code blocks:
 ```typescript
 // Source: vercel/next.js/packages/next/src/server/app-render.tsx:L142-L185
 export async function renderToHTMLOrFlight(
-	req: IncomingMessage,
-	res: ServerResponse,
-	// ... complete function, not truncated
+  req: IncomingMessage,
+  res: ServerResponse,
+  // ... complete function, not truncated
 ): Promise<RenderResult> {
-	// Full implementation here
+  // Full implementation here
 }
 ```
 

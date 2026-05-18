@@ -1,13 +1,11 @@
 {
   config,
   lib,
-  pkgs,
   ...
 }:
 
 let
   inherit (lib) mkIf;
-  mkIfCaskPresent = cask: mkIf (lib.any (x: x == cask) config.homebrew.casks);
   brewEnabled = config.homebrew.enable;
 
   isWork = config.users.primaryUser.username == "gmendes";
@@ -57,6 +55,7 @@ in
     "yubico-yubikey-manager"
     "zed"
     "codex"
+    "1password-cli"
 
     # Design
     "figma"
