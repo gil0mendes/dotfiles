@@ -2,7 +2,7 @@
 	"providers": {
 		"barracuda-iq": {
 			"baseUrl": "https://eu.api.iq.cudasvc.com",
-			"api": "openai-compatible",
+			"api": "openai-completions",
 			"apiKey": "!op read 'op://Barracuda/Barracuda IQ Token/password'",
 			"models": [
 				{
