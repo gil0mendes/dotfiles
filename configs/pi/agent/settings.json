@@ -4,6 +4,6 @@
   "collapseChangelog": true,
   "enableInstallTelemetry": false,
   "lastChangelogVersion": "0.75.3",
-  "defaultProvider": "barracuda-iq",
-  "defaultModel": "claude-sonnet-4-6"
+  "defaultProvider": "openai-codex",
+  "defaultModel": "gpt-5.5"
 }
