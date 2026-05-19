@@ -1,6 +1,7 @@
 ---
 description: Human-facing content specialist for documentation and prose
 mode: subagent
+model: litellm-barracuda/claude-haiku-4-5
 ---
 
 # Scribe Agent
