@@ -134,14 +134,29 @@
 					"id": "claude-sonnet-4-6"
 				},
 				"claude-haiku-4-5": {
-					"id": "azure/claude-haiku-4-5"
+					"id": "claude-haiku-4-5"
 				},
-				"gpt-5-4": {
-					"id": "azure/gpt-5-4"
+				"gemini-2-5-flash": {
+					"id": "gemini-2-5-flash"
 				}
 			},
 			"options": {
-				"baseURL": "https://eu.api.iq.cudasvc.com"
+				"baseURL": "https://api.iq.cudasvc.com"
+			}
+		},
+		"litellm-barracuda-openai": {
+			"name": "LiteLLM OpenAI (Barracuda)",
+			"npm": "@ai-sdk/openai",
+			"models": {
+				"gpt-5-5": {
+					"id": "gpt-5-5"
+				},
+				"gpt-5-4-mini": {
+					"id": "gpt-5-4-mini"
+				}
+			},
+			"options": {
+				"baseURL": "https://api.iq.cudasvc.com"
 			}
 		},
 		"lmstudio": {
@@ -161,7 +176,7 @@
 		"openai",
 		"opencode",
 		"litellm-barracuda",
-		"anthropic",
+		"litellm-barracuda-openai",
 		"lmstudio"
 	],
 	"mcp": {
