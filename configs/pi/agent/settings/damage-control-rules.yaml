@@ -12,7 +12,8 @@ askBeforeOutsideCwd: true
 # Use a trailing slash for directories.
 allowedOutsideCwdPaths:
   - "~/.dotfiles/"
-  - '~/.agent-browser/tmp/screenshots/'
+  - "~/.agent-browser/tmp/"
+  - "~/projects/"
 
 bashToolPatterns:
   - pattern: '\brm\s+(-[^\s]*)*-[rRf]'
@@ -72,6 +73,9 @@ bashToolPatterns:
   - pattern: '\bterraform\s+apply\b'
     reason: terraform apply can change infrastructure
     ask: true
+  - pattern: '\btofu\s+apply\b'
+    reason: tofu apply can change infrastructure
+    ask: true
   - pattern: '\bkubectl\s+delete\b'
     reason: kubectl delete removes Kubernetes resources
     ask: true
@@ -104,11 +108,6 @@ bashToolPatterns:
     reason: deletes a GKE cluster
   - pattern: '\bfirebase\s+projects:delete\b'
     reason: deletes a Firebase project
-  - pattern: '\bvercel\s+(remove|rm)\b'
-    reason: removes Vercel resources
-    ask: true
-  - pattern: '\bnetlify\s+sites:delete\b'
-    reason: deletes a Netlify site
   - pattern: '\bwrangler\s+(delete|r2\s+bucket\s+delete|kv:namespace\s+delete|d1\s+delete)\b'
     reason: deletes Cloudflare resources
   - pattern: '\bTRUNCATE\s+TABLE\b'
@@ -167,10 +166,6 @@ zeroAccessPaths:
     reason: Terraform state backups may contain secrets
   - path: ".terraform/"
     reason: Terraform working files may contain secrets
-  - path: ".vercel/"
-    reason: Vercel project credentials are zero-access
-  - path: ".netlify/"
-    reason: Netlify project credentials are zero-access
   - path: ".supabase/"
     reason: Supabase project credentials are zero-access
   - path: "dump.sql"
