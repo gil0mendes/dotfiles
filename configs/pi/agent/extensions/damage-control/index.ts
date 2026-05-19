@@ -2,6 +2,13 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import * as path from "node:path";
 import { DEFAULT_CONFIG, loadConfig, totalRules } from "./config";
+import {
+	emitActionBlocked,
+	emitFeatureRegister,
+	emitRiskDetected,
+	type DamageControlBlockSource,
+	type DamageControlFeatureId,
+} from "./events";
 import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
 import { matchPathRules, ruleValue } from "./rules";
 import { evaluateBash, outsideCwdPathsInCommand } from "./shell/analysis";
@@ -32,6 +39,9 @@ export default function damageControl(pi: ExtensionAPI) {
 		const loaded = reload(ctx.cwd);
 		const status = `shield: ${totalRules(current)} rules${current.strictMode ? ", strict" : ""}`;
 		ctx.ui.setStatus("damage-control", status);
+		for (const feature of ["commands", "paths", "policies"] as const) {
+			emitFeatureRegister(pi, feature);
+		}
 		if (loaded.error)
 			ctx.ui.notify(
 				`🛡️ Damage Control failed to load ${loaded.source}: ${loaded.error}`,
@@ -72,7 +82,25 @@ export default function damageControl(pi: ExtensionAPI) {
 	});
 
 	pi.on("tool_call", async (event, ctx) => {
-		const block = async (reason: string, ask: boolean) => {
+		const context = {
+			toolName: event.toolName,
+			input:
+				event.input && typeof event.input === "object"
+					? (event.input as Record<string, unknown>)
+					: undefined,
+		};
+		const block = async (
+			reason: string,
+			ask: boolean,
+			feature: DamageControlFeatureId = "policies",
+			blockSource: DamageControlBlockSource = ask ? "user" : "policy",
+			metadata?: Record<string, unknown>,
+		) => {
+			emitRiskDetected(pi, {
+				feature,
+				risk: { kind: "dangerous", reason, metadata },
+				context,
+			});
 			const message = `🛑 BLOCKED by Damage Control: ${reason}\n\nDo not retry with workaround commands, alternate paths, or equivalent destructive actions. Report this block to the user and ask how to proceed.`;
 			if (ask) {
 				const ok = await ctx.ui.confirm(
@@ -90,6 +118,13 @@ export default function damageControl(pi: ExtensionAPI) {
 					return { block: false };
 				}
 			}
+			emitActionBlocked(pi, {
+				feature,
+				action: { kind: "tool_call", toolName: event.toolName },
+				reason,
+				block: { source: blockSource, metadata },
+				context,
+			});
 			ctx.ui.notify(message, "error");
 			ctx.ui.setStatus("damage-control", `blocked: ${reason.slice(0, 40)}`);
 			pi.appendEntry("damage-control-log", {
@@ -154,6 +189,18 @@ export default function damageControl(pi: ExtensionAPI) {
 			const parentDir = path.dirname(target);
 			if (!ctx.hasUI) {
 				const reason = `command references path outside current directory: ${target}`;
+				emitRiskDetected(pi, {
+					feature: "paths",
+					risk: { kind: "dangerous", reason, metadata: { path: target } },
+					context,
+				});
+				emitActionBlocked(pi, {
+					feature: "paths",
+					action: { kind: "tool_call", toolName: tool, path: target },
+					reason,
+					block: { source: "nonInteractive", metadata: { path: target } },
+					context,
+				});
 				return {
 					block: true,
 					reason: `🛑 BLOCKED by Damage Control: ${reason}`,
@@ -180,6 +227,13 @@ export default function damageControl(pi: ExtensionAPI) {
 			}
 
 			const reason = `user denied access outside current directory: ${target}`;
+			emitActionBlocked(pi, {
+				feature: "paths",
+				action: { kind: "tool_call", toolName: tool, path: target },
+				reason,
+				block: { source: "user", metadata: { path: target } },
+				context,
+			});
 			ctx.ui.setStatus("damage-control", `blocked: ${reason.slice(0, 40)}`);
 			pi.appendEntry("damage-control-log", {
 				action: "denied_outside_cwd",
@@ -210,7 +264,10 @@ export default function damageControl(pi: ExtensionAPI) {
 
 		if (isToolCallEventType("bash", event)) {
 			const violation = evaluateBash(event.input.command, current);
-			if (violation) return block(violation.reason, violation.ask);
+			if (violation)
+				return block(violation.reason, violation.ask, "commands", "policy", {
+					command: event.input.command,
+				});
 			const outside = await askForOutsideCwdPaths(
 				outsideCwdPathsInCommand(event.input.command, ctx.cwd),
 				event.toolName,
@@ -233,7 +290,10 @@ export default function damageControl(pi: ExtensionAPI) {
 					typeof params.command === "string"
 				) {
 					const violation = evaluateBash(params.command, current);
-					if (violation) return block(violation.reason, violation.ask);
+					if (violation)
+						return block(violation.reason, violation.ask, "commands", "policy", {
+							command: params.command,
+						});
 					const outside = await askForOutsideCwdPaths(
 						outsideCwdPathsInCommand(params.command, ctx.cwd),
 						String(name),
@@ -252,6 +312,9 @@ export default function damageControl(pi: ExtensionAPI) {
 				return block(
 					zero.reason ?? `zero-access path: ${ruleValue(zero)}`,
 					zero.ask === true,
+					"paths",
+					"policy",
+					{ path: ruleValue(zero) },
 				);
 
 			if (event.toolName === "write" || event.toolName === "edit") {
@@ -260,6 +323,9 @@ export default function damageControl(pi: ExtensionAPI) {
 					return block(
 						readOnly.reason ?? `read-only path: ${ruleValue(readOnly)}`,
 						readOnly.ask === true,
+						"paths",
+						"policy",
+						{ path: ruleValue(readOnly) },
 					);
 			}
 
@@ -280,6 +346,20 @@ export default function damageControl(pi: ExtensionAPI) {
 	pi.on("user_bash", async (event, ctx) => {
 		const violation = evaluateBash(event.command, current);
 		if (violation) {
+			emitRiskDetected(pi, {
+				feature: "commands",
+				risk: {
+					kind: "dangerous",
+					reason: violation.reason,
+					metadata: { command: event.command },
+				},
+			});
+			emitActionBlocked(pi, {
+				feature: "commands",
+				action: { kind: "user_bash", command: event.command },
+				reason: violation.reason,
+				block: { source: "policy", metadata: { command: event.command } },
+			});
 			return {
 				result: {
 					output: `🛑 BLOCKED by Damage Control: ${violation.reason}`,
@@ -308,9 +388,20 @@ export default function damageControl(pi: ExtensionAPI) {
 
 		for (const target of outsidePaths) {
 			if (!ctx.hasUI) {
+				const reason = `command references path outside current directory: ${target}`;
+				emitRiskDetected(pi, {
+					feature: "paths",
+					risk: { kind: "dangerous", reason, metadata: { path: target } },
+				});
+				emitActionBlocked(pi, {
+					feature: "paths",
+					action: { kind: "user_bash", command: event.command, path: target },
+					reason,
+					block: { source: "nonInteractive", metadata: { path: target } },
+				});
 				return {
 					result: {
-						output: `🛑 BLOCKED by Damage Control: command references path outside current directory: ${target}`,
+						output: `🛑 BLOCKED by Damage Control: ${reason}`,
 						exitCode: 126,
 						cancelled: false,
 						truncated: false,
@@ -363,9 +454,16 @@ export default function damageControl(pi: ExtensionAPI) {
 				continue;
 			}
 
+			const reason = `user denied access outside current directory: ${target}`;
+			emitActionBlocked(pi, {
+				feature: "paths",
+				action: { kind: "user_bash", command: event.command, path: target },
+				reason,
+				block: { source: "user", metadata: { path: target } },
+			});
 			return {
 				result: {
-					output: `🛑 BLOCKED by Damage Control: user denied access outside current directory: ${target}`,
+					output: `🛑 BLOCKED by Damage Control: ${reason}`,
 					exitCode: 126,
 					cancelled: false,
 					truncated: false,

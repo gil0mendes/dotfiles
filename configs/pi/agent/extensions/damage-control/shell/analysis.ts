@@ -1,7 +1,7 @@
 import type { Program, SimpleCommand, Word } from "@aliou/sh";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { matchDangerousCommand } from "../commands/dangerous";
+import { checkDangerousCommand } from "../commands/dangerous";
 import { isInsideOrSame } from "../paths";
 import { absoluteTarget, matchLiteralPathInCommand, matchRegexRules, ruleValue } from "../rules";
 import type { Config, Rule } from "../types";
@@ -273,7 +273,12 @@ export function evaluateBash(
 		};
 
 	if (config.useBuiltinCommandMatchers !== false) {
-		const dangerous = matchDangerousCommand(cmd);
+		const dangerous = checkDangerousCommand({
+			command: cmd,
+			patterns: [],
+			useBuiltinMatchers: true,
+			fallbackPatterns: [],
+		});
 		if (dangerous)
 			return {
 				reason: dangerous.description,
