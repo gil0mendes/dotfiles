@@ -47,41 +47,4 @@ export type Config = {
 	strictModeAllowedList: StrictModeAllowedCommandConfig[];
 };
 
-export type Action =
-	| {
-			kind: "file";
-			path: string;
-			origin?: string;
-	  }
-	| {
-			kind: "command";
-			command: string;
-			origin?: string;
-	  };
 
-export type RuleResult<TMeta = null> =
-	| {
-			kind: "pass";
-	  }
-	| {
-			kind: "match";
-			reason: string;
-			metadata: TMeta;
-	  };
-
-export type Rule<TMeta = null> = {
-	key: string;
-	check: (action: Action) => RuleResult<TMeta>;
-};
-
-export type Safety<TMeta = null> =
-	| {
-			kind: "safe";
-	  }
-	| {
-			kind: "dangerous";
-			action: Action;
-			key: string;
-			reason: string;
-			metadata: TMeta;
-	  };

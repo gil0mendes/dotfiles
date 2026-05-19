@@ -79,19 +79,3 @@ export function matchRegexRules<
 	return null;
 }
 
-export function matchLiteralPathInCommand(
-	command: string,
-	rules: readonly PathPatternConfig[],
-): PathPatternConfig | null {
-	for (const rule of rules) {
-		const value = ruleValue(rule);
-		if (!value) continue;
-		const bare = value
-			.replace(/^~\//, "")
-			.replace(/\/+$|\\+$/g, "")
-			.replace(/^\*+/, "")
-			.replace(/\*+$/, "");
-		if (bare && command.includes(bare)) return rule;
-	}
-	return null;
-}

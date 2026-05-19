@@ -19,6 +19,7 @@ import {
 	canonicalizePath,
 	isGrantTooBroad,
 	isWriteDenied,
+	normalizeForDisplay,
 	shouldPromptForRead,
 	shouldPromptForWrite,
 	storageForm,
@@ -31,7 +32,6 @@ import {
 	type DamageControlBlockSource,
 	type DamageControlFeatureId,
 } from "./events";
-import { normalizeForDisplay } from "./paths";
 import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
 import { evaluateBash } from "./shell/analysis";
 
@@ -39,14 +39,12 @@ type AccessKind = "read" | "write";
 type AllowanceScope = "once" | "session" | "always";
 
 type SandboxState = {
-	enabled: boolean;
 	initialized: boolean;
 	sessionRead: string[];
 	sessionWrite: string[];
 };
 
 const sandboxState: SandboxState = {
-	enabled: false,
 	initialized: false,
 	sessionRead: [],
 	sessionWrite: [],
@@ -66,7 +64,6 @@ function sandboxRuntimeConfig(): SandboxRuntimeConfig {
 
 async function initializeSandbox(): Promise<void> {
 	await SandboxManager.initialize(sandboxRuntimeConfig(), async () => true);
-	sandboxState.enabled = true;
 	sandboxState.initialized = true;
 }
 
@@ -295,12 +292,11 @@ function setupSessionStart(pi: ExtensionAPI): void {
 				"info",
 			);
 		} catch (error) {
-			sandboxState.enabled = false;
-			sandboxState.initialized = false;
-			ctx.ui.notify(
-				`🛡️ Damage Control sandbox failed: ${error instanceof Error ? error.message : String(error)}`,
-				"error",
-			);
+		sandboxState.initialized = false;
+		ctx.ui.notify(
+			`🛡️ Damage Control sandbox failed: ${error instanceof Error ? error.message : String(error)}`,
+			"error",
+		);
 		}
 	});
 }
@@ -395,7 +391,6 @@ export default function damageControl(pi: ExtensionAPI) {
 	pi.on("session_shutdown", async () => {
 		if (!sandboxState.initialized) return;
 		await SandboxManager.reset();
-		sandboxState.enabled = false;
 		sandboxState.initialized = false;
 	});
 }

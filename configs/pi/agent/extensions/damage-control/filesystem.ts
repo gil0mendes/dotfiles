@@ -3,6 +3,20 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { FilesystemGateConfig } from "./types";
 
+export function isInsideOrSame(target: string, root: string): boolean {
+	const rel = path.relative(root, target);
+	return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+}
+
+export function normalizeForDisplay(target: string, cwd: string): string {
+	const home = os.homedir();
+	if (target === home) return "~";
+	if (target.startsWith(home + path.sep))
+		return `~${target.slice(home.length)}`;
+	const rel = path.relative(cwd, target);
+	return rel && !rel.startsWith("..") && !path.isAbsolute(rel) ? rel : target;
+}
+
 export const DEFAULT_FILESYSTEM_CONFIG: FilesystemGateConfig = {
 	denyRead: [
 		"/",
