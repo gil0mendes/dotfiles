@@ -12,6 +12,7 @@ askBeforeOutsideCwd: true
 # Use a trailing slash for directories.
 allowedOutsideCwdPaths:
   - "~/.dotfiles/"
+  - '~/.agent-browser/tmp/screenshots/'
 
 bashToolPatterns:
   - pattern: '\brm\s+(-[^\s]*)*-[rRf]'

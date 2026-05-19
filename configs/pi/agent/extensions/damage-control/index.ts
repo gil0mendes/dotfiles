@@ -337,6 +337,85 @@ function splitCommandWords(command: string): string[] {
 	return words;
 }
 
+/**
+ * Strips heredoc bodies from a shell command string so that pattern matchers
+ * and path extractors only see the outer command, not its stdin data.
+ *
+ * Handles: `<< 'EOF'`, `<< "EOF"`, `<< EOF`, `<<- EOF` (with optional dash and
+ * whitespace between `<<` and the marker).  Replaces every heredoc body with a
+ * single space so the surrounding command text stays structurally intact.
+ *
+ * Multiple heredocs in one command string are all stripped.
+ */
+function stripHeredocs(command: string): string {
+	// Match the heredoc opener and capture the bare marker name.
+	// Group 1: optional dash; group 2: optional quote; group 3: marker name.
+	const openerRe = /<<(-?)\s*(['"]?)([A-Za-z0-9_]+)\2/g;
+	let result = command;
+	let match: RegExpExecArray | null;
+
+	// Collect all heredocs from the original string (offsets shift as we
+	// replace, so we process right-to-left to keep earlier indices stable).
+	const replacements: Array<{ start: number; end: number }> = [];
+
+	while ((match = openerRe.exec(command)) !== null) {
+		const marker = match[3];
+		// The body starts after the newline that follows the opener line.
+		const bodyStart = command.indexOf("\n", match.index);
+		if (bodyStart === -1) continue; // no newline → no body
+		// The closing line is `marker` (possibly preceded by tabs when <<-).
+		const closingRe = new RegExp(`^\\t*${marker}\\s*$`, "m");
+		const bodySlice = command.slice(bodyStart + 1);
+		const closeMatch = closingRe.exec(bodySlice);
+		if (!closeMatch) continue;
+		const bodyEnd =
+			bodyStart + 1 + closeMatch.index + closeMatch[0].length;
+		replacements.push({ start: bodyStart + 1, end: bodyEnd });
+	}
+
+	// Replace right-to-left so indices stay valid.
+	for (let i = replacements.length - 1; i >= 0; i--) {
+		const r = replacements[i];
+		if (!r) continue;
+		result = result.slice(0, r.start) + " " + result.slice(r.end);
+	}
+
+	return result;
+}
+
+/**
+ * Returns true when a slash-prefixed token looks like a URL path rather than a
+ * filesystem path. Heuristics: query/fragment present; no dotfile segments; no
+ * uppercase path components; every segment is lowercase letters/digits/underscores/hyphens.
+ * e.g. `/api/user_tokens/generate` → true, `/etc/hosts` → false
+ */
+function looksLikeWebPath(token: string): boolean {
+	if (!token.startsWith("/")) return false;
+	// Query string or fragment is an unambiguous web signal
+	if (/[?#]/.test(token)) return true;
+	// Well-known OS filesystem root prefixes (Linux + macOS)
+	if (/^\/(etc|usr|var|bin|sbin|lib|lib64|opt|home|root|proc|sys|dev|run|tmp|boot|srv|mnt|media|private)\b/.test(token))
+		return false;
+	// Hidden dirs or dotfile segments (.ssh, .config, .env…)
+	if (/\/\.[^/]/.test(token)) return false;
+	// Any segment containing a dot → likely a filename (system.log, output.json)
+	if (/\/[^/]*\.[^/]/.test(token)) return false;
+	// Typical filesystem paths have uppercase components (Users, Library…)
+	if (/\/[A-Z]/.test(token)) return false;
+	// Every segment is lowercase letters/digits/underscores/hyphens/percent → web-like
+	return /^\/[a-z0-9_/%-]+$/.test(token);
+}
+
+/**
+ * Returns true when the command is a web-fetching or browser-eval context
+ * where slash-prefixed tokens are URL paths, not filesystem paths.
+ */
+function isWebContextCommand(command: string): boolean {
+	return /\bfetch\s*\(|\bcurl\b|\bwget\b|\bhttpie\b|\bhttp\s+[A-Z]|\bagent-browser\b/i.test(
+		command,
+	);
+}
+
 function cleanCommandPathToken(word: string): string | null {
 	const withoutRedirect = word.replace(/^[<>]+/, "").replace(/[,:;]+$/, "");
 	if (
@@ -469,13 +548,18 @@ function persistAllowedOutsidePath(
 }
 
 function outsideCwdPathsInCommand(command: string, cwd: string): string[] {
+	const cmd = stripHeredocs(command);
 	const cwdAbs = path.resolve(cwd);
 	const cwdReal = fs.realpathSync.native(cwd);
 	const paths = new Set<string>();
 
-	for (const word of splitCommandWords(command)) {
+	// In web-fetching contexts, slash-prefixed tokens are URL paths, not FS paths.
+	const webContext = isWebContextCommand(cmd);
+
+	for (const word of splitCommandWords(cmd)) {
 		const token = cleanCommandPathToken(word);
 		if (!token) continue;
+		if (webContext && looksLikeWebPath(token)) continue;
 		const resolved = absoluteTarget(token, cwd);
 		const normalized = fs.existsSync(resolved)
 			? fs.realpathSync.native(resolved)
@@ -494,7 +578,8 @@ function evaluateBash(
 	command: string,
 	config: Config,
 ): { rule?: Rule; reason: string; ask: boolean } | null {
-	const explicit = matchRegexRules(command, config.bashToolPatterns);
+	const cmd = stripHeredocs(command);
+	const explicit = matchRegexRules(cmd, config.bashToolPatterns);
 	if (explicit)
 		return {
 			rule: explicit,
@@ -502,7 +587,7 @@ function evaluateBash(
 			ask: explicit.ask === true,
 		};
 
-	const zero = matchLiteralPathInCommand(command, config.zeroAccessPaths);
+	const zero = matchLiteralPathInCommand(cmd, config.zeroAccessPaths);
 	if (zero)
 		return {
 			rule: zero,
@@ -511,8 +596,8 @@ function evaluateBash(
 			ask: zero.ask === true,
 		};
 
-	if (commandLooksMutating(command)) {
-		const readOnly = matchLiteralPathInCommand(command, config.readOnlyPaths);
+	if (commandLooksMutating(cmd)) {
+		const readOnly = matchLiteralPathInCommand(cmd, config.readOnlyPaths);
 		if (readOnly)
 			return {
 				rule: readOnly,
@@ -523,8 +608,8 @@ function evaluateBash(
 			};
 	}
 
-	if (commandLooksDeleting(command)) {
-		const noDelete = matchLiteralPathInCommand(command, config.noDeletePaths);
+	if (commandLooksDeleting(cmd)) {
+		const noDelete = matchLiteralPathInCommand(cmd, config.noDeletePaths);
 		if (noDelete)
 			return {
 				rule: noDelete,
@@ -536,7 +621,7 @@ function evaluateBash(
 	}
 
 	if (config.strictMode) {
-		const allowed = matchRegexRules(command, config.strictModeAllowedList);
+		const allowed = matchRegexRules(cmd, config.strictModeAllowedList);
 		if (!allowed)
 			return {
 				reason:
