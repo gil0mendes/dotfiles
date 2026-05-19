@@ -4,6 +4,10 @@
 
 strictMode: false
 
+# Enable structural checks for dangerous shell commands such as sudo, dd of=, mkfs,
+# recursive force deletes, disk partitioning, and privileged containers.
+useBuiltinCommandMatchers: true
+
 # Ask before running bash commands that reference paths outside the current working directory.
 # When allowed, that path is trusted for the rest of the session.
 askBeforeOutsideCwd: true
@@ -14,6 +18,7 @@ allowedOutsideCwdPaths:
   - "~/.dotfiles/"
   - "~/.agent-browser/tmp/"
   - "~/projects/"
+  - '~/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/docs/'
 
 bashToolPatterns:
   - pattern: '\brm\s+(-[^\s]*)*-[rRf]'
