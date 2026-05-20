@@ -67,7 +67,7 @@ afterEach(() => {
 });
 
 describe("parseSimpleYaml", () => {
-	it("parses scalars, string lists, object lists, booleans, and comments", () => {
+	it("parses scalars, string lists, object lists, booleans, nested lists, and comments", () => {
 		const raw = parseSimpleYaml(`
 # leading comment
 enabled: true
@@ -80,6 +80,13 @@ rules:
     ask: true
   - pattern: safe
     ask: false
+filesystem:
+  denyRead:
+    - /
+    - "*.env"
+  allowWrite:
+    - .
+    - /tmp
 `);
 
 		expect(raw).toEqual({
@@ -90,6 +97,10 @@ rules:
 				{ pattern: "danger", ask: true },
 				{ pattern: "safe", ask: false },
 			],
+			filesystem: {
+				denyRead: ["/", "*.env"],
+				allowWrite: [".", "/tmp"],
+			},
 		});
 	});
 });

@@ -3,8 +3,8 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { checkDangerousCommand } from "../commands/dangerous";
 import { isInsideOrSame } from "../paths";
-import { absoluteTarget, matchLiteralPathInCommand, matchRegexRules, ruleValue } from "../rules";
-import type { Config, Rule } from "../types";
+import { absoluteTarget, matchRegexRules } from "../rules";
+import type { Config, PatternConfig } from "../types";
 import { parseShell, stripHeredocs, walkCommands, walkStatements, wordToString } from "./ast";
 
 function commandLooksMutating(command: string): boolean {
@@ -261,9 +261,10 @@ export function outsideCwdPathsInCommand(
 export function evaluateBash(
 	command: string,
 	config: Config,
-): { rule?: Rule; reason: string; ask: boolean } | null {
+): { rule?: PatternConfig; reason: string; ask: boolean } | null {
+	if (config.permissionGate === false) return null;
+
 	const cmd = stripHeredocs(command);
-	const parsed = parseShell(command);
 	const explicit = matchRegexRules(cmd, config.bashToolPatterns);
 	if (explicit)
 		return {
@@ -283,42 +284,6 @@ export function evaluateBash(
 			return {
 				reason: dangerous.description,
 				ask: false,
-			};
-	}
-
-	const zero = matchLiteralPathInCommand(cmd, config.zeroAccessPaths);
-	if (zero)
-		return {
-			rule: zero,
-			reason:
-				zero.reason ?? `bash references zero-access path: ${ruleValue(zero)}`,
-			ask: zero.ask === true,
-		};
-
-	if (
-		(parsed ? astCommandLooksMutating(parsed) : commandLooksMutating(cmd)) ||
-		/>{1,2}/.test(cmd)
-	) {
-		const readOnly = matchLiteralPathInCommand(cmd, config.readOnlyPaths);
-		if (readOnly)
-			return {
-				rule: readOnly,
-				reason:
-					readOnly.reason ??
-					`bash may modify read-only path: ${ruleValue(readOnly)}`,
-				ask: readOnly.ask === true,
-			};
-	}
-
-	if (parsed ? astCommandLooksDeleting(parsed) : commandLooksDeleting(cmd)) {
-		const noDelete = matchLiteralPathInCommand(cmd, config.noDeletePaths);
-		if (noDelete)
-			return {
-				rule: noDelete,
-				reason:
-					noDelete.reason ??
-					`bash may delete protected path: ${ruleValue(noDelete)}`,
-				ask: noDelete.ask === true,
 			};
 	}
 

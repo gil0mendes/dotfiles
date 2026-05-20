@@ -1,7 +1,29 @@
-import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
-import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
+import type {
+	AgentToolResult,
+	BashOperations,
+	ExtensionAPI,
+	ExtensionContext,
+} from "@earendil-works/pi-coding-agent";
+import {
+	createBashToolDefinition,
+	createLocalBashOperations,
+	getShellConfig,
+	isToolCallEventType,
+	SettingsManager,
+} from "@earendil-works/pi-coding-agent";
+import { SandboxManager, type SandboxRuntimeConfig } from "@carderne/sandbox-runtime";
+import * as fs from "node:fs";
 import * as path from "node:path";
-import { configs } from "./config";
+import { configs, DEFAULT_CONFIG_PATH } from "./config";
+import {
+	canonicalizePath,
+	isGrantTooBroad,
+	isWriteDenied,
+	shouldPromptForRead,
+	shouldPromptForWrite,
+	storageForm,
+	withSessionAllowances,
+} from "./filesystem";
 import {
 	emitActionBlocked,
 	emitFeatureRegister,
@@ -9,22 +31,162 @@ import {
 	type DamageControlBlockSource,
 	type DamageControlFeatureId,
 } from "./events";
+import { normalizeForDisplay } from "./paths";
 import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
-import { matchPathRules, ruleValue } from "./rules";
-import { evaluateBash, outsideCwdPathsInCommand } from "./shell/analysis";
-import {
-	isGrantTooBroad,
-	isOutsidePathAllowed,
-	normalizeForDisplay,
-	outsideCwdPath,
-	persistAllowedOutsidePath,
-	storageForm,
-} from "./paths";
+import { evaluateBash } from "./shell/analysis";
+
+type AccessKind = "read" | "write";
+type AllowanceScope = "once" | "session" | "always";
+
+type SandboxState = {
+	enabled: boolean;
+	initialized: boolean;
+	sessionRead: string[];
+	sessionWrite: string[];
+};
+
+const sandboxState: SandboxState = {
+	enabled: false,
+	initialized: false,
+	sessionRead: [],
+	sessionWrite: [],
+};
+
+function sandboxRuntimeConfig(): SandboxRuntimeConfig {
+	return {
+		network: { allowedDomains: ["*"], deniedDomains: [] },
+		filesystem: withSessionAllowances(
+			configs.current.filesystem,
+			sandboxState.sessionRead,
+			sandboxState.sessionWrite,
+		),
+		enableWeakerNetworkIsolation: true,
+	};
+}
+
+async function initializeSandbox(): Promise<void> {
+	await SandboxManager.initialize(sandboxRuntimeConfig(), async () => true);
+	sandboxState.enabled = true;
+	sandboxState.initialized = true;
+}
+
+async function reinitializeSandbox(): Promise<void> {
+	if (!sandboxState.initialized) return;
+	await SandboxManager.reset();
+	await initializeSandbox();
+}
+
+function createSandboxedBashOperations(shellPath?: string): BashOperations {
+	const local = createLocalBashOperations({ shellPath });
+	const shell = getShellConfig(shellPath).shell;
+	return {
+		exec: async (command, cwd, options) => {
+			const wrapped = sandboxState.initialized
+				? await SandboxManager.wrapWithSandbox(command, shell, undefined, options.signal)
+				: command;
+			return local.exec(wrapped, cwd, options);
+		},
+	};
+}
+
+function appendFilesystemAllowance(
+	configPath: string | null,
+	kind: AccessKind,
+	allowance: string,
+): void {
+	const targetPath = configPath ?? DEFAULT_CONFIG_PATH;
+	fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+	const currentText = fs.existsSync(targetPath)
+		? fs.readFileSync(targetPath, "utf8")
+		: "";
+	if (
+		currentText
+			.split(/\r?\n/)
+			.some(
+				(line) =>
+					line.trim() === `- ${allowance}` ||
+					line.trim() === `- '${allowance}'` ||
+					line.trim() === `- "${allowance}"`,
+			)
+	)
+		return;
+
+	const key = kind === "read" ? "allowRead" : "allowWrite";
+	const lines = currentText.trimEnd().split(/\r?\n/);
+	const filesystemIndex = lines.findIndex((line) => /^filesystem:\s*$/.test(line));
+	if (filesystemIndex === -1) {
+		lines.push("", "filesystem:", `  ${key}:`, `    - ${allowance}`);
+		fs.writeFileSync(targetPath, `${lines.join("\n")}\n`, "utf8");
+		return;
+	}
+
+	const keyIndex = lines.findIndex(
+		(line, index) => index > filesystemIndex && new RegExp(`^  ${key}:\\s*$`).test(line),
+	);
+	if (keyIndex === -1) {
+		lines.splice(filesystemIndex + 1, 0, `  ${key}:`, `    - ${allowance}`);
+		fs.writeFileSync(targetPath, `${lines.join("\n")}\n`, "utf8");
+		return;
+	}
+
+	let insertAt = keyIndex + 1;
+	while (insertAt < lines.length && /^    - /.test(lines[insertAt] ?? "")) insertAt++;
+	lines.splice(insertAt, 0, `    - ${allowance}`);
+	fs.writeFileSync(targetPath, `${lines.join("\n")}\n`, "utf8");
+}
+
+function promptScope(result: PromptResult): AllowanceScope | null {
+	if (result.endsWith("once")) return "once";
+	if (result.endsWith("session")) return "session";
+	if (result.endsWith("always")) return "always";
+	return null;
+}
+
+function promptIsDirectory(result: PromptResult): boolean {
+	return result.includes("dir");
+}
+
+async function promptForFilesystemAccess(
+	ctx: ExtensionContext,
+	kind: AccessKind,
+	tool: string,
+	target: string,
+	showFileOptions: boolean,
+): Promise<boolean> {
+	if (!ctx.hasUI) return false;
+	const parentDir = path.dirname(target);
+	const result = await ctx.ui.custom<PromptResult>(
+		createPathAccessPromptComponent(
+			`${tool} ${kind}`,
+			normalizeForDisplay(target, ctx.cwd),
+			normalizeForDisplay(parentDir, ctx.cwd),
+			ctx.cwd,
+			showFileOptions,
+		),
+	);
+	const scope = promptScope(result);
+	if (!scope) return false;
+
+	const grantTarget = promptIsDirectory(result) && showFileOptions ? parentDir : target;
+	if (promptIsDirectory(result) && isGrantTooBroad(grantTarget, ctx.cwd)) {
+		ctx.ui.notify(
+			`Cannot grant access to ${normalizeForDisplay(grantTarget, ctx.cwd)}/ — too broad. Treating as allow once.`,
+			"warning",
+		);
+		return true;
+	}
+
+	const allowance = storageForm(grantTarget, ctx.cwd, promptIsDirectory(result));
+	if (scope === "session" || scope === "always") {
+		const session = kind === "read" ? sandboxState.sessionRead : sandboxState.sessionWrite;
+		if (!session.includes(allowance)) session.push(allowance);
+	}
+	if (scope === "always") appendFilesystemAllowance(configs.source, kind, allowance);
+	await reinitializeSandbox();
+	return true;
+}
 
 function setupPolicyHook(pi: ExtensionAPI): void {
-	const allowedOutsideCwdFiles = new Set<string>();
-	const allowedOutsideCwdDirs = new Set<string>();
-
 	pi.on("tool_call", async (event, ctx) => {
 		const context = {
 			toolName: event.toolName,
@@ -51,16 +213,7 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 					"🛡️ Damage Control confirmation",
 					`${reason}\n\nTool: ${event.toolName}\nInput: ${JSON.stringify(event.input).slice(0, 1200)}\n\nAllow once?`,
 				);
-				if (ok) {
-					pi.appendEntry("damage-control-log", {
-						action: "allowed_by_user",
-						tool: event.toolName,
-						input: event.input,
-						reason,
-						timestamp: Date.now(),
-					});
-					return { block: false };
-				}
+				if (ok) return { block: false };
 			}
 			emitActionBlocked(pi, {
 				feature,
@@ -71,139 +224,8 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 			});
 			ctx.ui.notify(message, "error");
 			ctx.ui.setStatus("damage-control", `blocked: ${reason.slice(0, 40)}`);
-			pi.appendEntry("damage-control-log", {
-				action: ask ? "denied_by_user" : "blocked",
-				tool: event.toolName,
-				input: event.input,
-				reason,
-				timestamp: Date.now(),
-			});
 			ctx.abort();
 			return { block: true, reason: message };
-		};
-
-		const applyOutsideCwdPromptResult = (
-			result: PromptResult,
-			target: string,
-			showFileOptions: boolean,
-		) => {
-			const parentDir = path.dirname(target);
-			if (result === "allow-file-once" || result === "allow-dir-once")
-				return true;
-			if (result === "allow-file-session" || result === "allow-file-always") {
-				allowedOutsideCwdFiles.add(target);
-				if (result === "allow-file-always")
-					persistAllowedOutsidePath(configs.source, storageForm(target, false));
-				return true;
-			}
-			if (result === "allow-dir-session" || result === "allow-dir-always") {
-				const dirPath = showFileOptions ? parentDir : target;
-				if (isGrantTooBroad(dirPath)) {
-					ctx.ui.notify(
-						`Cannot grant access to ${normalizeForDisplay(dirPath, ctx.cwd)}/ — too broad. Treating as allow once.`,
-						"warning",
-					);
-					return true;
-				}
-				allowedOutsideCwdDirs.add(dirPath);
-				if (result === "allow-dir-always")
-					persistAllowedOutsidePath(configs.source, storageForm(dirPath, true));
-				return true;
-			}
-			return false;
-		};
-
-		const askForOutsideCwdPath = async (
-			target: string,
-			tool: string,
-			showFileOptions: boolean,
-		) => {
-			if (
-				!configs.current.askBeforeOutsideCwd ||
-				isOutsidePathAllowed(
-					target,
-					configs.current,
-					ctx.cwd,
-					allowedOutsideCwdFiles,
-					allowedOutsideCwdDirs,
-				)
-			)
-				return { block: false };
-
-			const parentDir = path.dirname(target);
-			if (!ctx.hasUI) {
-				const reason = `command references path outside current directory: ${target}`;
-				emitRiskDetected(pi, {
-					feature: "paths",
-					risk: { kind: "dangerous", reason, metadata: { path: target } },
-					context,
-				});
-				emitActionBlocked(pi, {
-					feature: "paths",
-					action: { kind: "tool_call", toolName: tool, path: target },
-					reason,
-					block: { source: "nonInteractive", metadata: { path: target } },
-					context,
-				});
-				return {
-					block: true,
-					reason: `🛑 BLOCKED by Damage Control: ${reason}`,
-				};
-			}
-
-			const result = await ctx.ui.custom<PromptResult>(
-				createPathAccessPromptComponent(
-					tool,
-					normalizeForDisplay(target, ctx.cwd),
-					normalizeForDisplay(parentDir, ctx.cwd),
-					ctx.cwd,
-					showFileOptions,
-				),
-			);
-			if (applyOutsideCwdPromptResult(result, target, showFileOptions)) {
-				pi.appendEntry("damage-control-log", {
-					action: result,
-					tool,
-					path: target,
-					timestamp: Date.now(),
-				});
-				return { block: false };
-			}
-
-			const reason = `user denied access outside current directory: ${target}`;
-			emitActionBlocked(pi, {
-				feature: "paths",
-				action: { kind: "tool_call", toolName: tool, path: target },
-				reason,
-				block: { source: "user", metadata: { path: target } },
-				context,
-			});
-			ctx.ui.setStatus("damage-control", `blocked: ${reason.slice(0, 40)}`);
-			pi.appendEntry("damage-control-log", {
-				action: "denied_outside_cwd",
-				tool,
-				path: target,
-				reason,
-				timestamp: Date.now(),
-			});
-			ctx.abort();
-			return { block: true, reason: `🛑 BLOCKED by Damage Control: ${reason}` };
-		};
-
-		const askForOutsideCwdPaths = async (
-			targets: string[],
-			tool: string,
-			showFileOptions: boolean,
-		) => {
-			for (const target of targets) {
-				const result = await askForOutsideCwdPath(
-					target,
-					tool,
-					showFileOptions,
-				);
-				if (result.block) return result;
-			}
-			return { block: false };
 		};
 
 		if (isToolCallEventType("bash", event)) {
@@ -212,115 +234,74 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 				return block(violation.reason, violation.ask, "commands", "policy", {
 					command: event.input.command,
 				});
-			const outside = await askForOutsideCwdPaths(
-				outsideCwdPathsInCommand(event.input.command, ctx.cwd),
-				event.toolName,
-				true,
-			);
-			if (outside.block) return outside;
+		}
+
+		if (event.toolName === "read" && context.input?.path && typeof context.input.path === "string") {
+			const target = canonicalizePath(context.input.path, ctx.cwd);
+			if (shouldPromptForRead(target, sandboxRuntimeConfig().filesystem, ctx.cwd)) {
+				const allowed = await promptForFilesystemAccess(ctx, "read", event.toolName, target, true);
+				if (!allowed) return block(`read access denied for ${target}`, false, "paths", "user", { path: target });
+			}
 		}
 
 		if (
-			event.toolName === "multi_tool_use.parallel" &&
-			event.input &&
-			typeof event.input === "object" &&
-			Array.isArray((event.input as any).tool_uses)
+			(event.toolName === "write" || event.toolName === "edit") &&
+			context.input?.path &&
+			typeof context.input.path === "string"
 		) {
-			for (const toolUse of (event.input as any).tool_uses) {
-				const name = toolUse.recipient_name ?? toolUse.toolName ?? "";
-				const params = toolUse.parameters ?? toolUse.input ?? {};
-				if (
-					String(name).endsWith(".bash") &&
-					typeof params.command === "string"
-				) {
-					const violation = evaluateBash(params.command, configs.current);
-					if (violation)
-						return block(
-							violation.reason,
-							violation.ask,
-							"commands",
-							"policy",
-							{
-								command: params.command,
-							},
-						);
-					const outside = await askForOutsideCwdPaths(
-						outsideCwdPathsInCommand(params.command, ctx.cwd),
-						String(name),
-						true,
-					);
-					if (outside.block) return outside;
-				}
+			const target = canonicalizePath(context.input.path, ctx.cwd);
+			const filesystem = sandboxRuntimeConfig().filesystem;
+			if (isWriteDenied(target, filesystem, ctx.cwd))
+				return block(`write access denied by denyWrite for ${target}`, false, "paths", "policy", { path: target });
+			if (shouldPromptForWrite(target, filesystem, ctx.cwd)) {
+				const allowed = await promptForFilesystemAccess(ctx, "write", event.toolName, target, true);
+				if (!allowed) return block(`write access denied for ${target}`, false, "paths", "user", { path: target });
 			}
-		}
-
-		const input = event.input as Record<string, unknown>;
-		const paths = typeof input?.path === "string" ? [input.path] : [];
-		if (paths.length > 0) {
-			const zero = matchPathRules(
-				paths,
-				configs.current.zeroAccessPaths,
-				ctx.cwd,
-			);
-			if (zero)
-				return block(
-					zero.reason ?? `zero-access path: ${ruleValue(zero)}`,
-					zero.ask === true,
-					"paths",
-					"policy",
-					{ path: ruleValue(zero) },
-				);
-
-			if (event.toolName === "write" || event.toolName === "edit") {
-				const readOnly = matchPathRules(
-					paths,
-					configs.current.readOnlyPaths,
-					ctx.cwd,
-				);
-				if (readOnly)
-					return block(
-						readOnly.reason ?? `read-only path: ${ruleValue(readOnly)}`,
-						readOnly.ask === true,
-						"paths",
-						"policy",
-						{ path: ruleValue(readOnly) },
-					);
-			}
-
-			const outsidePaths = paths
-				.map((target) => outsideCwdPath(target, ctx.cwd))
-				.filter((target): target is string => Boolean(target));
-			const outside = await askForOutsideCwdPaths(
-				outsidePaths,
-				event.toolName,
-				event.toolName !== "ls" && event.toolName !== "find",
-			);
-			if (outside.block) return outside;
 		}
 
 		return { block: false };
 	});
 }
 
+function statusText(): string {
+	return `shield: ${configs.totalRules()} rules${configs.current.strictMode ? ", strict" : ""}`;
+}
+
 function setupSessionStart(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
 		const { error: configsError } = configs.load(ctx.cwd);
-
-		const status = `shield: ${configs.totalRules()} rules${configs.current.strictMode ? ", strict" : ""}`;
-		ctx.ui.setStatus("damage-control", status);
+		ctx.ui.setStatus("damage-control", statusText());
 		for (const feature of ["commands", "paths", "policies"] as const) {
 			emitFeatureRegister(pi, feature);
 		}
-		if (configsError)
+		if (configsError) {
 			ctx.ui.notify(
 				`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`,
 				"error",
 			);
-		else
+			return;
+		}
+		if (process.platform !== "darwin" && process.platform !== "linux") {
 			ctx.ui.notify(
-				`🛡️ Damage Control active (${status})${configs.source ? ` from ${configs.source}` : "; no config found"}`,
+				`🛡️ Damage Control filesystem sandbox is not supported on ${process.platform}`,
+				"warning",
+			);
+			return;
+		}
+		try {
+			await initializeSandbox();
+			ctx.ui.notify(
+				`🛡️ Damage Control active (${statusText()})${configs.source ? ` from ${configs.source}` : "; no config found"}`,
 				"info",
 			);
+		} catch (error) {
+			sandboxState.enabled = false;
+			sandboxState.initialized = false;
+			ctx.ui.notify(
+				`🛡️ Damage Control sandbox failed: ${error instanceof Error ? error.message : String(error)}`,
+				"error",
+			);
+		}
 	});
 }
 
@@ -329,11 +310,8 @@ function registerCommands(pi: ExtensionAPI): void {
 		description: "Reload Damage Control rules from settings YAML",
 		handler: async (_args, ctx) => {
 			const { error: configsError } = configs.load(ctx.cwd);
-
-			ctx.ui.setStatus(
-				"damage-control",
-				`shield: ${configs.totalRules()} rules${configs.current.strictMode ? ", strict" : ""}`,
-			);
+			await reinitializeSandbox();
+			ctx.ui.setStatus("damage-control", statusText());
 			ctx.ui.notify(
 				configsError
 					? `Failed: ${configsError}`
@@ -347,15 +325,77 @@ function registerCommands(pi: ExtensionAPI): void {
 		description: "Show Damage Control rule counts and source",
 		handler: async (_args, ctx) => {
 			ctx.ui.notify(
-				`🛡️ Damage Control: ${configs.totalRules()} rules; strictMode=${configs.current.strictMode}; source=${configs.source ?? "none"}`,
+				`🛡️ Damage Control: ${configs.totalRules()} rules; strictMode=${configs.current.strictMode}; sandbox=${sandboxState.initialized}; source=${configs.source ?? "none"}`,
 				"info",
 			);
 		},
 	});
 }
 
+function resultText<TDetails>(result: AgentToolResult<TDetails>): string {
+	return result.content
+		.filter((content) => content.type === "text")
+		.map((content) => content.text)
+		.join("\n");
+}
+
+function extractSandboxBlockedPath(output: string): string | null {
+	const match = output.match(/(?:^|\s)(\/[^\s:]+): Operation not permitted/m);
+	return match?.[1] ?? null;
+}
+
+function registerSandboxedBash(pi: ExtensionAPI): void {
+	const localCwd = process.cwd();
+	const shellPath = SettingsManager.create(localCwd).getShellPath();
+	const bashTool = createBashToolDefinition(localCwd, {
+		shellPath,
+		operations: createSandboxedBashOperations(shellPath),
+	});
+	pi.registerTool({
+		...bashTool,
+		label: "bash (damage-control sandbox)",
+		execute: async (id, params, signal, onUpdate, ctx) => {
+			const result = await bashTool.execute(id, params, signal, onUpdate, ctx);
+			const blockedPath = extractSandboxBlockedPath(resultText(result));
+			if (!blockedPath || !ctx.hasUI) return result;
+
+			const allowed = await promptForFilesystemAccess(
+				ctx,
+				"write",
+				"bash",
+				blockedPath,
+				true,
+			);
+			if (!allowed) return result;
+
+			onUpdate?.({
+				content: [
+					{
+						type: "text",
+						text: `\n--- Filesystem access granted for ${blockedPath}; retrying command ---\n`,
+					},
+				],
+				details: undefined,
+			});
+			return bashTool.execute(id, params, signal, onUpdate, ctx);
+		},
+	});
+
+	pi.on("user_bash", () => {
+		if (!sandboxState.initialized) return;
+		return { operations: createSandboxedBashOperations(shellPath) };
+	});
+}
+
 export default function damageControl(pi: ExtensionAPI) {
 	setupSessionStart(pi);
 	registerCommands(pi);
+	registerSandboxedBash(pi);
 	setupPolicyHook(pi);
+	pi.on("session_shutdown", async () => {
+		if (!sandboxState.initialized) return;
+		await SandboxManager.reset();
+		sandboxState.enabled = false;
+		sandboxState.initialized = false;
+	});
 }

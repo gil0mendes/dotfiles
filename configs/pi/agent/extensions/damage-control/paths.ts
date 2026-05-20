@@ -3,7 +3,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { DEFAULT_CONFIG_PATH } from "./config";
 import { absoluteTarget, matchPathRules } from "./rules";
-import type { Config, Rule } from "./types";
+import type { Config, PathPatternConfig } from "./types";
 
 export function isInsideOrSame(target: string, root: string): boolean {
 	const rel = path.relative(root, target);
@@ -51,10 +51,8 @@ export function isGrantTooBroad(target: string): boolean {
 	return normalized === "/" || normalized === os.homedir();
 }
 
-function allowedOutsideRules(config: Config): Rule[] {
-	return config.allowedOutsideCwdPaths.map((allowedPath) => ({
-		path: allowedPath,
-	}));
+function allowedOutsideRules(_config: Config): PathPatternConfig[] {
+	return [];
 }
 
 export function isOutsidePathAllowed(

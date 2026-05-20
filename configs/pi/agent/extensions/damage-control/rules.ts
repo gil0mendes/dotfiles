@@ -1,6 +1,11 @@
 import * as os from "node:os";
 import * as path from "node:path";
-import type { Rule } from "./types";
+import type {
+	BashToolPatternConfig,
+	PathPatternConfig,
+	PatternConfig,
+	StrictModeAllowedCommandConfig,
+} from "./types";
 
 export function expandHome(p: string): string {
 	return p === "~" || p.startsWith("~/")
@@ -38,15 +43,18 @@ function pathMatches(target: string, rulePath: string, cwd: string): boolean {
 	return regex.test(absTarget) || regex.test(relTarget);
 }
 
-export function ruleValue(rule: Rule): string {
-	return rule.pattern ?? rule.path ?? rule.command ?? "";
+export function ruleValue(rule: PatternConfig): string {
+	if ("pattern" in rule && typeof rule.pattern === "string") return rule.pattern;
+	if ("path" in rule && typeof rule.path === "string") return rule.path;
+	if ("command" in rule && typeof rule.command === "string") return rule.command;
+	return "";
 }
 
 export function matchPathRules(
 	targets: string[],
-	rules: Rule[],
+	rules: readonly PathPatternConfig[],
 	cwd: string,
-): Rule | null {
+): PathPatternConfig | null {
 	for (const target of targets) {
 		for (const rule of rules) {
 			const value = ruleValue(rule);
@@ -56,7 +64,9 @@ export function matchPathRules(
 	return null;
 }
 
-export function matchRegexRules(text: string, rules: Rule[]): Rule | null {
+export function matchRegexRules<
+	T extends BashToolPatternConfig | StrictModeAllowedCommandConfig,
+>(text: string, rules: readonly T[]): T | null {
 	for (const rule of rules) {
 		const value = ruleValue(rule);
 		if (!value) continue;
@@ -71,8 +81,8 @@ export function matchRegexRules(text: string, rules: Rule[]): Rule | null {
 
 export function matchLiteralPathInCommand(
 	command: string,
-	rules: Rule[],
-): Rule | null {
+	rules: readonly PathPatternConfig[],
+): PathPatternConfig | null {
 	for (const rule of rules) {
 		const value = ruleValue(rule);
 		if (!value) continue;

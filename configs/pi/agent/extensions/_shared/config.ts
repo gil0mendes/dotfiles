@@ -50,6 +50,7 @@ function removeComment(line: string): string {
 export function parseSimpleYaml(input: string): RawConfig {
 	const out: RawConfig = {};
 	let section: string | null = null;
+	let nestedSection: string | null = null;
 	let currentItem: Record<string, unknown> | null = null;
 
 	for (const rawLine of input.split(/\r?\n/)) {
@@ -59,6 +60,7 @@ export function parseSimpleYaml(input: string): RawConfig {
 		const top = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
 		if (top && top[1] && top[2] !== undefined && !rawLine.startsWith(" ")) {
 			section = top[1];
+			nestedSection = null;
 			const rest = top[2].trim();
 			out[section] = rest === "" ? [] : parseScalar(rest);
 			currentItem = null;
@@ -66,12 +68,42 @@ export function parseSimpleYaml(input: string): RawConfig {
 		}
 
 		if (!section) continue;
-		const arr = Array.isArray(out[section])
-			? (out[section] as unknown[])
-			: (out[section] = [] as unknown[]);
+
+		const nestedMap = line.match(/^\s{2}([A-Za-z0-9_-]+):\s*(.*)$/);
+		if (nestedMap && nestedMap[1] && nestedMap[2] !== undefined) {
+			if (Array.isArray(out[section]) && (out[section] as unknown[]).length === 0)
+				out[section] = {};
+			if (out[section] && typeof out[section] === "object" && !Array.isArray(out[section])) {
+				nestedSection = nestedMap[1];
+				const rest = nestedMap[2].trim();
+				(out[section] as Record<string, unknown>)[nestedSection] =
+					rest === "" ? [] : parseScalar(rest);
+				currentItem = null;
+				continue;
+			}
+		}
+
 		const item = line.match(/^\s*-\s*(.*)$/);
 		if (item && item[1] !== undefined) {
 			const rest = item[1].trim();
+			if (
+				nestedSection &&
+				out[section] &&
+				typeof out[section] === "object" &&
+				!Array.isArray(out[section])
+			) {
+				const nested = (out[section] as Record<string, unknown>)[nestedSection];
+				const arr = Array.isArray(nested)
+					? nested
+					: (((out[section] as Record<string, unknown>)[nestedSection] = []) as unknown[]);
+				arr.push(parseScalar(rest));
+				currentItem = null;
+				continue;
+			}
+
+			const arr = Array.isArray(out[section])
+				? (out[section] as unknown[])
+				: (out[section] = [] as unknown[]);
 			const kv = rest.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
 			if (kv && kv[1] && kv[2] !== undefined) {
 				currentItem = { [kv[1]]: parseScalar(kv[2]) };

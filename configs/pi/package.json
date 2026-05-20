@@ -8,6 +8,8 @@
 	],
 	"devDependencies": {
 		"@types/bun": "latest",
+		"oxfmt": "^0.51.0",
+		"oxlint": "^1.66.0",
 		"vitest": "^4.1.6"
 	},
 	"peerDependencies": {
@@ -15,6 +17,7 @@
 	},
 	"dependencies": {
 		"@aliou/sh": "^0.1.0",
+		"@carderne/sandbox-runtime": "^0.0.49",
 		"@earendil-works/pi-ai": "^0.74.1",
 		"@earendil-works/pi-coding-agent": "^0.74.1",
 		"@earendil-works/pi-tui": "^0.74.1",
