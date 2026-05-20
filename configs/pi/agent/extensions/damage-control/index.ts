@@ -302,7 +302,7 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 	});
 }
 
-export default function damageControl(pi: ExtensionAPI) {
+function setupSessionStart(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
 		const { error: configsError } = configs.load(ctx.cwd);
 
@@ -322,7 +322,9 @@ export default function damageControl(pi: ExtensionAPI) {
 				"info",
 			);
 	});
+}
 
+function registerCommands(pi: ExtensionAPI): void {
 	pi.registerCommand("damage-control-reload", {
 		description: "Reload Damage Control rules from settings YAML",
 		handler: async (_args, ctx) => {
@@ -350,6 +352,10 @@ export default function damageControl(pi: ExtensionAPI) {
 			);
 		},
 	});
+}
 
+export default function damageControl(pi: ExtensionAPI) {
+	setupSessionStart(pi);
+	registerCommands(pi);
 	setupPolicyHook(pi);
 }
