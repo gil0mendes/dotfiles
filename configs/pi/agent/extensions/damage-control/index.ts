@@ -1,7 +1,7 @@
 import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { isToolCallEventType } from "@earendil-works/pi-coding-agent";
 import * as path from "node:path";
-import { DEFAULT_CONFIG, loadConfig, totalRules } from "./config";
+import { configs } from "./config";
 import {
 	emitActionBlocked,
 	emitFeatureRegister,
@@ -12,7 +12,6 @@ import {
 import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
 import { matchPathRules, ruleValue } from "./rules";
 import { evaluateBash, outsideCwdPathsInCommand } from "./shell/analysis";
-import type { Config } from "./types";
 import {
 	isGrantTooBroad,
 	isOutsidePathAllowed,
@@ -22,64 +21,9 @@ import {
 	storageForm,
 } from "./paths";
 
-export default function damageControl(pi: ExtensionAPI) {
-	let current = DEFAULT_CONFIG;
-	let source: string | null = null;
+function setupPolicyHook(pi: ExtensionAPI): void {
 	const allowedOutsideCwdFiles = new Set<string>();
 	const allowedOutsideCwdDirs = new Set<string>();
-
-	const reload = (cwd: string) => {
-		const loaded = loadConfig(cwd);
-		current = loaded.config;
-		source = loaded.source;
-		return loaded;
-	};
-
-	pi.on("session_start", async (_event, ctx) => {
-		const loaded = reload(ctx.cwd);
-		const status = `shield: ${totalRules(current)} rules${current.strictMode ? ", strict" : ""}`;
-		ctx.ui.setStatus("damage-control", status);
-		for (const feature of ["commands", "paths", "policies"] as const) {
-			emitFeatureRegister(pi, feature);
-		}
-		if (loaded.error)
-			ctx.ui.notify(
-				`🛡️ Damage Control failed to load ${loaded.source}: ${loaded.error}`,
-				"error",
-			);
-		else
-			ctx.ui.notify(
-				`🛡️ Damage Control active (${status})${source ? ` from ${source}` : "; no config found"}`,
-				"info",
-			);
-	});
-
-	pi.registerCommand("damage-control-reload", {
-		description: "Reload Damage Control rules from settings YAML",
-		handler: async (_args, ctx) => {
-			const loaded = reload(ctx.cwd);
-			ctx.ui.setStatus(
-				"damage-control",
-				`shield: ${totalRules(current)} rules${current.strictMode ? ", strict" : ""}`,
-			);
-			ctx.ui.notify(
-				loaded.error
-					? `Failed: ${loaded.error}`
-					: `Reloaded ${totalRules(current)} rules from ${source ?? "defaults"}`,
-				loaded.error ? "error" : "info",
-			);
-		},
-	});
-
-	pi.registerCommand("damage-control-status", {
-		description: "Show Damage Control rule counts and source",
-		handler: async (_args, ctx) => {
-			ctx.ui.notify(
-				`🛡️ Damage Control: ${totalRules(current)} rules; strictMode=${current.strictMode}; source=${source ?? "none"}`,
-				"info",
-			);
-		},
-	});
 
 	pi.on("tool_call", async (event, ctx) => {
 		const context = {
@@ -149,7 +93,7 @@ export default function damageControl(pi: ExtensionAPI) {
 			if (result === "allow-file-session" || result === "allow-file-always") {
 				allowedOutsideCwdFiles.add(target);
 				if (result === "allow-file-always")
-					persistAllowedOutsidePath(source, storageForm(target, false));
+					persistAllowedOutsidePath(configs.source, storageForm(target, false));
 				return true;
 			}
 			if (result === "allow-dir-session" || result === "allow-dir-always") {
@@ -163,7 +107,7 @@ export default function damageControl(pi: ExtensionAPI) {
 				}
 				allowedOutsideCwdDirs.add(dirPath);
 				if (result === "allow-dir-always")
-					persistAllowedOutsidePath(source, storageForm(dirPath, true));
+					persistAllowedOutsidePath(configs.source, storageForm(dirPath, true));
 				return true;
 			}
 			return false;
@@ -175,10 +119,10 @@ export default function damageControl(pi: ExtensionAPI) {
 			showFileOptions: boolean,
 		) => {
 			if (
-				!current.askBeforeOutsideCwd ||
+				!configs.current.askBeforeOutsideCwd ||
 				isOutsidePathAllowed(
 					target,
-					current,
+					configs.current,
 					ctx.cwd,
 					allowedOutsideCwdFiles,
 					allowedOutsideCwdDirs,
@@ -263,7 +207,7 @@ export default function damageControl(pi: ExtensionAPI) {
 		};
 
 		if (isToolCallEventType("bash", event)) {
-			const violation = evaluateBash(event.input.command, current);
+			const violation = evaluateBash(event.input.command, configs.current);
 			if (violation)
 				return block(violation.reason, violation.ask, "commands", "policy", {
 					command: event.input.command,
@@ -289,11 +233,17 @@ export default function damageControl(pi: ExtensionAPI) {
 					String(name).endsWith(".bash") &&
 					typeof params.command === "string"
 				) {
-					const violation = evaluateBash(params.command, current);
+					const violation = evaluateBash(params.command, configs.current);
 					if (violation)
-						return block(violation.reason, violation.ask, "commands", "policy", {
-							command: params.command,
-						});
+						return block(
+							violation.reason,
+							violation.ask,
+							"commands",
+							"policy",
+							{
+								command: params.command,
+							},
+						);
 					const outside = await askForOutsideCwdPaths(
 						outsideCwdPathsInCommand(params.command, ctx.cwd),
 						String(name),
@@ -307,7 +257,11 @@ export default function damageControl(pi: ExtensionAPI) {
 		const input = event.input as Record<string, unknown>;
 		const paths = typeof input?.path === "string" ? [input.path] : [];
 		if (paths.length > 0) {
-			const zero = matchPathRules(paths, current.zeroAccessPaths, ctx.cwd);
+			const zero = matchPathRules(
+				paths,
+				configs.current.zeroAccessPaths,
+				ctx.cwd,
+			);
 			if (zero)
 				return block(
 					zero.reason ?? `zero-access path: ${ruleValue(zero)}`,
@@ -318,7 +272,11 @@ export default function damageControl(pi: ExtensionAPI) {
 				);
 
 			if (event.toolName === "write" || event.toolName === "edit") {
-				const readOnly = matchPathRules(paths, current.readOnlyPaths, ctx.cwd);
+				const readOnly = matchPathRules(
+					paths,
+					configs.current.readOnlyPaths,
+					ctx.cwd,
+				);
 				if (readOnly)
 					return block(
 						readOnly.reason ?? `read-only path: ${ruleValue(readOnly)}`,
@@ -342,5 +300,56 @@ export default function damageControl(pi: ExtensionAPI) {
 
 		return { block: false };
 	});
+}
 
+export default function damageControl(pi: ExtensionAPI) {
+	pi.on("session_start", async (_event, ctx) => {
+		const { error: configsError } = configs.load(ctx.cwd);
+
+		const status = `shield: ${configs.totalRules()} rules${configs.current.strictMode ? ", strict" : ""}`;
+		ctx.ui.setStatus("damage-control", status);
+		for (const feature of ["commands", "paths", "policies"] as const) {
+			emitFeatureRegister(pi, feature);
+		}
+		if (configsError)
+			ctx.ui.notify(
+				`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`,
+				"error",
+			);
+		else
+			ctx.ui.notify(
+				`🛡️ Damage Control active (${status})${configs.source ? ` from ${configs.source}` : "; no config found"}`,
+				"info",
+			);
+	});
+
+	pi.registerCommand("damage-control-reload", {
+		description: "Reload Damage Control rules from settings YAML",
+		handler: async (_args, ctx) => {
+			const { error: configsError } = configs.load(ctx.cwd);
+
+			ctx.ui.setStatus(
+				"damage-control",
+				`shield: ${configs.totalRules()} rules${configs.current.strictMode ? ", strict" : ""}`,
+			);
+			ctx.ui.notify(
+				configsError
+					? `Failed: ${configsError}`
+					: `Reloaded ${configs.totalRules()} rules from ${configs.source ?? "defaults"}`,
+				configsError ? "error" : "info",
+			);
+		},
+	});
+
+	pi.registerCommand("damage-control-status", {
+		description: "Show Damage Control rule counts and source",
+		handler: async (_args, ctx) => {
+			ctx.ui.notify(
+				`🛡️ Damage Control: ${configs.totalRules()} rules; strictMode=${configs.current.strictMode}; source=${configs.source ?? "none"}`,
+				"info",
+			);
+		},
+	});
+
+	setupPolicyHook(pi);
 }

@@ -1,6 +1,6 @@
-import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
+import { loadYamlConfig, type RawConfig } from "../_shared/config";
 import { BUILTIN_DANGEROUS_COMMAND_COUNT } from "./commands/dangerous";
 import type { Config, Rule } from "./types";
 
@@ -29,85 +29,6 @@ const CONFIG_PATHS = [
 	path.join(os.homedir(), ".pi", "damage-control-rules.yaml"),
 ];
 
-function stripQuotes(value: string): string {
-	const trimmed = value.trim();
-	if (
-		(trimmed.startsWith('"') && trimmed.endsWith('"')) ||
-		(trimmed.startsWith("'") && trimmed.endsWith("'"))
-	) {
-		return trimmed.slice(1, -1);
-	}
-	return trimmed;
-}
-
-function parseScalar(value: string): string | boolean {
-	const unquoted = stripQuotes(value);
-	if (unquoted === "true") return true;
-	if (unquoted === "false") return false;
-	return unquoted;
-}
-
-function removeComment(line: string): string {
-	let quote: string | null = null;
-	for (let i = 0; i < line.length; i++) {
-		const ch = line[i] ?? "";
-		if ((ch === '"' || ch === "'") && line[i - 1] !== "\\")
-			quote = quote === ch ? null : (quote ?? ch);
-		if (ch === "#" && !quote && (i === 0 || /\s/.test(line[i - 1] ?? "")))
-			return line.slice(0, i);
-	}
-	return line;
-}
-
-function parseSimpleYaml(input: string): Partial<Config> {
-	const out: Record<string, unknown> = {};
-	let section: string | null = null;
-	let currentItem: Record<string, unknown> | null = null;
-
-	for (const rawLine of input.split(/\r?\n/)) {
-		const line = removeComment(rawLine).replace(/\t/g, "  ").trimEnd();
-		if (!line.trim()) continue;
-
-		const top = line.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-		if (top && top[1] && top[2] !== undefined && !rawLine.startsWith(" ")) {
-			section = top[1];
-			const rest = top[2].trim();
-			if (rest === "") out[section] = [];
-			else out[section] = parseScalar(rest);
-			currentItem = null;
-			continue;
-		}
-
-		if (!section) continue;
-		const sectionName = section;
-		const arr = Array.isArray(out[sectionName])
-			? (out[sectionName] as unknown[])
-			: (out[sectionName] = [] as unknown[]);
-		const item = line.match(/^\s*-\s*(.*)$/);
-		if (item && item[1] !== undefined) {
-			const rest = item[1].trim();
-			const kv = rest.match(/^([A-Za-z0-9_-]+):\s*(.*)$/);
-			if (kv && kv[1] && kv[2] !== undefined) {
-				currentItem = { [kv[1]]: parseScalar(kv[2]) };
-				arr.push(currentItem);
-			} else if (section === "allowedOutsideCwdPaths") {
-				arr.push(parseScalar(rest));
-				currentItem = null;
-			} else {
-				currentItem = { pattern: parseScalar(rest) };
-				arr.push(currentItem);
-			}
-			continue;
-		}
-
-		const nested = line.match(/^\s+([A-Za-z0-9_-]+):\s*(.*)$/);
-		if (nested && nested[1] && nested[2] !== undefined && currentItem)
-			currentItem[nested[1]] = parseScalar(nested[2]);
-	}
-
-	return out as Partial<Config>;
-}
-
 function normalizeRule(
 	raw: unknown,
 	defaultKey: "pattern" | "path" | "command",
@@ -130,7 +51,7 @@ function normalizeRule(
 	};
 }
 
-function normalizeConfig(loaded: Partial<Config>): Config {
+function normalizeConfig(loaded: RawConfig): Config {
 	const normalize = (
 		key: keyof Config,
 		defaultKey: "pattern" | "path" | "command",
@@ -157,40 +78,37 @@ function normalizeConfig(loaded: Partial<Config>): Config {
 	};
 }
 
-function findConfigPath(cwd: string): string | null {
-	const projectPath = path.join(cwd, ".pi", "damage-control-rules.yaml");
-	if (fs.existsSync(projectPath)) return projectPath;
-	return CONFIG_PATHS.find((p) => fs.existsSync(p)) ?? null;
-}
+export const configs = (() => {
+	let source: string | null = null;
+	let current: Config = DEFAULT_CONFIG;
 
-export function loadConfig(cwd: string): {
-	config: Config;
-	source: string | null;
-	error?: string;
-} {
-	const source = findConfigPath(cwd);
-	if (!source) return { config: DEFAULT_CONFIG, source: null };
-	try {
-		return {
-			config: normalizeConfig(parseSimpleYaml(fs.readFileSync(source, "utf8"))),
-			source,
-		};
-	} catch (error) {
-		return {
-			config: DEFAULT_CONFIG,
-			source,
-			error: error instanceof Error ? error.message : String(error),
-		};
-	}
-}
-
-export function totalRules(config: Config): number {
-	return (
-		(config.useBuiltinCommandMatchers ? BUILTIN_DANGEROUS_COMMAND_COUNT : 0) +
-		config.bashToolPatterns.length +
-		config.zeroAccessPaths.length +
-		config.readOnlyPaths.length +
-		config.noDeletePaths.length +
-		config.strictModeAllowedList.length
-	);
-}
+	return {
+		get current() {
+			return current;
+		},
+		get source() {
+			return source;
+		},
+		load: (cwd: string) => {
+			const result = loadYamlConfig({
+				cwd,
+				projectRelativePath: path.join(".pi", "damage-control-rules.yaml"),
+				configPaths: CONFIG_PATHS,
+				defaultConfig: DEFAULT_CONFIG,
+				parse: normalizeConfig,
+			});
+			source = result.source;
+			current = result.config;
+			return result;
+		},
+		totalRules: () =>
+			(current.useBuiltinCommandMatchers
+				? BUILTIN_DANGEROUS_COMMAND_COUNT
+				: 0) +
+			current.bashToolPatterns.length +
+			current.zeroAccessPaths.length +
+			current.readOnlyPaths.length +
+			current.noDeletePaths.length +
+			current.strictModeAllowedList.length,
+	};
+})();
