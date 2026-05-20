@@ -6,7 +6,7 @@ export const DAMAGE_CONTROL_FEATURE_REQUEST_EVENT = "damage-control:feature:requ
 export const DAMAGE_CONTROL_FEATURE_REGISTER_EVENT = "damage-control:feature:register";
 
 export type DamageControlFeatureId = "commands" | "paths" | "policies";
-export type DamageControlActionKind = "tool_call" | "user_bash";
+export type DamageControlActionKind = "tool_call";
 export type DamageControlBlockSource =
 	| "policy"
 	| "pathAccess"
