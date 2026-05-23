@@ -63,7 +63,7 @@ function sandboxRuntimeConfig(): SandboxRuntimeConfig {
 }
 
 async function initializeSandbox(): Promise<void> {
-	await SandboxManager.initialize(sandboxRuntimeConfig(), async () => true);
+	await SandboxManager.initialize(sandboxRuntimeConfig(), async () => true, true);
 	sandboxState.initialized = true;
 }
 
@@ -93,9 +93,7 @@ function appendFilesystemAllowance(
 ): void {
 	const targetPath = configPath ?? DEFAULT_CONFIG_PATH;
 	fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-	const currentText = fs.existsSync(targetPath)
-		? fs.readFileSync(targetPath, "utf8")
-		: "";
+	const currentText = fs.existsSync(targetPath) ? fs.readFileSync(targetPath, "utf8") : "";
 	if (
 		currentText
 			.split(/\r?\n/)
@@ -149,6 +147,7 @@ async function promptForFilesystemAccess(
 	tool: string,
 	target: string,
 	showFileOptions: boolean,
+	grantOnceForSandboxRetry = false,
 ): Promise<boolean> {
 	if (!ctx.hasUI) return false;
 	const parentDir = path.dirname(target);
@@ -174,7 +173,7 @@ async function promptForFilesystemAccess(
 	}
 
 	const allowance = storageForm(grantTarget, ctx.cwd, promptIsDirectory(result));
-	if (scope === "session" || scope === "always") {
+	if (scope === "session" || scope === "always" || grantOnceForSandboxRetry) {
 		const session = kind === "read" ? sandboxState.sessionRead : sandboxState.sessionWrite;
 		if (!session.includes(allowance)) session.push(allowance);
 	}
@@ -233,11 +232,18 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 				});
 		}
 
-		if (event.toolName === "read" && context.input?.path && typeof context.input.path === "string") {
+		if (
+			event.toolName === "read" &&
+			context.input?.path &&
+			typeof context.input.path === "string"
+		) {
 			const target = canonicalizePath(context.input.path, ctx.cwd);
 			if (shouldPromptForRead(target, sandboxRuntimeConfig().filesystem, ctx.cwd)) {
 				const allowed = await promptForFilesystemAccess(ctx, "read", event.toolName, target, true);
-				if (!allowed) return block(`read access denied for ${target}`, false, "paths", "user", { path: target });
+				if (!allowed)
+					return block(`read access denied for ${target}`, false, "paths", "user", {
+						path: target,
+					});
 			}
 		}
 
@@ -249,10 +255,15 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 			const target = canonicalizePath(context.input.path, ctx.cwd);
 			const filesystem = sandboxRuntimeConfig().filesystem;
 			if (isWriteDenied(target, filesystem, ctx.cwd))
-				return block(`write access denied by denyWrite for ${target}`, false, "paths", "policy", { path: target });
+				return block(`write access denied by denyWrite for ${target}`, false, "paths", "policy", {
+					path: target,
+				});
 			if (shouldPromptForWrite(target, filesystem, ctx.cwd)) {
 				const allowed = await promptForFilesystemAccess(ctx, "write", event.toolName, target, true);
-				if (!allowed) return block(`write access denied for ${target}`, false, "paths", "user", { path: target });
+				if (!allowed)
+					return block(`write access denied for ${target}`, false, "paths", "user", {
+						path: target,
+					});
 			}
 		}
 
@@ -272,10 +283,7 @@ function setupSessionStart(pi: ExtensionAPI): void {
 			emitFeatureRegister(pi, feature);
 		}
 		if (configsError) {
-			ctx.ui.notify(
-				`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`,
-				"error",
-			);
+			ctx.ui.notify(`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`, "error");
 			return;
 		}
 		if (process.platform !== "darwin" && process.platform !== "linux") {
@@ -292,11 +300,11 @@ function setupSessionStart(pi: ExtensionAPI): void {
 				"info",
 			);
 		} catch (error) {
-		sandboxState.initialized = false;
-		ctx.ui.notify(
-			`🛡️ Damage Control sandbox failed: ${error instanceof Error ? error.message : String(error)}`,
-			"error",
-		);
+			sandboxState.initialized = false;
+			ctx.ui.notify(
+				`🛡️ Damage Control sandbox failed: ${error instanceof Error ? error.message : String(error)}`,
+				"error",
+			);
 		}
 	});
 }
@@ -335,9 +343,63 @@ function resultText<TDetails>(result: AgentToolResult<TDetails>): string {
 		.join("\n");
 }
 
-function extractSandboxBlockedPath(output: string): string | null {
-	const match = output.match(/(?:^|\s)(\/[^\s:]+): Operation not permitted/m);
-	return match?.[1] ?? null;
+type SandboxBlockedAccess = {
+	kind: AccessKind;
+	path: string;
+};
+
+const READ_ERROR_COMMANDS = new Set([
+	"awk",
+	"cat",
+	"find",
+	"grep",
+	"head",
+	"less",
+	"ls",
+	"more",
+	"rg",
+	"sed",
+	"stat",
+	"tail",
+]);
+
+const SHELL_ERROR_COMMANDS = new Set(["bash", "dash", "fish", "sh", "zsh"]);
+
+function parseSandboxViolation(line: string): SandboxBlockedAccess | null {
+	const match = line.match(/\b(file-read|file-write)[^\s]*\s+(\/\S+)/);
+	if (!match) return null;
+	return { kind: match[1] === "file-read" ? "read" : "write", path: match[2] };
+}
+
+function classifyOperationNotPermitted(line: string, cwd: string): SandboxBlockedAccess | null {
+	const match = line.match(/^(?:(.+?):\s+)?(\/[^\s:]+): Operation not permitted$/);
+	if (!match) return null;
+	const commandName = path.basename((match[1] ?? "").trim());
+	const target = canonicalizePath(match[2], cwd);
+	const filesystem = sandboxRuntimeConfig().filesystem;
+	if (READ_ERROR_COMMANDS.has(commandName)) return { kind: "read", path: target };
+	if (SHELL_ERROR_COMMANDS.has(commandName)) return { kind: "write", path: target };
+	if (shouldPromptForRead(target, filesystem, cwd)) return { kind: "read", path: target };
+	return { kind: "write", path: target };
+}
+
+export function extractSandboxBlockedAccesses(
+	output: string,
+	violationLines: readonly string[],
+	cwd: string,
+): SandboxBlockedAccess[] {
+	const accesses = new Map<string, SandboxBlockedAccess>();
+	const addAccess = (access: SandboxBlockedAccess | null) => {
+		if (!access) return;
+		const target = canonicalizePath(access.path, cwd);
+		accesses.set(`${access.kind}:${target}`, { ...access, path: target });
+	};
+
+	for (const line of violationLines) addAccess(parseSandboxViolation(line));
+	for (const line of output.split(/\r?\n/))
+		addAccess(classifyOperationNotPermitted(line.trim(), cwd));
+
+	return [...accesses.values()];
 }
 
 function registerSandboxedBash(pi: ExtensionAPI): void {
@@ -351,24 +413,38 @@ function registerSandboxedBash(pi: ExtensionAPI): void {
 		...bashTool,
 		label: "bash (damage-control sandbox)",
 		execute: async (id, params, signal, onUpdate, ctx) => {
+			const startedAt = new Date();
 			const result = await bashTool.execute(id, params, signal, onUpdate, ctx);
-			const blockedPath = extractSandboxBlockedPath(resultText(result));
-			if (!blockedPath || !ctx.hasUI) return result;
+			if (!ctx.hasUI) return result;
 
-			const allowed = await promptForFilesystemAccess(
-				ctx,
-				"write",
-				"bash",
-				blockedPath,
-				true,
+			const violationLines = SandboxManager.getSandboxViolationStore()
+				.getViolationsForCommand(params.command)
+				.filter((violation) => violation.timestamp >= startedAt)
+				.map((violation) => violation.line);
+			const blockedAccesses = extractSandboxBlockedAccesses(
+				resultText(result),
+				violationLines,
+				ctx.cwd,
 			);
-			if (!allowed) return result;
+			if (blockedAccesses.length === 0) return result;
+
+			for (const access of blockedAccesses) {
+				const allowed = await promptForFilesystemAccess(
+					ctx,
+					access.kind,
+					"bash",
+					access.path,
+					true,
+					true,
+				);
+				if (!allowed) return result;
+			}
 
 			onUpdate?.({
 				content: [
 					{
 						type: "text",
-						text: `\n--- Filesystem access granted for ${blockedPath}; retrying command ---\n`,
+						text: `\n--- Filesystem access granted; retrying command ---\n`,
 					},
 				],
 				details: undefined,

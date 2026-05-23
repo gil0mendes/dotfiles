@@ -6,6 +6,7 @@ import {
 	shouldPromptForRead,
 	shouldPromptForWrite,
 } from "./filesystem";
+import { extractSandboxBlockedAccesses } from "./index";
 import type { FilesystemGateConfig } from "./types";
 
 const cwd = path.resolve("/tmp/example-project");
@@ -38,5 +39,33 @@ describe("filesystem gate", () => {
 
 	it("matches directory patterns as prefixes", () => {
 		expect(matchesFilesystemPattern("/tmp/shared/note.txt", ["/tmp/shared/"], cwd)).toBe(true);
+	});
+
+	it("extracts read blocks reported by sandboxed commands", () => {
+		expect(
+			extractSandboxBlockedAccesses("cat: /private/secret.txt: Operation not permitted", [], cwd),
+		).toEqual([{ kind: "read", path: "/private/secret.txt" }]);
+	});
+
+	it("extracts write blocks reported by sandboxed shell redirects", () => {
+		expect(
+			extractSandboxBlockedAccesses("/bin/bash: /opt/file.txt: Operation not permitted", [], cwd),
+		).toEqual([{ kind: "write", path: "/opt/file.txt" }]);
+	});
+
+	it("extracts read and write blocks from macOS sandbox violations", () => {
+		expect(
+			extractSandboxBlockedAccesses(
+				"",
+				[
+					"bash(123) deny(1) file-read-data /private/secret.txt",
+					"bash(123) deny(1) file-write-create /opt/file.txt",
+				],
+				cwd,
+			),
+		).toEqual([
+			{ kind: "read", path: "/private/secret.txt" },
+			{ kind: "write", path: "/opt/file.txt" },
+		]);
 	});
 });
