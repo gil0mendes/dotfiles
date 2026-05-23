@@ -15,7 +15,6 @@ permissionGate: true
 # takes precedence over allowWrite.
 filesystem:
   denyRead:
-    - /
     - /Users
     - .env
     - .env.*
@@ -54,6 +53,7 @@ filesystem:
     - /sbin/
     - /boot/
     - /root/
+    - /System/Library/
     - ~/projects
     - ~/.config
     - ~/.cargo
@@ -80,6 +80,7 @@ filesystem:
     - .venv/
     - venv/
     - target/
+    - ~/.dotfiles
 
   allowWrite:
     - .
