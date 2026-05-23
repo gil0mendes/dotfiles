@@ -53,6 +53,7 @@ filesystem:
     - /boot/
     - /root/
     - /opt/
+    - /var/
     - /System/Library/
     - ~/projects
     - ~/.config
@@ -84,6 +85,8 @@ filesystem:
     - venv/
     - target/
     - ~/.dotfiles
+    - ~/.bun/install/global/node_modules/@earendil-works/pi-coding-agent/docs/
+    - ~/.dotfiles/configs/
 
   allowWrite:
     - .
