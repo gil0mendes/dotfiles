@@ -15,12 +15,11 @@ permissionGate: true
 # takes precedence over allowWrite.
 filesystem:
   denyRead:
-    - /Users
     - .env
     - .env.*
     - "*.env"
     - ~/.ssh/
-    - ~/.gnupg/
+    - ~/.gnupg/private-keys*
     - ~/.aws/
     - ~/.config/gcloud/
     - ~/.azure/
@@ -53,6 +52,7 @@ filesystem:
     - /sbin/
     - /boot/
     - /root/
+    - /opt/
     - /System/Library/
     - ~/projects
     - ~/.config
@@ -65,6 +65,9 @@ filesystem:
     - ~/.bashrc
     - ~/.zshrc
     - ~/.profile
+    - ~/.nix-profile/
+    - ~/.ssh/known_hosts
+    - ~/.ssh/config
     - package-lock.json
     - yarn.lock
     - pnpm-lock.yaml
