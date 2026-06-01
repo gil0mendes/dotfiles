@@ -1,4 +1,9 @@
-{ config, pkgs, lib, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   inherit (lib) getName mkIf optional;
@@ -14,6 +19,7 @@ in
     withPython3 = true;
     viAlias = true;
     vimAlias = true;
+    withRuby = false;
   };
 
   home.shellAliases = {

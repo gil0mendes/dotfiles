@@ -61,7 +61,7 @@
     oras
     atuin
     watchman
-    defuddle-cli
+    defuddle
 
     # we use it for OpenCode
     bun
@@ -104,7 +104,7 @@
     nixfmt
     nil
     ## JS/TS
-    nodePackages.typescript-language-server
+    typescript-language-server
     eslint_d
     ## JSON
     vscode-langservers-extracted
