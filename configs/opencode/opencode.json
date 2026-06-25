@@ -106,6 +106,9 @@
 			"true": "allow",
 			"tsc *": "allow",
 			"turbo *": "allow",
+			"terraform init": "allow",
+			"terraform fmt *": "allow",
+			"tofu init": "allow",
 			"uname *": "allow",
 			"uniq *": "allow",
 			"unzip *": "allow",
@@ -118,7 +121,8 @@
 			"yarn *": "allow",
 			"z *": "allow",
 			"zip *": "allow",
-			"zoxide *": "allow"
+			"zoxide *": "allow",
+			"kustomize build *": "allow"
 		},
 		"edit": "allow",
 		"webfetch": "allow"
@@ -131,8 +135,8 @@
 				"claude-opus-4-7": {
 					"id": "claude-opus-4-7"
 				},
-				"claude-sonnet-4-6": {
-					"id": "claude-sonnet-4-6"
+				"claude-sonnet-5": {
+					"id": "claude-sonnet-5"
 				},
 				"claude-haiku-4-5": {
 					"id": "claude-haiku-4-5"
@@ -142,7 +146,7 @@
 				}
 			},
 			"options": {
-				"baseURL": "https://api.iq.cudasvc.com"
+				"baseURL": "https://eu.api.iq.cudasvc.com"
 			}
 		},
 		"litellm-barracuda-openai": {
@@ -158,18 +162,6 @@
 			},
 			"options": {
 				"baseURL": "https://api.iq.cudasvc.com"
-			}
-		},
-		"lmstudio": {
-			"name": "LM Studio",
-			"npm": "@ai-sdk/openai-compatible",
-			"models": {
-				"qwen3.6-27b": {
-					"id": "qwen/qwen3.6-27b"
-				}
-			},
-			"options": {
-				"baseURL": "http://192.168.1.29:1234/v1"
 			}
 		}
 	},
@@ -189,11 +181,6 @@
 		"grep_app": {
 			"type": "remote",
 			"url": "https://mcp.grep.app",
-			"enabled": true
-		},
-		"shadcn": {
-			"type": "local",
-			"command": ["npx", "shadcn@latest", "mcp"],
 			"enabled": true
 		},
 		"atlasian": {
