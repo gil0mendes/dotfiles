@@ -18,7 +18,7 @@
   ];
 
   services.kanata = {
-    enable = true;
+    enable = false;
     config = ''
       (defcfg
         process-unmapped-keys yes
@@ -28,7 +28,7 @@
         )
       )
 
-      (defsrc 
+      (defsrc
         esc	f1	f2	f3	f4	f5	f6	f7	f8	f9	f10	f11	f12
         caps a s d f j k l ;
         fn
@@ -54,7 +54,7 @@
       (deffakekeys
         to-base (layer-switch base)
       )
-        
+
       (defalias
         tap (multi
           (layer-switch nomods)
