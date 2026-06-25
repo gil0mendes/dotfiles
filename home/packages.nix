@@ -56,6 +56,7 @@
     vscode
     kubectl
     kubelogin
+    argocd
     sops
     age
     oras

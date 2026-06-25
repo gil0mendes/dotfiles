@@ -1,7 +1,7 @@
 ---
 description: Technical implementation specialist for writing and modifying code
 mode: subagent
-model: litellm-barracuda-openai/gpt-5-5
+model: litellm-barracuda-openai/gpt-5-6-terra
 variant: xhigh
 ---
 

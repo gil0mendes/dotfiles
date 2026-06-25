@@ -132,21 +132,21 @@
 			"name": "LiteLLM (Barracuda)",
 			"npm": "@ai-sdk/openai-compatible",
 			"models": {
-				"claude-opus-4-7": {
-					"id": "claude-opus-4-7"
+				"claude-opus-4-8": {
+					"id": "claude-opus-4-8"
 				},
 				"claude-sonnet-5": {
 					"id": "claude-sonnet-5"
 				},
 				"claude-haiku-4-5": {
-					"id": "claude-haiku-4-5"
+					"id": "claude-sonnet-5"
 				},
 				"gemini-2-5-flash": {
 					"id": "gemini-2-5-flash"
 				}
 			},
 			"options": {
-				"baseURL": "https://eu.api.iq.cudasvc.com"
+				"baseURL": "https://api.iq.cudasvc.com"
 			}
 		},
 		"litellm-barracuda-openai": {
@@ -158,6 +158,15 @@
 				},
 				"gpt-5-4-mini": {
 					"id": "gpt-5-4-mini"
+				},
+				"gpt-5-6-sol": {
+					"id": "gpt-5-6-sol"
+				},
+				"gpt-5-6-terra": {
+					"id": "gpt-5-6-terra"
+				},
+				"gpt-5-6-luna": {
+					"id": "gpt-5-6-luna"
 				}
 			},
 			"options": {

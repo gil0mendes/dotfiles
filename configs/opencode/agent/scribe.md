@@ -1,7 +1,7 @@
 ---
 description: Human-facing content specialist for documentation and prose
 mode: subagent
-model: litellm-barracuda/claude-haiku-4-5
+model: litellm-barracuda-openai/gpt-5-6-luna
 ---
 
 # Scribe Agent
