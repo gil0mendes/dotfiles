@@ -1,7 +1,19 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { parse } from "yaml";
 
 export type RawConfig = Record<string, unknown>;
+
+const isRawConfig = (value: unknown): value is RawConfig =>
+	typeof value === "object" && value !== null && !Array.isArray(value);
+
+export function parseYamlConfig(input: string): RawConfig {
+	const parsed = parse(input);
+	if (!isRawConfig(parsed)) {
+		throw new Error("YAML config must be a mapping");
+	}
+	return parsed;
+}
 
 export type ConfigLoaderOptions<TConfig> = {
 	cwd: string;

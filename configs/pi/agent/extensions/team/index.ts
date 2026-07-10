@@ -1,8 +1,7 @@
-import type {
-	ExtensionAPI,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Runtime, team } from "./runtime";
+import { setupTools } from "./tools/registerTools";
+import { registerUIRenderers } from "./ui";
 
 type ProcessHooks = {
 	once(event: "SIGINT", listener: () => void): unknown;
@@ -15,11 +14,7 @@ const processHooksSetupKey = Symbol.for("team.processHooksSetup");
 const globalWithProcessHooks = globalThis as typeof globalThis &
 	Record<symbol, boolean | undefined>;
 
-function setupProcessHooks(
-	runtime: Runtime,
-	processHooks: ProcessHooks,
-	setupKey: symbol,
-) {
+function setupProcessHooks(runtime: Runtime, processHooks: ProcessHooks, setupKey: symbol) {
 	if (globalWithProcessHooks[setupKey]) {
 		return;
 	}
@@ -35,22 +30,13 @@ function setupProcessHooks(
 }
 
 function registerPiHooks(pi: ExtensionAPI) {
-	let currentCtx: ExtensionContext | undefined;
-
-	const refreshWidget = () => {
-		// TODO: implement
-	};
-
 	const activateSession = (ctx: ExtensionContext) => {
-		currentCtx = ctx;
-		team.activateSession(
-			{
-				sessionId: ctx.sessionManager.getSessionId(),
-				sendMessage: pi.sendMessage.bind(pi),
-				isIdle: () => ctx.isIdle(),
-			},
-			refreshWidget,
-		);
+		team.activateSession({
+			sessionId: ctx.sessionManager.getSessionId(),
+			sendMessage: pi.sendMessage.bind(pi),
+			isIdle: () => ctx.isIdle(),
+			events: pi.events,
+		});
 	};
 
 	pi.on("session_start", (_event, ctx) => {
@@ -69,8 +55,7 @@ function registerPiHooks(pi: ExtensionAPI) {
 
 export default function teamExtension(pi: ExtensionAPI) {
 	setupProcessHooks(team, process, processHooksSetupKey);
+	registerUIRenderers(pi, team);
 	registerPiHooks(pi);
-
-	// TODO: register tools
-	// TODO: register renderers
+	setupTools(pi, team);
 }
