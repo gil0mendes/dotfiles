@@ -1,7 +1,7 @@
 ---
 name: reviewer
 description: Expert code reviewer for security, performance, and philosophy compliance
-mode: subagent
+tools: read, bash, grep, find, ls
 ---
 
 # Code Review Agent

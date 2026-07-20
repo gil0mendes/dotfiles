@@ -4,6 +4,7 @@ description: Technical implementation specialist for writing and modifying code
 mode: subagent
 model: openai-codex/gpt-5.6-terra
 variant: xhigh
+tools: read, bash, edit, write, grep, find, ls
 ---
 
 # Coder Agent

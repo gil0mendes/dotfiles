@@ -1,8 +1,8 @@
 ---
 name: researcher
 description: Knowledge architect for external research and documentation
-mode: subagent
 model: openai-codex/gpt-5.6-luna
+tools: webfetch, websearch
 ---
 
 # Researcher Agent

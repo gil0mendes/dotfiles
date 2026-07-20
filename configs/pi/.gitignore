@@ -37,3 +37,4 @@ agent/auth.json
 agent/sessions/*
 agent/models.json
 agent/trust.json
+agent/models-store.json

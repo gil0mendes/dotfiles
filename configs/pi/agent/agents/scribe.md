@@ -2,6 +2,7 @@
 name: scribe
 description: Human-facing content specialist for documentation and prose
 model: openai-codex/gpt-5.6-luna
+tools: read, edit, write, ls
 ---
 
 # Scribe Agent
