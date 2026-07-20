@@ -18,6 +18,7 @@ model: openai-codex/gpt-5.5
 Prompt
 `);
 
+		expect(result.agent?.type).toBe("agent");
 		expect(result.agent?.model).toBe("openai-codex/gpt-5.5");
 		expect(result.agent?.parsedModel).toEqual({
 			provider: "openai-codex",
@@ -26,6 +27,51 @@ Prompt
 		expect(result.agent?.parsedModels).toEqual([
 			{ provider: "openai-codex", modelId: "gpt-5.5" },
 		]);
+		expect(result.warnings).toEqual([]);
+	});
+
+	it("accepts orchestrator type declarations", () => {
+		const result = loadAgentFromContent(`---
+name: coordinator
+description: Coordinates subagents
+type: orchestrator
+---
+Prompt
+`);
+
+		expect(result.agent?.type).toBe("orchestrator");
+		expect(result.warnings).toEqual([]);
+	});
+
+	it("rejects unsupported type declarations", () => {
+		const result = loadAgentFromContent(`---
+name: worker
+description: Completes tasks
+type: supervisor
+---
+Prompt
+`);
+
+		expect(result.agent).toBeNull();
+		expect(result.warnings).toEqual([
+			{
+				filePath: "/tmp/test-agent.md",
+				message:
+					'Ignored subagent definition "worker". Frontmatter field "type" must be either "agent" or "orchestrator".',
+			},
+		]);
+	});
+
+	it("preserves declared tools for runtime validation", () => {
+		const result = loadAgentFromContent(`---
+name: extension-user
+description: Uses an extension tool
+tools: [read, web_search]
+---
+Prompt
+`);
+
+		expect(result.agent?.tools).toEqual(["read", "web_search"]);
 		expect(result.warnings).toEqual([]);
 	});
 

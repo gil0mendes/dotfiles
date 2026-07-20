@@ -42,6 +42,7 @@ export type BootstrapContext = {
 	modelRegistry: ModelRegistry;
 	agentDir: string;
 	parentSessionFile?: string;
+	availableToolNames: readonly string[];
 };
 
 type BootstrapOptions = {
@@ -122,11 +123,28 @@ export const resolveModel = (
 	return { model, warnings };
 };
 
-const resolverTools = (
+export const resolveTools = (
 	agentConfig: AgentConfig,
-): { tools: string[]; warnings: string[] } => {
-	// TODO: validate tools against available tool names
-	return { tools: agentConfig.tools ?? [], warnings: [] };
+	availableToolNames: readonly string[],
+): { tools: string[] | undefined; warnings: string[] } => {
+	const declaredTools = agentConfig.tools;
+	if (declaredTools === undefined) {
+		return { tools: undefined, warnings: [] };
+	}
+	if (declaredTools.length === 0) {
+		return { tools: [], warnings: [] };
+	}
+
+	const availableTools = new Set(availableToolNames);
+	const tools = declaredTools.filter((toolName) => availableTools.has(toolName));
+	const unknownTools = declaredTools.filter(
+		(toolName) => !availableTools.has(toolName),
+	);
+	const warnings = unknownTools.map(
+		(toolName) => `Unknown tool "${toolName}" in subagent config, skipping`,
+	);
+
+	return { tools, warnings };
 };
 
 function normalizeSessionNamePart(value: string): string {
@@ -206,7 +224,10 @@ async function bootstrapSession({
 	const { model, warnings: modelWarnings } = resolveModel(agentConfig, ctx);
 	warnings.push(...modelWarnings);
 
-	const { tools, warnings: toolsWarnings } = resolverTools(agentConfig);
+	const { tools, warnings: toolsWarnings } = resolveTools(
+		agentConfig,
+		ctx.availableToolNames,
+	);
 	warnings.push(...toolsWarnings);
 
 	const resourceLoader = new DefaultResourceLoader({

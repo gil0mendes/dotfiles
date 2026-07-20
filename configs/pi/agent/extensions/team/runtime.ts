@@ -28,6 +28,10 @@ import { getSteeringMessagePayload } from "./message/steeringPayload";
 const PENDING_MESSAGE_TTL_MS = 86_400_000; // 24 hours
 
 export type ActiveRuntimeBinding = {
+	/**
+	 * Current working directory.
+	 */
+	cwd: string;
 	sessionId: string;
 	sendMessage: ExtensionAPI["sendMessage"];
 	isIdle: () => boolean;
@@ -39,6 +43,7 @@ type SpawnContext = {
 	modelRegistry: ModelRegistry;
 	agentDir: string;
 	parentSessionFile?: string;
+	availableToolNames: readonly string[];
 	brief?: string;
 	onWarning?: (message: string) => void;
 };
@@ -102,6 +107,7 @@ const toBootstrapContext = (ctx: SpawnContext): BootstrapContext => ({
 	modelRegistry: ctx.modelRegistry,
 	agentDir: ctx.agentDir,
 	parentSessionFile: ctx.parentSessionFile,
+	availableToolNames: ctx.availableToolNames,
 });
 
 export class Runtime {
@@ -242,6 +248,10 @@ export class Runtime {
 					state.ownerSessionId === ownerSessionId,
 			)
 			.map(buildActiveAgentSummary);
+	}
+
+	getCwd(): string {
+		return this.activeBinding?.cwd ?? "";
 	}
 
 	private validateOwnedSubagent(

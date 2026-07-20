@@ -5,20 +5,23 @@ export type ParsedModel = {
 	modelId: string;
 };
 
+export type AgentType = "orchestrator" | "agent";
+
 export type AgentConfigFields = {
 	model?: string | string[];
+	type?: AgentType;
 	parsedModel?: ParsedModel;
 	parsedModels?: ParsedModel[];
 	thinking?: ThinkingLevel;
-	// TODO: validate tools against available tool names
 	tools?: string[];
 	skills?: string[];
 	compaction?: boolean;
 	interactive?: boolean;
 };
 
-export type AgentConfig = AgentConfigFields & {
+export type AgentConfig = Omit<AgentConfigFields, "type"> & {
 	name: string;
+	type: AgentType;
 	description: string;
 	systemPrompt: string;
 	filePath: string;

@@ -8,7 +8,12 @@ import {
 	parseModelPreferences,
 	type AgentDiscoveryWarning,
 } from "./utils";
-import type { AgentConfig, AgentConfigFields, ParsedModel } from "./types";
+import type {
+	AgentConfig,
+	AgentConfigFields,
+	AgentType,
+	ParsedModel,
+} from "./types";
 import type { ThinkingLevel } from "@earendil-works/pi-ai";
 
 export type AgentDefinitionFile = {
@@ -120,12 +125,7 @@ const loadConfigFile = (filePath: string): AgentConfigFile | null => {
 
 type AgentConfigOverride = AgentConfigFields;
 type ParsedFieldName =
-	| "model"
-	| "thinking"
-	| "tools"
-	| "skills"
-	| "compaction"
-	| "interactive";
+	"model" | "thinking" | "tools" | "skills" | "compaction" | "interactive";
 type ParsedListFieldName = "tools" | "skills";
 type ParsedBooleanFieldName = "compaction" | "interactive";
 type WarningSubject = "subagent" | "subagent override";
@@ -138,8 +138,7 @@ type ParsedFieldWarning =
 			expected: "string" | "string or YAML string array" | "boolean";
 	  }
 	| { code: "invalid-model-format"; model: string }
-	| { code: "invalid-thinking-level"; thinking: string }
-	| { code: "unknown-tools"; tools: string[] };
+	| { code: "invalid-thinking-level"; thinking: string };
 
 type ParsedFieldSet = AgentConfigFields & {
 	warnings: ParsedFieldWarning[];
@@ -148,6 +147,16 @@ type ParsedFieldSet = AgentConfigFields & {
 type ParseFieldOptions = {
 	warnOnInvalidType: boolean;
 	setValueOnInvalidType: boolean;
+};
+
+const parseAgentType = (value: unknown): AgentType | null => {
+	if (value === undefined) {
+		return "agent";
+	}
+	if (value === "agent" || value === "orchestrator") {
+		return value;
+	}
+	return null;
 };
 
 const VALID_THINKING_LEVELS: readonly string[] = [
@@ -200,24 +209,6 @@ const parseListField = (
 
 	return { values: [], warnings: [{ code: "invalid-list-format", fieldName }] };
 };
-
-const SUPPORTED_TOOL_NAMES_LITERAL = [
-	"read",
-	"bash",
-	"edit",
-	"write",
-	"grep",
-	"find",
-	"ls",
-] as const;
-
-export type SupportedToolName = (typeof SUPPORTED_TOOL_NAMES_LITERAL)[number];
-export const SUPPORTED_TOOL_NAMES = Object.freeze([
-	...SUPPORTED_TOOL_NAMES_LITERAL,
-] as SupportedToolName[]);
-
-const isSupportedToolName = (name: string): name is SupportedToolName =>
-	SUPPORTED_TOOL_NAMES.includes(name as SupportedToolName);
 
 const parseBooleanField = (
 	fieldName: ParsedBooleanFieldName,
@@ -282,15 +273,8 @@ const parseSharedFields = (
 
 	if ("tools" in record) {
 		const parsed = parseListField(record.tools, "tools");
-		const validTools = parsed.values.filter(isSupportedToolName);
-		const invalidTools = parsed.values.filter(
-			(tool) => !isSupportedToolName(tool),
-		);
-
-		fields.tools = validTools;
+		fields.tools = parsed.values;
 		warnings.push(...parsed.warnings);
-		if (invalidTools.length)
-			warnings.push({ code: "unknown-tools", tools: invalidTools });
 	}
 
 	if ("skills" in record) {
@@ -342,8 +326,6 @@ const formatFieldWarning = (
 			return `${prefix}: invalid model format "${warning.model}" (expected "provider/model-id"), ignoring model`;
 		case "invalid-thinking-level":
 			return `${prefix}: invalid thinking level "${warning.thinking}", ignoring`;
-		case "unknown-tools":
-			return `${prefix}: unknown tools ${warning.tools.map((toolName) => `"${toolName}"`).join(", ")}, ignoring`;
 	}
 };
 
@@ -428,12 +410,26 @@ const parseAgentDefinition = (
 		};
 	}
 
+	const type = parseAgentType(frontmatter.type);
+	if (!type) {
+		return {
+			agent: null,
+			warnings: [
+				createDiscoveryWarning(
+					filePath,
+					`Ignored subagent definition "${name}". Frontmatter field "type" must be either "agent" or "orchestrator".`,
+				),
+			],
+		};
+	}
+
 	const parsedFields = parseDefinitionFields(frontmatter, filePath, name);
 	return {
 		agent: {
 			name,
 			description,
 			...parsedFields.fields,
+			type,
 			systemPrompt: body,
 			filePath,
 		},

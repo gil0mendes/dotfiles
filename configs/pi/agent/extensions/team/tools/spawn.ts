@@ -62,6 +62,7 @@ export const registerTeamSpawnTool = (
 					modelRegistry: ctx.modelRegistry,
 					agentDir: getAgentDir(),
 					parentSessionFile: ctx.sessionManager.getSessionFile(),
+					availableToolNames: pi.getAllTools().map((tool) => tool.name),
 					onWarning: (message) => {
 						runtime.reportWarning(toolCtx.callerSessionId, message);
 					},
