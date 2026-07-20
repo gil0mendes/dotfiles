@@ -1,7 +1,7 @@
 ---
 name: scribe
 description: Human-facing content specialist for documentation and prose
-model: gpt-5-6-luna
+model: openaicodex/gpt-5-6-luna
 ---
 
 # Scribe Agent

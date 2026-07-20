@@ -1,7 +1,8 @@
 ---
+name: librarian
 description: Multi-repository codebase expert for understanding library internals and remote code. Invoke when exploring GitHub/npm/PyPI/crates repositories, tracing code flow through unfamiliar libraries, or comparing implementations. Show its response in full — do not summarize.
 mode: subagent
-model: litellm-barracuda-openai/gpt-5-6-terra
+model: openaicodex/gpt-5-6-terra
 permission:
   "*": allow
   edit: deny
