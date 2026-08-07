@@ -18,7 +18,7 @@ in
 
   homebrew.enable = true;
   homebrew.onActivation.autoUpdate = true;
-  homebrew.onActivation.cleanup = "zap";
+  homebrew.onActivation.cleanup = "none";
   homebrew.global.brewfile = true;
 
   homebrew.taps = [
