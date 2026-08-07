@@ -69,7 +69,10 @@
 
     # clouds tools
     awscli2
-    azure-cli
+    (azure-cli.withExtensions [
+      azure-cli.extensions.bastion
+      azure-cli.extensions.ssh
+    ])
 
     # modern and fast alternative to find
     fd
