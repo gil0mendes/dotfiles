@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+OPENCODE_AUTH="$HOME/.local/share/opencode/auth.json"
+PI_AUTH="$HOME/.pi/agent/auth.json"
+
+[[ -f "$OPENCODE_AUTH" ]] || {
+    echo "Error: $OPENCODE_AUTH does not exist" >&2
+    exit 1
+}
+
+[[ -f "$PI_AUTH" ]] || {
+    echo "Error: $PI_AUTH does not exist" >&2
+    exit 1
+}
+
+key=$(jq -er 'to_entries[0].value.key' "$OPENCODE_AUTH")
+
+tmp=$(mktemp)
+trap 'rm -f "$tmp"' EXIT
+
+jq --arg key "$key" '
+    .["barracuda-iq"].key = $key
+' "$PI_AUTH" > "$tmp"
+
+mv "$tmp" "$PI_AUTH"
+trap - EXIT
