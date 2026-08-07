@@ -132,6 +132,14 @@ export const backgroundAgentsPlugin: Plugin = async (ctx) => {
 		// Inject delegation rules into system prompt
 		"experimental.chat.system.transform": injectDelegationRules,
 
+		// Deliver queued parent notifications on the next user turn.
+		"chat.message": async (input, output): Promise<void> => {
+			manager.injectPendingNotificationsIntoChatMessage(
+				output,
+				input.sessionID,
+			);
+		},
+
 		// Compaction hook - inject delegation context for context recovery
 		"experimental.session.compacting": sessionCompacting(manager),
 

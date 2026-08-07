@@ -130,6 +130,7 @@ const DEFAULT_MAX_RUN_TIME_MS = 15 * 60 * 1000;
 const TERMINAL_WAIT_GRACE_MS = 10_000;
 const READ_POLL_INTERVAL_MS = 250;
 const ALL_COMPLETE_QUIET_PERIOD_MS = 50;
+const PARENT_NOTIFICATION_TIMEOUT_MS = 5_000;
 
 function isTerminalStatus(
 	status: DelegationStatus,
@@ -214,6 +215,7 @@ export class DelegationManager {
 	private timeoutTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	private pendingByParent = new Map<string, Set<string>>();
 	private parentNotificationState = new Map<string, ParentNotificationState>();
+	private pendingNotifications = new Map<string, string[]>();
 	private client: OpencodeClient;
 	private baseDir: string;
 	private log: Logger;
@@ -754,30 +756,12 @@ export class DelegationManager {
 		}
 		if (state.allCompleteNotifiedCycleToken === cycleToken) return;
 
-		try {
-			await this.client.session.prompt({
-				path: { id: parentSessionID },
-				body: {
-					noReply: false,
-					agent: parentAgent,
-					parts: [
-						{
-							type: "text",
-							text: this.buildAllCompleteNotification(
-								parentSessionID,
-								cycle,
-								cycleToken,
-							),
-						},
-					],
-				},
-			});
-		} catch (error) {
-			await this.debugLog(
-				`all-complete notification failed for ${parentSessionID} cycle=${cycleToken}: ${error instanceof Error ? error.message : "Unknown error"}`,
-			);
-			return;
-		}
+		const deliveryStatus = await this.sendParentNotification(
+			parentSessionID,
+			parentAgent,
+			this.buildAllCompleteNotification(parentSessionID, cycle, cycleToken),
+			false,
+		);
 
 		if (state.allCompleteCycleToken !== cycleToken) return;
 		if (
@@ -788,6 +772,91 @@ export class DelegationManager {
 
 		state.allCompleteNotificationCount += 1;
 		state.allCompleteNotifiedCycleToken = cycleToken;
+
+		await this.debugLog(
+			`all-complete notification ${deliveryStatus} for ${parentSessionID} cycle=${cycleToken}`,
+		);
+	}
+
+	private queuePendingNotification(
+		parentSessionID: string,
+		notification: string,
+	): void {
+		const pending = this.pendingNotifications.get(parentSessionID) ?? [];
+		pending.push(notification);
+		this.pendingNotifications.set(parentSessionID, pending);
+	}
+
+	private async sendParentNotification(
+		parentSessionID: string,
+		parentAgent: string,
+		notification: string,
+		noReply: boolean,
+	): Promise<"sent" | "queued" | "timed-out"> {
+		const session = this.client.session;
+		let timeout: ReturnType<typeof setTimeout> | undefined;
+
+		try {
+			await this.debugLog(
+				`parent notification sending for ${parentSessionID} noReply=${noReply} async=${Boolean(session.promptAsync)}`,
+			);
+
+			const result = await Promise.race<"sent" | "timed-out">([
+				session
+					.promptAsync({
+						path: { id: parentSessionID },
+						body: {
+							noReply,
+							agent: parentAgent,
+							parts: [{ type: "text", text: notification }],
+						},
+					})
+					.then((): "sent" => "sent"),
+				new Promise<"timed-out">((resolve) => {
+					timeout = setTimeout(
+						() => resolve("timed-out"),
+						PARENT_NOTIFICATION_TIMEOUT_MS,
+					);
+				}),
+			]);
+
+			if (result === "timed-out") {
+				await this.debugLog(
+					`parent notification timed out for ${parentSessionID} after ${PARENT_NOTIFICATION_TIMEOUT_MS}ms`,
+				);
+			}
+
+			return result;
+		} catch (error) {
+			this.queuePendingNotification(parentSessionID, notification);
+			await this.debugLog(
+				`parent notification queued for ${parentSessionID}: ${error instanceof Error ? error.message : "Unknown error"}`,
+			);
+			return "queued";
+		} finally {
+			if (timeout) clearTimeout(timeout);
+		}
+	}
+
+	injectPendingNotificationsIntoChatMessage(
+		output: { parts?: Array<{ type: string; text?: string }> },
+		sessionID: string,
+	): void {
+		const pending = this.pendingNotifications.get(sessionID);
+		if (!pending || pending.length === 0) return;
+
+		this.pendingNotifications.delete(sessionID);
+		const notificationText = pending.join("\n\n");
+		const parts = output.parts ?? [];
+		const firstTextPart = parts.find((part) => part.type === "text");
+
+		if (firstTextPart) {
+			firstTextPart.text = `${notificationText}\n\n${firstTextPart.text ?? ""}`;
+			output.parts = parts;
+			return;
+		}
+
+		output.parts = [{ type: "text", text: notificationText }, ...parts];
 	}
 
 	private async notifyParent(delegationID: string): Promise<void> {
@@ -807,23 +876,22 @@ export class DelegationManager {
 				delegation,
 				remainingCount,
 			);
-			this.markNotified(delegation.id);
 
-			await this.client.session.prompt({
-				path: { id: delegation.parentSessionID },
-				body: {
-					noReply: true,
-					agent: delegation.parentAgent,
-					parts: [{ type: "text", text: terminalNotification }],
-				},
-			});
+			const deliveryStatus = await this.sendParentNotification(
+				delegation.parentSessionID,
+				delegation.parentAgent,
+				terminalNotification,
+				true,
+			);
+
+			this.markNotified(delegation.id);
 			this.scheduleAllCompleteForParent(
 				delegation.parentSessionID,
 				delegation.parentAgent,
 			);
 
 			await this.debugLog(
-				`notifyParent sent for ${delegation.id} (remaining=${remainingCount}, status=${delegation.status})`,
+				`notifyParent ${deliveryStatus} for ${delegation.id} (remaining=${remainingCount}, status=${delegation.status})`,
 			);
 		} catch (error) {
 			await this.debugLog(
@@ -966,6 +1034,9 @@ export class DelegationManager {
 						plan_save: false,
 					},
 				},
+			})
+			.then(() => {
+				void this.finalizeDelegation(delegation.id, "complete");
 			})
 			.catch((error: Error) => {
 				void this.finalizeDelegation(delegation.id, "error", error.message);
