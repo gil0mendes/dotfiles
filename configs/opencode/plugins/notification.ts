@@ -1,14 +1,26 @@
+import type { Plugin } from "@opencode-ai/plugin";
+import type { EventSessionIdle } from "@opencode-ai/sdk";
 import { homedir, platform } from "node:os";
 import { join } from "node:path";
 
 const DEBOUNCE_MS = 1000;
 
-export const NotificationPlugin = async ({ $, client }) => {
-  const soundPath = join(homedir(), ".config/opencode/sounds/new-alert.mp3");
-  const currentPlatform = platform();
-  const lastSoundTime = {};
+const SOUNDS = {
+	finished: "new-alert.mp3",
+	alert: "ding.mp3",
+};
 
-  const isDebounced = (eventType) => {
+const SOUNDS_BY_EVENT: Record<string, keyof typeof SOUNDS> = {
+	"permission.asked": "alert",
+	"session.idle": "finished"
+};
+
+export const NotificationPlugin: Plugin = async ({ $, client }) => {
+	const soundDirectory = join(homedir(), ".config/opencode/sounds");
+  const currentPlatform = platform();
+  const lastSoundTime: Record<string, number> = {};
+
+  const isDebounced = (eventType: string) => {
     const now = Date.now();
     const lastTime = lastSoundTime[eventType] ?? 0;
 
@@ -20,7 +32,7 @@ export const NotificationPlugin = async ({ $, client }) => {
     return false;
   };
 
-  const tryPlayCommand = async (command) => {
+  const tryPlayCommand = async (command: BunShell) => {
     try {
       await command.quiet();
       return true;
@@ -29,7 +41,9 @@ export const NotificationPlugin = async ({ $, client }) => {
     }
   };
 
-  const playNotificationSound = async () => {
+	const playNotificationSound = async (sound: keyof typeof SOUNDS) => {
+		const soundPath = join(soundDirectory, SOUNDS[sound]);
+
     if (currentPlatform === "darwin") {
       return $`afplay ${soundPath}`.quiet();
     }
@@ -47,16 +61,19 @@ export const NotificationPlugin = async ({ $, client }) => {
     }
   };
 
-  const notifyUser = async (eventType) => {
+  const notifyUser = async (eventType: string) => {
     if (isDebounced(eventType)) {
       return;
-    }
+		}
 
-    await playNotificationSound();
+		const soundToPlay = SOUNDS_BY_EVENT[eventType] ?? "finished";
+    await playNotificationSound(soundToPlay);
   };
 
   // Check if a session is a main (non-subagent) session
-  const isMainSession = async (sessionID) => {
+  const isMainSession = async (
+    sessionID: EventSessionIdle["properties"]["sessionID"],
+  ) => {
     try {
       const result = await client.session.get({ path: { id: sessionID } });
       const session = result.data ?? result;
@@ -75,9 +92,10 @@ export const NotificationPlugin = async ({ $, client }) => {
         if (await isMainSession(sessionID)) {
           await notifyUser(event.type);
         }
-      }
+			}
 
-      // Permission prompt created
+			// Permission prompt created
+      // @ts-expect-error this is a work in progress
       if (event.type === "permission.asked") {
         await notifyUser(event.type);
       }
