@@ -108,6 +108,7 @@
 			"turbo *": "allow",
 			"terraform init": "allow",
 			"terraform fmt *": "allow",
+			"tflint *": "allow",
 			"tofu init": "allow",
 			"uname *": "allow",
 			"uniq *": "allow",
@@ -122,7 +123,10 @@
 			"z *": "allow",
 			"zip *": "allow",
 			"zoxide *": "allow",
-			"kustomize build *": "allow"
+			"kustomize build *": "allow",
+			"command *": "allow",
+			"true *": "allow",
+			"print *": "allow"
 		},
 		"edit": "allow",
 		"webfetch": "allow"
