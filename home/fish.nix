@@ -171,6 +171,9 @@ in
     		# Initialize Atuin
     		${pkgs.atuin}/bin/atuin init fish --disable-up-arrow | source
 
+        # Initialize Zoxide
+        ${pkgs.zoxide}/bin/zoxide init fish --cmd cd | source
+
         # Run function to set colors that are dependant on `$term_background` and to register them so they are triggerd when
         # the relevent event happens or variable changes.
         set-shell-colors

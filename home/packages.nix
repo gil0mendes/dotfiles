@@ -63,6 +63,7 @@
     atuin
     watchman
     defuddle
+    zoxide
 
     # we use it for OpenCode
     bun
@@ -107,6 +108,7 @@
     ## NIX
     nixfmt
     nil
+    nixd
     ## JS/TS
     typescript-language-server
     eslint_d

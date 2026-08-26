@@ -16,9 +16,6 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
-    # Allow to fix the CMD+Space search for isntalled applications
-    mac-app-util.url = "github:hraban/mac-app-util";
-
     # Other sources
     moses-lua = {
       url = "github:Yonaba/Moses";
@@ -40,7 +37,6 @@
       darwin,
       nixpkgs,
       home-manager,
-      mac-app-util,
       jj-starship,
       ...
     }:
@@ -76,9 +72,6 @@
       nixDarwinCommonModules = attrValues self.darwinModules ++ [
         # `home-manager` module
         home-manager.darwinModules.home-manager
-
-        # mac-app-util modules
-        mac-app-util.darwinModules.default
 
         (import ./modules/services/kanata.nix)
 
@@ -199,9 +192,6 @@
       };
 
       homeManagerModules = {
-        # import mac-app-util for the user
-        mac-app-util = mac-app-util.homeManagerModules.default;
-
         # My configurations
         g0m-emacs = import ./home/emacs.nix;
         g0m-fish = import ./home/fish.nix;
