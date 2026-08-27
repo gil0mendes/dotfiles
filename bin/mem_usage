@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
-vm_stat | awk 'BEGIN{FS="[:]+"}{if(NR<7&&NR>1)sum+=$2; if(NR==2||NR==4||NR==5)free+=$2} END{printf "%3dGB\n",(sum - free)*0.00001}'
-
+vm_stat | awk '
+  NR == 1 { page_size = $8 }
+  /^Pages active:/ { active = $3 }
+  /^Pages wired down:/ { wired = $4 }
+  /^Pages occupied by compressor:/ { compressed = $5 }
+  END { printf "%3.0fGB\n", (active + wired + compressed) * page_size / 1024^3 }
+'

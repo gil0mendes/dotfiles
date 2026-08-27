@@ -94,6 +94,7 @@
             users.users.${primaryUser.username}.home = "/Users/${primaryUser.username}";
             home-manager.users.${primaryUser.username} = {
               imports = attrValues self.homeManagerModules;
+              home.sessionPath = [ "${config.users.primaryUser.nixConfigDirectory}/bin" ];
               home.stateVersion = homeManagerStateVersion;
               home.user-info = config.users.primaryUser;
             };
