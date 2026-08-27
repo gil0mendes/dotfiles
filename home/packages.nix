@@ -119,5 +119,7 @@
     stylua
     ## YAML
     yaml-language-server
+    ## Shell
+    shellcheck
   ];
 }
