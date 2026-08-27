@@ -52,6 +52,7 @@
 			"gh repo clone*": "allow",
 			"git *": "allow",
 			"git push*": "ask",
+			"git show *": "allow",
 			"glab * approve*": "ask",
 			"glab * close*": "ask",
 			"glab * comment*": "ask",
@@ -126,10 +127,28 @@
 			"kustomize build *": "allow",
 			"command *": "allow",
 			"true *": "allow",
-			"print *": "allow"
+			"print *": "allow",
+			"agent-browser *": "allow",
+			"dig *": "allow",
+			"yq *": "allow",
+			"pre-commit *": "allow"
 		},
 		"edit": "allow",
 		"webfetch": "allow"
+	},
+	"agent": {
+		"plan": {
+			"model": "litellm-barracuda-openai/gpt-5-6-sol"
+		},
+		"build": {
+			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+		},
+		"general": {
+			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+		},
+		"explore": {
+			"model": "litellm-barracuda-openai/gpt-5-6-luna"
+		}
 	},
 	"provider": {
 		"litellm-barracuda": {
