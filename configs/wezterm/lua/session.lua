@@ -1,5 +1,5 @@
 local wez = require("wezterm")
-local resurrect = wez.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+local resurrect = require("lua.resurrect")
 
 local M = {}
 
@@ -12,8 +12,11 @@ M.apply_to_config = function(config)
 	})
 
 	wez.on("resurrect.error", function(err)
-		wez.log_error("ERROR!")
-		wez.gui.gui_windows()[1]:toast_notification("resurrect", err, nil, 3000)
+		wez.log_error(err)
+		local gui_windows = wez.gui.gui_windows()
+		if gui_windows[1] ~= nil then
+			gui_windows[1]:toast_notification("resurrect", err, nil, 3000)
+		end
 	end)
 end
 

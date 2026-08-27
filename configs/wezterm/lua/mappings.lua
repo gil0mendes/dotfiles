@@ -1,7 +1,7 @@
 local wez = require("wezterm")
 local act = wez.action
 local callback = wez.action_callback
-local resurrect = wez.plugin.require("https://github.com/MLFlexer/resurrect.wezterm")
+local resurrect = require("lua.resurrect")
 
 local mod = {
 	c = "CTRL",
@@ -77,31 +77,44 @@ local keys = function()
 	end
 
 	-- restore session
-	keybind(
-		{ mod.l },
-		"r",
-		callback(function(win, pane)
-			resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id)
-				local type = string.match(id, "^([^/]+)") -- match before '/'
-				id = string.match(id, "([^/]+)$") -- match after '/'
-				id = string.match(id, "(.+)%..+$") -- remove file extention
-				local opts = {
-					relative = true,
-					restore_text = true,
-					on_pane_restore = resurrect.tab_state.default_on_pane_restore,
-				}
-				if type == "workspace" then
-					local state = resurrect.state_manager.load_state(id, "workspace")
-					resurrect.workspace_state.restore_workspace(state, opts)
-				elseif type == "window" then
-					local state = resurrect.state_manager.load_state(id, "window")
-					resurrect.window_state.restore_window(pane:window(), state, opts)
-				elseif type == "tab" then
-					local state = resurrect.state_manager.load_state(id, "tab")
-					resurrect.tab_state.restore_tab(pane:tab(), state, opts)
-				end
+	table.insert(
+		keys,
+		keybind(
+			{ mod.l },
+			"r",
+			callback(function(win, pane)
+				resurrect.fuzzy_loader.fuzzy_load(win, pane, function(id)
+					local type, state_id = string.match(id, "^([^/]+)/(.+)$")
+					if type == nil or state_id == nil then
+						return
+					end
+					local opts = {
+						relative = true,
+						restore_text = true,
+						on_pane_restore = resurrect.tab_state.default_on_pane_restore,
+					}
+					if type == "workspace" then
+						local state = resurrect.state_manager.load_state(state_id, "workspace")
+						if state == nil then
+							return
+						end
+						resurrect.workspace_state.restore_workspace(state, opts)
+					elseif type == "window" then
+						local state = resurrect.state_manager.load_state(state_id, "window")
+						if state == nil then
+							return
+						end
+						resurrect.window_state.restore_window(pane:window(), state, opts)
+					elseif type == "tab" then
+						local state = resurrect.state_manager.load_state(state_id, "tab")
+						if state == nil then
+							return
+						end
+						resurrect.tab_state.restore_tab(pane:tab(), state, opts)
+					end
+				end)
 			end)
-		end)
+		)
 	)
 
 	return keys
