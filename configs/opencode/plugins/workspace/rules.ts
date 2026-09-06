@@ -1,13 +1,3 @@
-/**
- * Expected input for experimental.chat.system.transform hook.
- * Note: The official SDK types this as {}, but runtime provides these properties.
- * See: https://github.com/sst/opencode/issues/6142
- */
-type SystemTransformInput = {
-	agent?: string;
-	sessionID?: string;
-};
-
 const PLAN_RULES = `<system-reminder>
 <workspace-routing policy_level="critical">
 
@@ -205,19 +195,16 @@ Review triggers:
 </code-review-protocol>
 </system-reminder>`;
 
-export const ruleInjection = async (input: SystemTransformInput, output) => {
-	const agent = input.agent;
-
-	// Universal date awareness (all agents) - Law 2: Parse intent, not just data
-	const today = new Date().toISOString().split("T")[0];
-	output.system.push(`<date-awareness>
+export function ruleInjection(agent: string, system: Array<{ type: "text"; text: string }>): void {
+	const today = new Date().toISOString().split("T")[0] ?? "";
+	system.push({ type: "text", text: `<date-awareness>
 Today is ${today}. When searching for documentation, APIs, or external resources, use the current year (${new Date().getFullYear()}). Do not default to outdated years from training data.
-</date-awareness>`);
+</date-awareness>` });
 
 	// Agent-specific rules
 	if (agent === "plan") {
-		output.system.push(PLAN_RULES);
+		system.push({ type: "text", text: PLAN_RULES });
 	} else if (agent === "build") {
-		output.system.push(BUILD_RULES);
+		system.push({ type: "text", text: BUILD_RULES });
 	}
-};
+}

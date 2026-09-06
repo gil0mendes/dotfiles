@@ -250,15 +250,13 @@ export class DelegationManager {
 		let currentID = sessionID;
 		for (let depth = 0; depth < 10; depth++) {
 			try {
-				const session = await this.client.session.get({
-					path: { id: currentID },
-				});
+				const session = await this.client.session.get({ sessionID: currentID });
 
-				if (!session.data?.parentID) {
+				if (!session.parentID) {
 					return currentID;
 				}
 
-				currentID = session.data.parentID;
+				currentID = session.parentID;
 			} catch {
 				return currentID;
 			}
@@ -793,23 +791,17 @@ export class DelegationManager {
 		notification: string,
 		noReply: boolean,
 	): Promise<"sent" | "queued" | "timed-out"> {
-		const session = this.client.session;
 		let timeout: ReturnType<typeof setTimeout> | undefined;
 
 		try {
-			await this.debugLog(
-				`parent notification sending for ${parentSessionID} noReply=${noReply} async=${Boolean(session.promptAsync)}`,
-			);
+			await this.debugLog(`parent notification sending for ${parentSessionID} noReply=${noReply}`);
 
 			const result = await Promise.race<"sent" | "timed-out">([
-				session
-					.promptAsync({
-						path: { id: parentSessionID },
-						body: {
-							noReply,
-							agent: parentAgent,
-							parts: [{ type: "text", text: notification }],
-						},
+				this.client.session
+					.prompt({
+						sessionID: parentSessionID,
+						text: notification,
+						delivery: noReply ? "queue" : "steer",
 					})
 					.then((): "sent" => "sent"),
 				new Promise<"timed-out">((resolve) => {
@@ -857,6 +849,12 @@ export class DelegationManager {
 		}
 
 		output.parts = [{ type: "text", text: notificationText }, ...parts];
+	}
+
+	takePendingNotifications(sessionID: string): string[] {
+		const pending = this.pendingNotifications.get(sessionID) ?? [];
+		this.pendingNotifications.delete(sessionID);
+		return pending;
 	}
 
 	private async notifyParent(delegationID: string): Promise<void> {
@@ -921,9 +919,7 @@ export class DelegationManager {
 
 		if (resolvedResult.trim().length > 0) {
 			const metadata = await this.metadataGenerator(
-				this.client,
 				resolvedResult,
-				delegation.sessionID,
 				(msg) => this.debugLog(msg),
 			);
 			delegation.title = metadata.title;
@@ -935,30 +931,15 @@ export class DelegationManager {
 	}
 
 	async delegate(input: DelegateInput): Promise<DelegationRecord> {
-		const agentsResult = await this.client.app.agents({});
-		const rawAgents = agentsResult.data;
-		const agents = Array.isArray(rawAgents) ? rawAgents : [];
-		const validAgent = agents.find(
-			(agent) => isRecord(agent) && agent.name === input.agent,
-		);
+		const agents = (await this.client.agent.list()).data;
+		const validAgent = agents.find((agent) => agent.id === input.agent);
 
 		if (!validAgent) {
 			const available = agents
-				.filter(
-					(agent) =>
-						isRecord(agent) &&
-						(typeof agent.mode !== "string" ||
-							agent.mode === "subagent" ||
-							agent.mode === "all"),
-				)
+				.filter((agent) => agent.mode === "subagent" || agent.mode === "all")
 				.map((agent) => {
-					if (!isRecord(agent) || typeof agent.name !== "string")
-						return "• (unknown)";
-					const description =
-						typeof agent.description === "string"
-							? ` - ${agent.description}`
-							: "";
-					return `• ${agent.name}${description}`;
+					const description = agent.description ? ` - ${agent.description}` : "";
+					return `• ${agent.id}${description}`;
 				})
 				.join("\n");
 
@@ -989,24 +970,22 @@ export class DelegationManager {
 		await this.debugLog(`delegate() called, generated stable ID: ${stableID}`);
 
 		const sessionResult = await this.client.session.create({
-			body: {
-				title: `Delegation: ${stableID}`,
-				parentID: input.parentSessionID,
-			},
+			title: `Delegation: ${stableID}`,
+			agent: input.agent,
 		});
 
 		await this.debugLog(
-			`session.create result: ${JSON.stringify(sessionResult.data)}`,
+			`session.create result: ${JSON.stringify(sessionResult)}`,
 		);
 
-		if (!sessionResult.data?.id) {
+		if (!sessionResult.id) {
 			throw new Error("Failed to create delegation session");
 		}
 
 		const delegation = this.registerDelegation({
 			id: stableID,
 			rootSessionID,
-			sessionID: sessionResult.data.id,
+			sessionID: sessionResult.id,
 			parentSessionID: input.parentSessionID,
 			parentMessageID: input.parentMessageID,
 			parentAgent: input.parentAgent,
@@ -1022,19 +1001,7 @@ export class DelegationManager {
 		this.markStarted(delegation.id);
 
 		this.client.session
-			.prompt({
-				path: { id: delegation.sessionID },
-				body: {
-					agent: input.agent,
-					parts: [{ type: "text", text: input.prompt }],
-					tools: {
-						task: false,
-						delegate: false,
-						todowrite: false,
-						plan_save: false,
-					},
-				},
-			})
+			.prompt({ sessionID: delegation.sessionID, text: input.prompt })
 			.then(() => {
 				void this.finalizeDelegation(delegation.id, "complete");
 			})
@@ -1052,9 +1019,7 @@ export class DelegationManager {
 		await this.debugLog(`handleTimeout for delegation ${delegation.id}`);
 
 		try {
-			await this.client.session.delete({
-				path: { id: delegation.sessionID },
-			});
+			await this.client.session.interrupt({ sessionID: delegation.sessionID });
 		} catch {
 			// Ignore.
 		}
@@ -1076,10 +1041,8 @@ export class DelegationManager {
 
 	private async getResult(delegation: DelegationRecord): Promise<string> {
 		try {
-			const messages = await this.client.session.messages({
-				path: { id: delegation.sessionID },
-			});
-			const messageData = parseSessionMessages(messages.data);
+			const messages = await this.client.session.context({ sessionID: delegation.sessionID });
+			const messageData = parseSessionMessages(messages);
 
 			if (messageData.length === 0) {
 				await this.debugLog(
@@ -1337,9 +1300,7 @@ ${description}
 
 			if (deletedWhileActive) {
 				try {
-					await this.client.session.delete({
-						path: { id: delegation.sessionID },
-					});
+					await this.client.session.interrupt({ sessionID: delegation.sessionID });
 				} catch {
 					// Session may already be deleted.
 				}

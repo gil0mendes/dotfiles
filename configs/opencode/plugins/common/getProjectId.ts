@@ -10,7 +10,6 @@ import * as crypto from "node:crypto";
 import { stat } from "node:fs/promises";
 import * as path from "node:path";
 import { logWarn } from "./logWarn";
-import type { OpencodeClient } from "./types";
 import { TimeoutError, withTimeout } from "./withTimeout";
 
 /**
@@ -56,7 +55,6 @@ function hashPath(projectRoot: string): string {
  */
 export async function getProjectId(
 	projectRoot: string,
-	client?: OpencodeClient,
 ): Promise<string> {
 	// Guard: Validate projectRoot (Law 1: Early Exit, Law 4: Fail Fast)
 	if (!projectRoot || typeof projectRoot !== "string") {
@@ -73,7 +71,6 @@ export async function getProjectId(
 	// Guard: No .git directory - not a git repo (Law 1: Early Exit)
 	if (!gitStat) {
 		logWarn(
-			client,
 			"project-id",
 			`No .git found at ${projectRoot}, using path hash`,
 		);
@@ -88,15 +85,15 @@ export async function getProjectId(
 		const match = content.match(/^gitdir:\s*(.+)$/m);
 
 		// Guard: Invalid .git file format (Law 4: Fail Fast)
-		if (!match) {
+		const gitdirPath = match?.[1];
+		if (!gitdirPath) {
 			throw new Error(
 				`getProjectId: .git file exists but has invalid format at ${gitPath}`,
 			);
 		}
 
 		// Resolve path (handles both relative and absolute)
-		const gitdirPath = match[1].trim();
-		const resolvedGitdir = path.resolve(projectRoot, gitdirPath);
+		const resolvedGitdir = path.resolve(projectRoot, gitdirPath.trim());
 
 		// The gitdir contains a 'commondir' file pointing to shared .git
 		const commondirPath = path.join(resolvedGitdir, "commondir");
@@ -130,7 +127,6 @@ export async function getProjectId(
 			return cached;
 		}
 		logWarn(
-			client,
 			"project-id",
 			`Invalid cache content at ${cacheFile}, regenerating`,
 		);
@@ -166,26 +162,25 @@ export async function getProjectId(
 				.map((x) => x.trim())
 				.sort();
 
-			if (roots.length > 0 && /^[a-f0-9]{40}$/i.test(roots[0])) {
-				const projectId = roots[0];
+			const projectId = roots[0];
+			if (projectId && /^[a-f0-9]{40}$/i.test(projectId)) {
 				// Cache the result
 				try {
 					await Bun.write(cacheFile, projectId);
 				} catch (e) {
-					logWarn(client, "project-id", `Failed to cache project ID: ${e}`);
+					logWarn("project-id", `Failed to cache project ID: ${e}`);
 				}
 				return projectId;
 			}
 		} else {
 			const stderr = await new Response(proc.stderr).text();
-			logWarn(
-				client,
+		logWarn(
 				"project-id",
 				`git rev-list failed (${exitCode}): ${stderr.trim()}`,
 			);
 		}
 	} catch (error) {
-		logWarn(client, "project-id", `git command failed: ${error}`);
+		logWarn("project-id", `git command failed: ${error}`);
 	}
 
 	// Fallback to path hash

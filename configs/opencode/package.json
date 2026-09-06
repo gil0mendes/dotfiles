@@ -1,11 +1,12 @@
 {
   "dependencies": {
-    "@opencode-ai/plugin": "1.18.18",
-    "@opencode-ai/sdk": "^1.2.18",
+    "@opencode/client": "^2.0.21",
+    "@opencode/plugin": "^2.0.21",
     "unique-names-generator": "^4.7.1"
   },
   "devDependencies": {
     "@types/bun": "^1.4.0",
-    "@types/node": "^25.3.3"
+    "@types/node": "^25.3.3",
+    "typescript": "^7.0.2"
   }
 }

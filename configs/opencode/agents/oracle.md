@@ -7,13 +7,22 @@ options:
     type: enabled
     budgetTokens: 31999
 # Strict read-only permissions (mirrors Amp's allowMcp:false, allowToolbox:false)
-permission:
-  "*": deny
-  read: allow
-  grep: allow
-  glob: allow
-  webfetch: allow
-  lsp: allow
+permissions:
+  - action: "*"
+    resource: "*"
+    effect: deny
+  - action: read
+    resource: "*"
+    effect: allow
+  - action: grep
+    resource: "*"
+    effect: allow
+  - action: glob
+    resource: "*"
+    effect: allow
+  - action: webfetch
+    resource: "*"
+    effect: allow
 ---
 
 You are the Oracle - an expert AI advisor with advanced reasoning capabilities.

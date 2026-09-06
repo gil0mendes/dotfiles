@@ -2,27 +2,6 @@ import type { Logger } from "./logger";
 import type { OpencodeClient } from "./types";
 
 /**
- * Permission entry type: simple value or pattern object.
- * Matches CLI schema: z.union([z.enum(["ask", "allow", "deny"]), z.record(z.enum(...))])
- */
-type PermissionEntry =
-	| "ask"
-	| "allow"
-	| "deny"
-	| Record<string, "ask" | "allow" | "deny">;
-
-/**
- * Check if a permission entry denies access (Law 4: Fail Fast).
- * Handles both simple values ("deny") and pattern objects ({ "*": "deny" }).
- */
-function isPermissionDenied(entry: PermissionEntry | undefined): boolean {
-	if (entry === undefined) return false;
-	if (entry === "deny") return true;
-	if (typeof entry === "object" && entry["*"] === "deny") return true;
-	return false;
-}
-
-/**
  * Parse agent write capability at boundary.
  * Returns trusted type indicating if agent is read-only.
  *
@@ -35,22 +14,22 @@ export async function parseAgentWriteCapability(
 	log: Logger,
 ): Promise<{ isReadOnly: boolean }> {
 	try {
-		const config = await client.config.get();
-		const configData = config.data as {
-			agent?: Record<
-				string,
-				{
-					permission?: Record<string, PermissionEntry>;
-				}
-			>;
+		const agent = await client.agent.get({ agentID: agentName });
+		const permissions = agent.data.permissions;
+		const lastEffect = (action: string): "allow" | "ask" | "deny" | undefined => {
+			let effect: "allow" | "ask" | "deny" | undefined;
+			for (const rule of permissions) {
+				if (rule.resource !== "*") continue;
+				if (rule.action !== "*" && rule.action !== action) continue;
+				effect = rule.effect;
+			}
+			return effect;
 		};
-		const permission = configData?.agent?.[agentName]?.permission ?? {};
 
-		const editDenied = isPermissionDenied(permission.edit);
-		const writeDenied = isPermissionDenied(permission.write);
-		const bashDenied = isPermissionDenied(permission.bash);
-
-		return { isReadOnly: editDenied && writeDenied && bashDenied };
+		return {
+			isReadOnly:
+				lastEffect("edit") === "deny" && lastEffect("shell") === "deny",
+		};
 	} catch (error) {
 		// Fail-safe: Config errors shouldn't block task calls
 		// Fail-loud: Log for observability

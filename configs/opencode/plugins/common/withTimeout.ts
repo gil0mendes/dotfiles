@@ -10,7 +10,7 @@
  * Extends Error for proper instanceof checks and stack traces.
  */
 export class TimeoutError extends Error {
-	readonly name = "TimeoutError" as const;
+	override readonly name = "TimeoutError";
 	readonly timeoutMs: number;
 
 	constructor(message: string, timeoutMs: number) {

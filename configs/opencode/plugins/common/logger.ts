@@ -1,14 +1,9 @@
-import type { OpencodeClient } from "./types";
-
 /**
- * Create a structured logger that sends messages to OpenCode's log API.
- * Catches errors silently to avoid disrupting tool execution.
+ * Create a logger for plugin diagnostics.
  */
-export function createLogger(client: OpencodeClient) {
+export function createLogger() {
 	const log = (level: "debug" | "info" | "warn" | "error", message: string) =>
-		client.app
-			.log({ body: { service: "background-agents", level, message } })
-			.catch(() => {});
+		console[level](`[background-agents] ${message}`);
 
 	return {
 		debug: (msg: string) => log("debug", msg),

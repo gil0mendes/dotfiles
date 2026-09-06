@@ -40,17 +40,8 @@ You WILL be notified via \`<task-notification>\`. Polling wastes tokens.
 </delegation-system>
 </task-notification>`;
 
-/**
- * Expected input for experimental.chat.system.transform hook.
- */
-type SystemTransformInput = {
-	agent?: string;
-	sessionID?: string;
-};
-
-export const injectDelegationRules = async (
-	_input: SystemTransformInput,
-	output: { system: string[] },
-) => {
-	output.system.push(DELEGATION_RULES);
-};
+export function injectDelegationRules(
+	system: Array<{ type: "text"; text: string }>,
+): void {
+	system.push({ type: "text", text: DELEGATION_RULES });
+}

@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { type Plugin, tool } from "@opencode-ai/plugin";
+import { Plugin } from "@opencode/plugin";
 import { z } from "zod";
 import { getProjectId } from "./common/getProjectId";
 import { ruleInjection } from "./workspace/rules";
@@ -95,9 +95,10 @@ function extractMarkdownParts(content: string): ExtractedParts {
 	const fmMatch = content.match(/^---\n([\s\S]*?)\n---/);
 	let frontmatter: Record<string, string | number> | null = null;
 
-	if (fmMatch) {
+	const frontmatterText = fmMatch?.[1];
+	if (frontmatterText) {
 		frontmatter = {};
-		const fmLines = fmMatch[1].split("\n");
+		const fmLines = frontmatterText.split("\n");
 		for (const line of fmLines) {
 			const [key, ...valueParts] = line.split(":");
 			if (key && valueParts.length > 0) {
@@ -121,10 +122,14 @@ function extractMarkdownParts(content: string): ExtractedParts {
 
 	let phaseMatch = phaseRegex.exec(content);
 	while (phaseMatch !== null) {
-		const phaseNum = parseInt(phaseMatch[1], 10);
-		const phaseName = phaseMatch[2].trim();
-		const phaseStatus = phaseMatch[3].trim();
-		const phaseContent = phaseMatch[4];
+		const [, phaseNumberText, phaseNameText, phaseStatusText, phaseContent] = phaseMatch;
+		if (!phaseNumberText || !phaseNameText || !phaseStatusText || !phaseContent) {
+			phaseMatch = phaseRegex.exec(content);
+			continue;
+		}
+		const phaseNum = parseInt(phaseNumberText, 10);
+		const phaseName = phaseNameText.trim();
+		const phaseStatus = phaseStatusText.trim();
 
 		const tasks: ExtractedParts["phases"][0]["tasks"] = [];
 		const taskRegex =
@@ -132,12 +137,17 @@ function extractMarkdownParts(content: string): ExtractedParts {
 
 		let taskMatch = taskRegex.exec(phaseContent);
 		while (taskMatch !== null) {
+			const [, checkedText, , taskID, taskContent, currentMarker, citation] = taskMatch;
+			if (!checkedText || !taskID || !taskContent) {
+				taskMatch = taskRegex.exec(phaseContent);
+				continue;
+			}
 			tasks.push({
-				id: taskMatch[3],
-				checked: taskMatch[1] === "x",
-				content: taskMatch[4].trim().replace(/\*\*/g, ""),
-				isCurrent: !!taskMatch[5],
-				citation: taskMatch[6]?.replace(/`/g, ""),
+				id: taskID,
+				checked: checkedText === "x",
+				content: taskContent.trim().replace(/\*\*/g, ""),
+				isCurrent: currentMarker !== undefined,
+				citation: citation?.replace(/`/g, ""),
 			});
 			taskMatch = taskRegex.exec(phaseContent);
 		}
@@ -285,6 +295,12 @@ function isNodeError(error: unknown): error is NodeJS.ErrnoException {
 	return error instanceof Error && "code" in error;
 }
 
+function stringInput(input: unknown, key: string): string | undefined {
+	if (typeof input !== "object" || input === null) return undefined;
+	const value = Object.fromEntries(Object.entries(input))[key];
+	return typeof value === "string" ? value : undefined;
+}
+
 /**
  * KDCO Workspace Plugin
  *
@@ -319,8 +335,10 @@ cleanupInterval.unref?.();
 // RULES FOR INJECTION
 // ==========================================
 
-export const WorkspacePlugin: Plugin = async (ctx) => {
-	const { directory } = ctx;
+export default Plugin.define({
+	id: "workspace",
+	async setup(ctx) {
+	const directory = ctx.location.directory;
 
 	// Use git root commit hash for cross-worktree consistency
 	const projectId = await getProjectId(directory);
@@ -343,15 +361,13 @@ export const WorkspacePlugin: Plugin = async (ctx) => {
 
 		let currentID = sessionID;
 		for (let depth = 0; depth < 10; depth++) {
-			const session = await ctx.client.session.get({
-				path: { id: currentID },
-			});
+			const session = await ctx.session.get({ sessionID: currentID });
 
-			if (!session.data?.parentID) {
+			if (!session.parentID) {
 				return currentID;
 			}
 
-			currentID = session.data.parentID;
+			currentID = session.parentID;
 		}
 
 		throw new Error(
@@ -359,36 +375,38 @@ export const WorkspacePlugin: Plugin = async (ctx) => {
 		);
 	}
 
-	return {
-		tool: {
-			plan_save: tool({
+	await ctx.tool.transform((editor) => {
+		editor.add({
+				name: "plan_save",
 				description:
 					"Save the implementation plan as markdown. Must include citations (ref:delegation-id) for decisions based on research. Plan is validated before saving.",
-				args: {
-					content: tool.schema
-						.string()
-						.describe("The full plan in markdown format"),
+				input: {
+					type: "object",
+					properties: { content: { type: "string", description: "The full plan in markdown format" } },
+					required: ["content"],
+					additionalProperties: false,
 				},
-				async execute(args, toolCtx) {
+				async execute(input, toolContext) {
 					// Guard 1: Session required (Law 1: Early Exit)
-					if (!toolCtx?.sessionID) {
-						return "❌ plan_save requires sessionID. This is a system error.";
+					const content = stringInput(input, "content");
+					if (content === undefined) {
+						return { content: "❌ plan_save requires string content." };
 					}
 
-					const rootID = await getRootSessionID(toolCtx.sessionID);
+					const rootID = await getRootSessionID(toolContext.sessionID);
 					const sessionDir = path.join(baseDir, rootID);
 					await fs.mkdir(sessionDir, { recursive: true });
 
 					// Guard 2: Parse and validate at boundary (Law 2: Parse Don't Validate)
-					const result = parsePlanMarkdown(args.content);
+					const result = parsePlanMarkdown(content);
 					if (!result.ok) {
-						return formatParseError(result.error, result.hint);
+						return { content: formatParseError(result.error, result.hint) };
 					}
 
 					// Happy path: save
 					await fs.writeFile(
 						path.join(sessionDir, "plan.md"),
-						args.content,
+						content,
 						"utf8",
 					);
 					const warningCount = result.warnings?.length ?? 0;
@@ -397,89 +415,75 @@ export const WorkspacePlugin: Plugin = async (ctx) => {
 							? ` (${warningCount} warnings: ${result.warnings?.join(", ")})`
 							: "";
 
-					return `Plan saved.${warningText}`;
+					return { content: `Plan saved.${warningText}` };
 				},
-			}),
-
-			plan_read: tool({
+			});
+			editor.add({
+				name: "plan_read",
 				description: "Read the current implementation plan for this session.",
-				args: {
-					reason: tool.schema
-						.string()
-						.describe("Brief explanation of why you are calling this tool"),
+				input: {
+					type: "object",
+					properties: { reason: { type: "string", description: "Brief explanation of why you are calling this tool" } },
+					required: ["reason"],
+					additionalProperties: false,
 				},
-				async execute(_args, toolCtx) {
+				async execute(_input, toolContext) {
 					// Guard: Session required (Law 1: Early Exit)
-					if (!toolCtx?.sessionID) {
-						return "❌ plan_read requires sessionID. This is a system error.";
-					}
-					const rootID = await getRootSessionID(toolCtx.sessionID);
+					const rootID = await getRootSessionID(toolContext.sessionID);
 					const planPath = path.join(baseDir, rootID, "plan.md");
 					try {
-						return await fs.readFile(planPath, "utf8");
+						return { content: await fs.readFile(planPath, "utf8") };
 					} catch (error) {
 						if (isNodeError(error) && error.code === "ENOENT")
-							return "No plan found.";
+							return { content: "No plan found." };
 						throw error;
 					}
 				},
-			}),
-		},
+			});
+	});
 
-		// Targeted Rule Injection
-		"experimental.chat.system.transform": ruleInjection,
+	await ctx.session.hook("context", (event) => {
+		ruleInjection(event.agent, event.system);
+	});
 
-		// Track coder task starts for review trigger
-		"tool.execute.before": async (
-			input: { tool: string; callID?: string },
-			output: { args?: { subagent_type?: string } },
-		) => {
-			if (input.tool !== "task") return;
-			if (!input.callID) return;
-			if (output.args?.subagent_type !== "coder") return;
+	await ctx.tool.hook("execute.before", (event) => {
+		if (event.tool !== "task") return;
+		if (typeof event.input !== "object" || event.input === null) return;
+		if (!("subagent_type" in event.input) || event.input.subagent_type !== "coder") return;
+		activeCoderCalls.set(event.id, { startTime: Date.now() });
+	});
 
-			activeCoderCalls.set(input.callID, { startTime: Date.now() });
-		},
-
-		// Trigger review reminder when plan_save or all coder tasks complete
-		"tool.execute.after": async (
-			input: { tool: string; sessionID: string; callID: string },
-			output: { title: string; output: string; metadata: unknown },
-		) => {
+	await ctx.tool.hook("execute.after", async (event) => {
 			// Plan save triggers reviewer delegation reminder
-			if (input.tool === "plan_save") {
-				output.output += `\n\n<system-reminder>
+			if (event.tool === "plan_save" && event.status === "completed") {
+				 await ctx.session.synthetic({ sessionID: event.sessionID, text: `<system-reminder>
 Plan saved successfully. You MUST now delegate to the reviewer:
 1. Use the \`delegate\` tool to send the plan to the \`reviewer\` agent
 2. The reviewer will load \`plan-review\` and \`code-philosophy\` skills
 3. Use \`plan_read\` to get the plan content for the delegation prompt
 4. This is NON-BLOCKING - continue work while review runs in background
-</system-reminder>`;
+</system-reminder>` });
 				return;
 			}
 
 			// Coder task completion tracking
-			if (!input.callID) return;
-			if (!activeCoderCalls.has(input.callID)) return;
+			if (!activeCoderCalls.has(event.id)) return;
 
-			activeCoderCalls.delete(input.callID);
+			activeCoderCalls.delete(event.id);
 
 			if (activeCoderCalls.size === 0) {
-				output.output += `\n\n<system-reminder>
+				if (event.status !== "completed") return;
+				await ctx.session.synthetic({ sessionID: event.sessionID, text: `<system-reminder>
 Coder task complete. Proceed to code review:
 1. Delegate to \`reviewer\` agent with the changed files
 2. Include findings in your completion report
 3. Offer to fix any critical/major issues found
-</system-reminder>`;
+</system-reminder>` });
 			}
-		},
+	});
 
-		// Compaction Hook - Inject plan context when session is compacted
-		"experimental.session.compacting": async (
-			input: { sessionID: string },
-			output: { context: string[]; prompt?: string },
-		) => {
-			const rootID = await getRootSessionID(input.sessionID);
+	await ctx.session.hook("compaction", async (event) => {
+			const rootID = await getRootSessionID(event.sessionID);
 			const planPath = path.join(baseDir, rootID, "plan.md");
 
 			let planContent: string | null = null;
@@ -501,7 +505,7 @@ Coder task complete. Proceed to code review:
 					planContent.slice(start, end).match(/\d+\.\d+ [^\n←]+/)?.[0] ?? null;
 			}
 
-			output.context.push(`<workspace-context>
+			event.system.push({ type: "text", text: `<workspace-context>
 ## Current Plan
 ${planContent}
 
@@ -510,9 +514,7 @@ ${currentTask ? `Current task: ${currentTask}` : "No task marked as CURRENT"}
 
 ## Verification
 To verify any cited decision, use \`delegation_read("ref:id")\`.
-</workspace-context>`);
-		},
-	};
-};
-
-export default WorkspacePlugin;
+</workspace-context>` });
+	});
+	},
+});

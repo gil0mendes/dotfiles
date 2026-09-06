@@ -1,142 +1,647 @@
 {
 	"$schema": "https://opencode.ai/config.json",
-	"autoupdate": true,
-	"permission": {
-		"external_directory": {
-			"*": "ask",
-			"~/.config/opencode/**": "allow",
-			"~/projects/**": "allow",
-			"~/.local/share/opencode/mcp-auth.json": "deny"
-		},
-		"read": {
-			"*": "allow",
-			"*.env": "deny",
-			"*.env.*": "deny",
-			"*.envrc": "deny",
-			".dev.vars": "ask",
-			"secrets/*": "deny",
-			"~/.local/share/opencode/mcp-auth.json": "deny"
-		},
-		"bash": {
-			"*": "ask",
-			"ast-grep *": "allow",
-			"awk *": "allow",
-			"basename *": "allow",
-			"biome *": "allow",
-			"bun *": "allow",
-			"cargo *": "allow",
-			"cat *": "allow",
-			"cloc *": "allow",
-			"cp *": "allow",
-			"date *": "allow",
-			"diff *": "allow",
-			"dirname *": "allow",
-			"doggo *": "allow",
-			"dot *": "allow",
-			"du *": "allow",
-			"echo *": "allow",
-			"fd *": "allow",
-			"file *": "allow",
-			"find *": "allow",
-			"fnm *": "allow",
-			"gh * approve*": "ask",
-			"gh * close*": "ask",
-			"gh * comment*": "ask",
-			"gh * create*": "ask",
-			"gh * delete*": "ask",
-			"gh * edit*": "ask",
-			"gh * merge*": "ask",
-			"gh * reopen*": "ask",
-			"gh * review*": "ask",
-			"gh *": "allow",
-			"gh repo clone*": "allow",
-			"git *": "allow",
-			"git push*": "ask",
-			"git show *": "allow",
-			"glab * approve*": "ask",
-			"glab * close*": "ask",
-			"glab * comment*": "ask",
-			"glab * create*": "ask",
-			"glab * delete*": "ask",
-			"glab * edit*": "ask",
-			"glab * merge*": "ask",
-			"glab * reopen*": "ask",
-			"glab * review*": "ask",
-			"glab *": "allow",
-			"glab repo clone*": "allow",
-			"go *": "allow",
-			"gofmt *": "allow",
-			"grep *": "allow",
-			"gsed *": "allow",
-			"gunzip *": "allow",
-			"gzip *": "allow",
-			"head *": "allow",
-			"hostname": "allow",
-			"id": "allow",
-			"jj *": "allow",
-			"jj git push*": "ask",
-			"jj gp*": "ask",
-			"jq *": "allow",
-			"ls *": "allow",
-			"make *": "allow",
-			"mkdir *": "allow",
-			"mv *": "allow",
-			"npm *": "allow",
-			"open *": "allow",
-			"pbcopy": "allow",
-			"pbpaste": "allow",
-			"pnpm *": "allow",
-			"prettier *": "allow",
-			"printf *": "allow",
-			"pwd": "allow",
-			"readlink *": "allow",
-			"realpath *": "allow",
-			"rg *": "allow",
-			"sed *": "allow",
-			"shellcheck *": "allow",
-			"sort *": "allow",
-			"stat *": "allow",
-			"stow *": "allow",
-			"stylua *": "allow",
-			"tail *": "allow",
-			"tar *": "allow",
-			"tee *": "allow",
-			"touch *": "allow",
-			"tr *": "allow",
-			"tree *": "allow",
-			"true": "allow",
-			"tsc *": "allow",
-			"turbo *": "allow",
-			"terraform init": "allow",
-			"terraform fmt *": "allow",
-			"tflint *": "allow",
-			"tofu init": "allow",
-			"uname *": "allow",
-			"uniq *": "allow",
-			"unzip *": "allow",
-			"vite *": "allow",
-			"vitest *": "allow",
-			"wc *": "allow",
-			"which *": "allow",
-			"whoami": "allow",
-			"xargs *": "ask",
-			"yarn *": "allow",
-			"z *": "allow",
-			"zip *": "allow",
-			"zoxide *": "allow",
-			"kustomize build *": "allow",
-			"command *": "allow",
-			"true *": "allow",
-			"print *": "allow",
-			"agent-browser *": "allow",
-			"dig *": "allow",
-			"yq *": "allow",
-			"pre-commit *": "allow"
-		},
-		"edit": "allow",
-		"webfetch": "allow"
+	"update": "auto",
+	"worktree": {
+		"directory": "~/projects/worktrees"
 	},
-	"agent": {
+	"permissions": [
+		{
+			"action": "external_directory",
+			"resource": "*",
+			"effect": "ask"
+		},
+		{
+			"action": "external_directory",
+			"resource": "~/.config/opencode/**",
+			"effect": "allow"
+		},
+		{
+			"action": "external_directory",
+			"resource": "~/projects/**",
+			"effect": "allow"
+		},
+		{
+			"action": "external_directory",
+			"resource": "~/.local/share/opencode/mcp-auth.json",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "*",
+			"effect": "allow"
+		},
+		{
+			"action": "read",
+			"resource": "*.env",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "*.env.*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "*.envrc",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": ".dev.vars",
+			"effect": "ask"
+		},
+		{
+			"action": "read",
+			"resource": "secrets/*",
+			"effect": "deny"
+		},
+		{
+			"action": "read",
+			"resource": "~/.local/share/opencode/mcp-auth.json",
+			"effect": "deny"
+		},
+		{
+			"action": "shell",
+			"resource": "*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "ast-grep *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "awk *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "basename *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "biome *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "bun *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "cargo *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "cat *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "cloc *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "cp *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "date *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "diff *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "dirname *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "doggo *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "dot *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "du *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "echo *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "fd *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "file *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "find *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "fnm *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * approve*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * close*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * comment*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * create*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * delete*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * edit*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * merge*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * reopen*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh * review*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "gh *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gh repo clone*",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "git *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "git push*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "git show *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * approve*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * close*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * comment*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * create*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * delete*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * edit*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * merge*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * reopen*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab * review*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "glab *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "glab repo clone*",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "go *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gofmt *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "grep *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gsed *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gunzip *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "gzip *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "head *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "hostname",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "id",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "jj *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "jj git push*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "jj gp*",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "jq *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "ls *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "make *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "mkdir *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "mv *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "npm *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "open *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "pbcopy",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "pbpaste",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "pnpm *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "prettier *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "printf *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "pwd",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "readlink *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "realpath *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "rg *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "sed *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "shellcheck *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "sort *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "stat *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "stow *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "stylua *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tail *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tar *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tee *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "touch *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tr *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tree *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "true",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tsc *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "turbo *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "terraform init",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "terraform fmt *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tflint *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "tofu init",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "uname *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "uniq *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "unzip *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "vite *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "vitest *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "wc *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "which *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "whoami",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "xargs *",
+			"effect": "ask"
+		},
+		{
+			"action": "shell",
+			"resource": "yarn *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "z *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "zip *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "zoxide *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "kustomize build *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "command *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "true *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "print *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "agent-browser *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "dig *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "yq *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "pre-commit *",
+			"effect": "allow"
+		},
+		{
+			"action": "edit",
+			"resource": "*",
+			"effect": "allow"
+		},
+		{
+			"action": "webfetch",
+			"resource": "*",
+			"effect": "allow"
+		}
+	],
+	"agents": {
 		"plan": {
 			"model": "openai/gpt-5.6-sol"
 		},
@@ -150,7 +655,7 @@
 			"model": "openai/gpt-5.6-luna"
 		},
 		"coder": {
-			"model": "openai/gpt-5.6-terra"
+			"model": "openai/gpt-5.6-terra#xhigh"
 		},
 		"librarian": {
 			"model": "openai/gpt-5.6-terra"
@@ -168,27 +673,52 @@
 			"model": "openai/gpt-5.6-luna"
 		}
 	},
-	"enabled_providers": [
-		"openai",
-		"opencode",
-		"lmstudio"
-	],
 	"mcp": {
-		"context7": {
-			"type": "remote",
-			"url": "https://mcp.context7.com/mcp",
-			"enabled": true
-		},
-		"grep_app": {
-			"type": "remote",
-			"url": "https://mcp.grep.app",
-			"enabled": true
-		},
-		"atlasian": {
-			"type": "remote",
-			"url": "https://mcp.atlassian.com/v1/mcp",
-			"enabled": false
+		"servers": {
+			"context7": {
+				"type": "remote",
+				"url": "https://mcp.context7.com/mcp",
+				"disabled": false
+			},
+			"grep_app": {
+				"type": "remote",
+				"url": "https://mcp.grep.app",
+				"disabled": false
+			},
+			"atlasian": {
+				"type": "remote",
+				"url": "https://mcp.atlassian.com/v1/mcp",
+				"disabled": true
+			}
 		}
 	},
-	"plugin": ["notification", "workspace", "background-agents", "opencode-pty"]
+	"plugins": [
+		{
+			"package": "opencode-pty/v2"
+		}
+	],
+	"experimental": {
+		"policies": [
+			{
+				"action": "provider.use",
+				"resource": "*",
+				"effect": "deny"
+			},
+			{
+				"action": "provider.use",
+				"resource": "openai",
+				"effect": "allow"
+			},
+			{
+				"action": "provider.use",
+				"resource": "opencode",
+				"effect": "allow"
+			},
+			{
+				"action": "provider.use",
+				"resource": "lmstudio",
+				"effect": "allow"
+			}
+		]
+	}
 }
