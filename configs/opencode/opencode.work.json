@@ -43,15 +43,33 @@
 			"models": {
 				"claude-opus-5-5": {
 					"modelID": "claude-opus-5-5",
+				"claude-opus-4-8": {
+					"modelID": "claude-opus-4-8",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
 				},
 				"claude-sonnet-5-5": {
 					"modelID": "claude-sonnet-5-5",
+				"claude-sonnet-5": {
+					"modelID": "claude-sonnet-5",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
 				},
 				"claude-haiku-4-5": {
 					"modelID": "claude-haiku-4-5",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
 				},
 				"gemini-3-8-flash": {
 					"modelID": "gemini-3-8-flash"
@@ -72,11 +90,19 @@
 				},
 				"gpt-6-1-sol": {
 					"modelID": "gpt-6-1-sol",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
 				},
 				"gpt-5-6-terra": {
 					"modelID": "gpt-5-6-terra",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] },
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					},
 					"variants": [
 						{
 							"id": "xhigh",
@@ -86,9 +112,21 @@
 						}
 					]
 				},
+				"gpt-5-6-luna": {
+					"modelID": "gpt-5-6-luna",
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
+				},
 				"gpt-6-luna": {
 					"modelID": "gpt-6-luna",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+					"capabilities": {
+						"tools": true,
+						"input": ["text", "image"],
+						"output": ["text"]
+					}
 				}
 			}
 		}
@@ -98,6 +136,10 @@
 			"slack-mcp": {
 				"type": "remote",
 				"url": "https://cuda-internal-ai-gateway.azure-api.net/slack-mcp/mcp"
+			},
+			"atlasian": {
+				"type": "remote",
+				"url": "https://mcp.atlassian.com/v1/mcp"
 			}
 		}
 	},
