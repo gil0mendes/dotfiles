@@ -1,7 +1,6 @@
 ---
 description: Knowledge architect for external research and documentation
 mode: subagent
-model: litellm-barracuda-openai/gpt-5-6-luna
 ---
 
 # Researcher Agent

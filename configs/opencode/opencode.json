@@ -138,70 +138,39 @@
 	},
 	"agent": {
 		"plan": {
-			"model": "litellm-barracuda-openai/gpt-5-6-sol"
+			"model": "openai/gpt-5.6-sol"
 		},
 		"build": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+			"model": "openai/gpt-5.6-terra"
 		},
 		"general": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+			"model": "openai/gpt-5.6-terra"
 		},
 		"explore": {
-			"model": "litellm-barracuda-openai/gpt-5-6-luna"
-		}
-	},
-	"provider": {
-		"litellm-barracuda": {
-			"name": "LiteLLM (Barracuda)",
-			"npm": "@ai-sdk/openai-compatible",
-			"models": {
-				"claude-opus-4-8": {
-					"id": "claude-opus-4-8"
-				},
-				"claude-sonnet-5": {
-					"id": "claude-sonnet-5"
-				},
-				"claude-haiku-4-5": {
-					"id": "claude-sonnet-5"
-				},
-				"gemini-2-5-flash": {
-					"id": "gemini-2-5-flash"
-				}
-			},
-			"options": {
-				"baseURL": "https://api.iq.cudasvc.com"
-			}
+			"model": "openai/gpt-5.6-luna"
 		},
-		"litellm-barracuda-openai": {
-			"name": "LiteLLM OpenAI (Barracuda)",
-			"npm": "@ai-sdk/openai",
-			"models": {
-				"gpt-5-5": {
-					"id": "gpt-5-5"
-				},
-				"gpt-5-4-mini": {
-					"id": "gpt-5-4-mini"
-				},
-				"gpt-5-6-sol": {
-					"id": "gpt-5-6-sol"
-				},
-				"gpt-5-6-terra": {
-					"id": "gpt-5-6-terra"
-				},
-				"gpt-5-6-luna": {
-					"id": "gpt-5-6-luna"
-				}
-			},
-			"options": {
-				"baseURL": "https://api.iq.cudasvc.com"
-			}
+		"coder": {
+			"model": "openai/gpt-5.6-terra"
+		},
+		"librarian": {
+			"model": "openai/gpt-5.6-terra"
+		},
+		"oracle": {
+			"model": "openai/gpt-5.6-sol"
+		},
+		"researcher": {
+			"model": "openai/gpt-5.6-luna"
+		},
+		"reviewer": {
+			"model": "openai/gpt-5.6-terra"
+		},
+		"scribe": {
+			"model": "openai/gpt-5.6-luna"
 		}
 	},
 	"enabled_providers": [
 		"openai",
 		"opencode",
-		"litellm-barracuda",
-		"litellm-barracuda-openai",
 		"lmstudio"
 	],
 	"mcp": {
