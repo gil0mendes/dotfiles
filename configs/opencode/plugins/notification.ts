@@ -21,39 +21,61 @@ export default Plugin.define({
 	setup(ctx) {
 		const soundDirectory = join(homedir(), ".config/opencode/sounds");
 		const lastSoundAt = new Map<string, number>();
+		const activeSoundTypes = new Set<string>();
 		const controller = new AbortController();
 
-		const notify = async (eventType: string) => {
+		const notify = (eventType: string): Promise<void> | undefined => {
 			const now = Date.now();
 			const previous = lastSoundAt.get(eventType) ?? 0;
-			if (now - previous < debounceMs) return;
+			if (activeSoundTypes.has(eventType) || now - previous < debounceMs) return;
+
+			activeSoundTypes.add(eventType);
 			lastSoundAt.set(eventType, now);
 
-			const sound = eventType === "permission.asked" ? "ding.mp3" : "new-alert.mp3";
-			const soundPath = join(soundDirectory, sound);
-			if (platform() === "darwin") {
-				await play("afplay", soundPath);
-				return;
-			}
-			for (const command of ["paplay", "pw-play", "mpv"]) {
+			return (async () => {
 				try {
-					await play(command, soundPath);
-					return;
-				} catch {
-					// Try the next available player.
+					const sound = eventType === "permission.asked" ? "ding.mp3" : "new-alert.mp3";
+					const soundPath = join(soundDirectory, sound);
+					if (platform() === "darwin") {
+						await play("afplay", soundPath);
+						return;
+					}
+					let finalPlaybackFailure: Error | undefined;
+					for (const command of ["paplay", "pw-play", "mpv"]) {
+						try {
+							await play(command, soundPath);
+							return;
+						} catch (error: unknown) {
+							if (error instanceof Error) finalPlaybackFailure = error;
+							// Try the next available player.
+						}
+					}
+					throw (
+						finalPlaybackFailure ??
+						new Error("Unable to play notification sound: every fallback player failed.")
+					);
+				} finally {
+					activeSoundTypes.delete(eventType);
 				}
-			}
+			})();
+		};
+
+		const handlePlaybackFailure = (playback: Promise<void> | undefined) => {
+			if (!playback) return;
+			void playback.catch((error: unknown) => {
+				if (!controller.signal.aborted) console.warn("[notification]", error);
+			});
 		};
 
 		void (async () => {
 			for await (const event of ctx.event.subscribe({ signal: controller.signal })) {
 				if (event.type === "permission.asked") {
-					await notify(event.type);
+					handlePlaybackFailure(notify(event.type));
 					continue;
 				}
 				if (event.type !== "session.idle") continue;
 				const session = await ctx.session.get({ sessionID: event.data.sessionID });
-				if (!session.parentID) await notify(event.type);
+				if (!session.parentID) handlePlaybackFailure(notify(event.type));
 			}
 		})().catch((error: unknown) => {
 			if (!controller.signal.aborted) console.warn("[notification]", error);
