@@ -105,6 +105,14 @@
 			}
 		}
 	},
+	"mcp": {
+		"servers": {
+			"slack-mcp": {
+				"type": "remote",
+				"url": "https://cuda-internal-ai-gateway.azure-api.net/slack-mcp/mcp"
+			}
+		}
+	},
 	"experimental": {
 		"policies": [
 			{
