@@ -2,7 +2,7 @@
 	"$schema": "https://opencode.ai/config.json",
 	"agents": {
 		"plan": {
-			"model": "litellm-barracuda-openai/gpt-5-6-sol"
+			"model": "litellm-barracuda-openai/gpt-6-1-sol"
 		},
 		"build": {
 			"model": "litellm-barracuda-openai/gpt-5-6-terra"
@@ -11,7 +11,7 @@
 			"model": "litellm-barracuda-openai/gpt-5-6-terra"
 		},
 		"explore": {
-			"model": "litellm-barracuda-openai/gpt-5-6-luna"
+			"model": "litellm-barracuda-openai/gpt-6-luna"
 		},
 		"coder": {
 			"model": "litellm-barracuda-openai/gpt-5-6-terra#xhigh"
@@ -20,16 +20,16 @@
 			"model": "litellm-barracuda-openai/gpt-5-6-terra"
 		},
 		"oracle": {
-			"model": "litellm-barracuda/claude-opus-4-8"
+			"model": "litellm-barracuda/claude-opus-5-5"
 		},
 		"researcher": {
-			"model": "litellm-barracuda-openai/gpt-5-6-luna"
+			"model": "litellm-barracuda-openai/gpt-6-luna"
 		},
 		"reviewer": {
 			"model": "litellm-barracuda-openai/gpt-5-6-terra"
 		},
 		"scribe": {
-			"model": "litellm-barracuda-openai/gpt-5-6-luna"
+			"model": "litellm-barracuda-openai/gpt-6-luna"
 		}
 	},
 	"providers": {
@@ -41,20 +41,20 @@
 				"baseURL": "https://api.iq.cudasvc.com/v1"
 			},
 			"models": {
-				"claude-opus-4-8": {
-					"modelID": "claude-opus-4-8",
+				"claude-opus-5-5": {
+					"modelID": "claude-opus-5-5",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
-				"claude-sonnet-5": {
-					"modelID": "claude-sonnet-5",
+				"claude-sonnet-5-5": {
+					"modelID": "claude-sonnet-5-5",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"claude-haiku-4-5": {
 					"modelID": "claude-haiku-4-5",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
-				"gemini-2-5-flash": {
-					"modelID": "gemini-2-5-flash"
+				"gemini-3-8-flash": {
+					"modelID": "gemini-3-8-flash"
 				}
 			}
 		},
@@ -66,16 +66,8 @@
 				"baseURL": "https://api.iq.cudasvc.com/v1"
 			},
 			"models": {
-				"gpt-5-5": {
-					"modelID": "gpt-5-5",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
-				},
-				"gpt-5-4-mini": {
-					"modelID": "gpt-5-4-mini",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
-				},
-				"gpt-5-6-sol": {
-					"modelID": "gpt-5-6-sol",
+				"gpt-6-astra": {
+					"modelID": "gpt-6-astra",
 					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gpt-6-1-sol": {
@@ -93,10 +85,6 @@
 							}
 						}
 					]
-				},
-				"gpt-5-6-luna": {
-					"modelID": "gpt-5-6-luna",
-					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gpt-6-luna": {
 					"modelID": "gpt-6-luna",

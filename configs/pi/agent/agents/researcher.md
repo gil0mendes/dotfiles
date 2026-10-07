@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: Knowledge architect for external research and documentation
-model: openai-codex/gpt-5.6-luna
+model: openai-codex/gpt-6-luna
 tools: webfetch, websearch
 ---
 

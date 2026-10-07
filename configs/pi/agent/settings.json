@@ -5,6 +5,6 @@
   "enableInstallTelemetry": false,
   "lastChangelogVersion": "0.79.6",
   "defaultProvider": "barracuda-iq",
-  "defaultModel": "claude-sonnet-5",
+  "defaultModel": "claude-sonnet-5-5",
   "hideThinkingBlock": true
 }

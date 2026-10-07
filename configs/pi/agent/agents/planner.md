@@ -2,7 +2,7 @@
 name: planner
 description: Orchestrate other agents to draw a plan for the presented problem
 type: orchestrator
-model: openai-codex/gpt-5.6-sol
+model: openai-codex/gpt-6-1-sol
 ---
 
 # Planner Agent
