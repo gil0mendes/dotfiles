@@ -35,19 +35,23 @@
 	"providers": {
 		"litellm-barracuda": {
 			"name": "LiteLLM (Barracuda)",
-			"package": "aisdk:@ai-sdk/openai-compatible",
+			"env": ["LITELLM_BARRACUDA_API_KEY"],
+			"package": "@opencode/ai/providers/openai-compatible",
 			"settings": {
-				"baseURL": "https://api.iq.cudasvc.com"
+				"baseURL": "https://api.iq.cudasvc.com/v1"
 			},
 			"models": {
 				"claude-opus-4-8": {
-					"modelID": "claude-opus-4-8"
+					"modelID": "claude-opus-4-8",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"claude-sonnet-5": {
-					"modelID": "claude-sonnet-5"
+					"modelID": "claude-sonnet-5",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"claude-haiku-4-5": {
-					"modelID": "claude-sonnet-5"
+					"modelID": "claude-haiku-4-5",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gemini-2-5-flash": {
 					"modelID": "gemini-2-5-flash"
@@ -56,25 +60,47 @@
 		},
 		"litellm-barracuda-openai": {
 			"name": "LiteLLM OpenAI (Barracuda)",
-			"package": "aisdk:@ai-sdk/openai",
+			"env": ["LITELLM_BARRACUDA_OPENAI_API_KEY"],
+			"package": "@opencode/ai/providers/openai",
 			"settings": {
-				"baseURL": "https://api.iq.cudasvc.com"
+				"baseURL": "https://api.iq.cudasvc.com/v1"
 			},
 			"models": {
 				"gpt-5-5": {
-					"modelID": "gpt-5-5"
+					"modelID": "gpt-5-5",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gpt-5-4-mini": {
-					"modelID": "gpt-5-4-mini"
+					"modelID": "gpt-5-4-mini",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gpt-5-6-sol": {
-					"modelID": "gpt-5-6-sol"
+					"modelID": "gpt-5-6-sol",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+				},
+				"gpt-6-1-sol": {
+					"modelID": "gpt-6-1-sol",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				},
 				"gpt-5-6-terra": {
-					"modelID": "gpt-5-6-terra"
+					"modelID": "gpt-5-6-terra",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] },
+					"variants": [
+						{
+							"id": "xhigh",
+							"settings": {
+								"reasoningEffort": "xhigh"
+							}
+						}
+					]
 				},
 				"gpt-5-6-luna": {
-					"modelID": "gpt-5-6-luna"
+					"modelID": "gpt-5-6-luna",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
+				},
+				"gpt-6-luna": {
+					"modelID": "gpt-6-luna",
+					"capabilities": { "tools": true, "input": ["text", "image"], "output": ["text"] }
 				}
 			}
 		}

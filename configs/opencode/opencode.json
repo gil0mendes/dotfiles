@@ -237,6 +237,16 @@
 		},
 		{
 			"action": "shell",
+			"resource": "git diff *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
+			"resource": "git status *",
+			"effect": "allow"
+		},
+		{
+			"action": "shell",
 			"resource": "glab * approve*",
 			"effect": "ask"
 		},
@@ -631,6 +641,11 @@
 			"effect": "allow"
 		},
 		{
+			"action": "shell",
+			"resource": "obsidian *",
+			"effect": "allow"
+		},
+		{
 			"action": "edit",
 			"resource": "*",
 			"effect": "allow"
@@ -643,7 +658,7 @@
 	],
 	"agents": {
 		"plan": {
-			"model": "openai/gpt-5.6-sol"
+			"model": "openai/gpt-6-1-sol"
 		},
 		"build": {
 			"model": "openai/gpt-5.6-terra"
@@ -652,7 +667,7 @@
 			"model": "openai/gpt-5.6-terra"
 		},
 		"explore": {
-			"model": "openai/gpt-5.6-luna"
+			"model": "openai/gpt-6-luna"
 		},
 		"coder": {
 			"model": "openai/gpt-5.6-terra#xhigh"
@@ -661,16 +676,16 @@
 			"model": "openai/gpt-5.6-terra"
 		},
 		"oracle": {
-			"model": "openai/gpt-5.6-sol"
+			"model": "openai/gpt-6-1-sol"
 		},
 		"researcher": {
-			"model": "openai/gpt-5.6-luna"
+			"model": "openai/gpt-6-luna"
 		},
 		"reviewer": {
 			"model": "openai/gpt-5.6-terra"
 		},
 		"scribe": {
-			"model": "openai/gpt-5.6-luna"
+			"model": "openai/gpt-6-luna"
 		}
 	},
 	"mcp": {
@@ -712,6 +727,16 @@
 			{
 				"action": "provider.use",
 				"resource": "opencode",
+				"effect": "allow"
+			},
+			{
+				"action": "provider.use",
+				"resource": "litellm-barracuda",
+				"effect": "allow"
+			},
+			{
+				"action": "provider.use",
+				"resource": "litellm-barracuda-openai",
 				"effect": "allow"
 			},
 			{
