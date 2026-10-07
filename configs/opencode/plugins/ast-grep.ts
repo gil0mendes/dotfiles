@@ -15,7 +15,7 @@ function inputBoolean(input: unknown, key: string): boolean | undefined {
 
 function executeAstGrep(args: string[]): Promise<string> {
 	return new Promise((resolve, reject) => {
-		const process = spawn("sg", args);
+		const process = spawn("ast-grep", args);
 		let stdout = "";
 		let stderr = "";
 		process.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
