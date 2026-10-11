@@ -54,6 +54,8 @@ const agentConfigFieldsSchema = z
 		skills: z.array(z.string()).optional(),
 		compaction: z.boolean().optional(),
 		interactive: z.boolean().optional(),
+		delegatesTo: z.array(z.string()).optional(),
+		rootOnly: z.boolean().optional(),
 	})
 	.transform((config): AgentConfigFields => ({
 		...config,

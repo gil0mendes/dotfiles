@@ -1,5 +1,6 @@
 import { type ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { discoverAgents } from "./catalog";
+import { getPermittedSubagents } from "./delegationPolicy";
 import type { Runtime } from "./runtime";
 
 type BuildSystemPromptArgs = {
@@ -21,20 +22,22 @@ const buildSystemPrompt = ({ agents }: BuildSystemPromptArgs) => `
 </system-reminder>`;
 
 export const registerSystemPrompt = (pi: ExtensionAPI, runtime: Runtime) => {
-	const catalog = discoverAgents(runtime.getCwd());
-	const agents = catalog.agents
-		.filter((agent) => agent.type === "orchestrator")
-		.map(
-			(agent) =>
-				`<agent>
-					<name>${agent.name}</name>
-					<description>${agent.description}</description>
-				</agent>`,
-		)
-		.join("\n");
-	const systemPrompt = buildSystemPrompt({ agents });
+	pi.on("before_agent_start", (event, ctx) => {
+		const caller = runtime.getSessionAgent(ctx.sessionManager.getSessionId());
+		if (caller?.type !== "orchestrator") return;
 
-	pi.on("before_agent_start", (event) => {
+		const catalog = discoverAgents(ctx.cwd);
+		const agents = getPermittedSubagents(caller, catalog.agents)
+			.map(
+				(agent) =>
+					`<agent>
+						<name>${agent.name}</name>
+						<description>${agent.description}</description>
+					</agent>`,
+			)
+			.join("\n");
+		const systemPrompt = buildSystemPrompt({ agents });
+
 		return {
 			systemPrompt: `${event.systemPrompt}\n${systemPrompt}`,
 		};

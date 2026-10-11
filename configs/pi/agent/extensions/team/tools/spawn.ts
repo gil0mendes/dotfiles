@@ -2,6 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { getAgentDir } from "@earendil-works/pi-coding-agent";
 import Type from "typebox";
 import { discoverAgents } from "../catalog";
+import { canSpawnSubagent } from "../delegationPolicy";
 import type { Runtime } from "../runtime";
 import { getToolContext, toolError, toolSuccess } from "./shared";
 
@@ -48,6 +49,13 @@ export const registerTeamSpawnTool = (
 					catalog.agents.map((agent) => agent.name).join(", ") || "none";
 				return toolError(
 					`Agent "${params.subagent}" not found. Available agents: ${availableAgents}`,
+				);
+			}
+
+			const caller = runtime.getSessionAgent(toolCtx.callerSessionId);
+			if (!canSpawnSubagent(caller, subagent)) {
+				return toolError(
+					`Agent "${caller?.name ?? "root"}" is not permitted to spawn "${subagent.name}"`,
 				);
 			}
 

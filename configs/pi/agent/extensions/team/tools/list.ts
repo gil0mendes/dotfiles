@@ -2,6 +2,7 @@ import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { CONFIG_DIR_NAME, getAgentDir } from "@earendil-works/pi-coding-agent";
 import Type from "typebox";
 import { discoverAgents } from "../catalog";
+import { getPermittedSubagents } from "../delegationPolicy";
 import type { AgentConfig } from "../loader/types";
 import type { AgentDiscoveryWarning } from "../loader/utils";
 import type { ActiveAgentSummary, Runtime } from "../runtime";
@@ -15,8 +16,14 @@ const STATUS_ICON: Record<ActiveAgentSummary["status"], string> = {
 	aborted: "🛑",
 };
 
-const formatAvailableAgents = (agents: AgentConfig[]): string[] => {
+const formatAvailableAgents = (
+	agents: AgentConfig[],
+	hasConfiguredAgents: boolean,
+): string[] => {
 	if (agents.length === 0) {
+		if (hasConfiguredAgents) {
+			return ["No subagents are permitted for this session."];
+		}
 		return [
 			`No valid subagent definitions found. Add \`.md\` files to \`<cwd>/${CONFIG_DIR_NAME}/agents/\` or \`${getAgentDir()}/agents/\`.`,
 		];
@@ -84,19 +91,22 @@ export const registerTeamListTool = (
 		execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) => {
 			const toolCtx = getToolContext(ctx);
 			const catalog = discoverAgents(toolCtx.cwd);
+			const availableAgents = getPermittedSubagents(
+				runtime.getSessionAgent(toolCtx.callerSessionId),
+				catalog.agents,
+			);
 			const runningAgents = runtime.getActiveSummariesForOwner(
 				toolCtx.callerSessionId,
 			);
 
 			const lines = [
 				"## Available Subagents",
-				...formatAvailableAgents(catalog.agents),
+				...formatAvailableAgents(availableAgents, catalog.agents.length > 0),
 				...formatWarnings(catalog.warnings),
 				"",
 				"## Active Subagents",
 				...formatActiveAgents(runningAgents),
 			];
-
 
 			return toolSuccess(lines.join("\n"));
 		},

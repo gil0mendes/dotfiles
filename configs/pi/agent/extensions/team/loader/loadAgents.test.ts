@@ -62,6 +62,21 @@ Prompt
 		]);
 	});
 
+	it("parses declared delegation permissions", () => {
+		const result = loadAgentFromContent(`---
+name: coordinator
+description: Coordinates research
+delegatesTo: [explorer, researcher]
+rootOnly: true
+---
+Prompt
+`);
+
+		expect(result.agent?.delegatesTo).toEqual(["explorer", "researcher"]);
+		expect(result.agent?.rootOnly).toBe(true);
+		expect(result.warnings).toEqual([]);
+	});
+
 	it("preserves declared tools for runtime validation", () => {
 		const result = loadAgentFromContent(`---
 name: extension-user

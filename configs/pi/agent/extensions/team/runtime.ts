@@ -115,15 +115,19 @@ export class Runtime {
 	private readonly runner: SubagentRunner;
 	private readonly scheduleFlush: (callback: () => void) => void;
 	private readonly now = Date.now;
-	private activeBinding?: ActiveRuntimeBinding;
+	private readonly bindings = new Map<string, ActiveRuntimeBinding>();
+	private readonly sessionAgents = new Map<string, AgentConfig>();
+	private readonly scheduledFlushes = new Set<string>();
 	private pendingMessages: PendingMessage[] = [];
-	private flushScheduled = false;
 
 	constructor() {
 		// TODO: move this logic outside to make it more modular
 		this.scheduleFlush = (fn) => setTimeout(fn, 0);
 		this.runner = new SubagentSessionRunner({
 			isCurrent: (state) => this.agents.get(state.id) === state,
+			onSessionAttached: (state, sessionId) => {
+				this.sessionAgents.set(sessionId, state.agentConfig);
+			},
 			onProgress: (ownerSessionId) => {
 				this.notifyRuntimeChanged(ownerSessionId, "progressed");
 			},
@@ -174,20 +178,24 @@ export class Runtime {
 	}
 
 	activateSession(binding: ActiveRuntimeBinding): void {
-		this.activeBinding = binding;
+		this.bindings.set(binding.sessionId, binding);
 		this.notifyRuntimeChanged(binding.sessionId, "activated");
 		this.schedulePendingFlushFor(binding.sessionId);
 	}
 
 	terminateSession(sessionId: string): void {
-		if (this.activeBinding?.sessionId === sessionId) {
-			this.activeBinding = undefined;
-		}
+		this.bindings.delete(sessionId);
+		this.sessionAgents.delete(sessionId);
 	}
 
 	reportWarning(ownerSessionId: string, message: string): void {
-		if (this.activeBinding?.sessionId !== ownerSessionId) return;
-		emitTeamWarning(this.activeBinding.events, { ownerSessionId, message });
+		const binding = this.bindings.get(ownerSessionId);
+		if (!binding) return;
+		emitTeamWarning(binding.events, { ownerSessionId, message });
+	}
+
+	getSessionAgent(sessionId: string): AgentConfig | undefined {
+		return this.sessionAgents.get(sessionId);
 	}
 
 	spawn(
@@ -248,10 +256,6 @@ export class Runtime {
 					state.ownerSessionId === ownerSessionId,
 			)
 			.map(buildActiveAgentSummary);
-	}
-
-	getCwd(): string {
-		return this.activeBinding?.cwd ?? "";
 	}
 
 	private validateOwnedSubagent(
@@ -320,18 +324,17 @@ export class Runtime {
 	}
 
 	private schedulePendingFlushFor(sessionId: string): void {
-		// when no pending messages for this session, no need to schedule a flush
 		const hasMessagesForThisSession = this.pendingMessages.some(
 			(entry) => entry.ownerSessionId === sessionId,
 		);
-		if (!hasMessagesForThisSession) {
+		if (!hasMessagesForThisSession || this.scheduledFlushes.has(sessionId)) {
 			return;
 		}
 
-		this.flushScheduled = true;
+		this.scheduledFlushes.add(sessionId);
 		this.scheduleFlush(() => {
-			this.flushScheduled = false;
-			this.flushPending();
+			this.scheduledFlushes.delete(sessionId);
+			this.flushPendingFor(sessionId);
 		});
 	}
 
@@ -342,18 +345,14 @@ export class Runtime {
 		);
 	}
 
-	private flushPending(): void {
-		if (!this.activeBinding) {
-			return;
-		}
+	private flushPendingFor(sessionId: string): void {
+		if (!this.bindings.has(sessionId)) return;
 
-		const targetSessionId = this.activeBinding.sessionId;
 		this.cleanStaleMessages();
-
 		const toDeliver: PendingMessage[] = [];
 		const remaining: PendingMessage[] = [];
 		for (const entry of this.pendingMessages) {
-			if (entry.ownerSessionId === targetSessionId) {
+			if (entry.ownerSessionId === sessionId) {
 				toDeliver.push(entry);
 			} else {
 				remaining.push(entry);
@@ -391,11 +390,7 @@ export class Runtime {
 	}
 
 	private deliver(ownerSessionId: string, payload: SteeringPayload): void {
-		if (
-			!this.activeBinding ||
-			ownerSessionId !== this.activeBinding.sessionId ||
-			this.flushScheduled
-		) {
+		if (!this.bindings.has(ownerSessionId)) {
 			this.queue(ownerSessionId, payload);
 			return;
 		}
@@ -403,16 +398,14 @@ export class Runtime {
 	}
 
 	private send(ownerSessionId: string, payload: SteeringPayload): void {
-		if (
-			!this.activeBinding ||
-			this.activeBinding.sessionId !== ownerSessionId
-		) {
+		const binding = this.bindings.get(ownerSessionId);
+		if (!binding) {
 			this.queue(ownerSessionId, payload);
 			return;
 		}
 
 		const remaining = this.countRunningForOwner(ownerSessionId, payload.id);
-		const isIdle = this.activeBinding.isIdle();
+		const isIdle = binding.isIdle();
 		const triggerResultTurn =
 			payload.status === "waiting" || !(isIdle && remaining > 0);
 
@@ -421,10 +414,7 @@ export class Runtime {
 			triggerTurn: triggerResultTurn,
 		});
 
-		this.activeBinding.sendMessage(
-			steeringPayload.message,
-			steeringPayload.options,
-		);
+		binding.sendMessage(steeringPayload.message, steeringPayload.options);
 	}
 
 	private notifyRuntimeChanged(
@@ -432,8 +422,9 @@ export class Runtime {
 		reason: TeamRuntimeChangeReason,
 		agentId?: string,
 	): void {
-		if (this.activeBinding?.sessionId !== ownerSessionId) return;
-		emitTeamRuntimeChanged(this.activeBinding.events, {
+		const binding = this.bindings.get(ownerSessionId);
+		if (!binding) return;
+		emitTeamRuntimeChanged(binding.events, {
 			ownerSessionId,
 			reason,
 			agentId,

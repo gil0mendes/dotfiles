@@ -125,9 +125,16 @@ const loadConfigFile = (filePath: string): AgentConfigFile | null => {
 
 type AgentConfigOverride = AgentConfigFields;
 type ParsedFieldName =
-	"model" | "thinking" | "tools" | "skills" | "compaction" | "interactive";
-type ParsedListFieldName = "tools" | "skills";
-type ParsedBooleanFieldName = "compaction" | "interactive";
+	| "model"
+	| "thinking"
+	| "tools"
+	| "skills"
+	| "compaction"
+	| "interactive"
+	| "delegatesTo"
+	| "rootOnly";
+type ParsedListFieldName = "tools" | "skills" | "delegatesTo";
+type ParsedBooleanFieldName = "compaction" | "interactive" | "rootOnly";
 type WarningSubject = "subagent" | "subagent override";
 
 type ParsedFieldWarning =
@@ -283,6 +290,12 @@ const parseSharedFields = (
 		warnings.push(...parsed.warnings);
 	}
 
+	if ("delegatesTo" in record) {
+		const parsed = parseListField(record.delegatesTo, "delegatesTo");
+		fields.delegatesTo = parsed.values;
+		warnings.push(...parsed.warnings);
+	}
+
 	if (typeof record.compaction === "boolean") {
 		const parsed = parseBooleanField("compaction", record.compaction, options);
 		fields.compaction = parsed.compaction;
@@ -296,6 +309,12 @@ const parseSharedFields = (
 			options,
 		);
 		fields.interactive = parsed.interactive;
+		warnings.push(...parsed.warnings);
+	}
+
+	if (typeof record.rootOnly === "boolean") {
+		const parsed = parseBooleanField("rootOnly", record.rootOnly, options);
+		fields.rootOnly = parsed.rootOnly;
 		warnings.push(...parsed.warnings);
 	}
 

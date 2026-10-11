@@ -2,6 +2,8 @@
 name: planner
 description: Orchestrate other agents to draw a plan for the presented problem
 type: orchestrator
+rootOnly: true
+delegatesTo: [explorer, librarian, researcher, reviewer, scribe]
 model: openai-codex/gpt-6-1-sol
 ---
 

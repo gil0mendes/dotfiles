@@ -30,6 +30,7 @@ export interface SubagentRunner {
 export interface SubagentRunnerCallbacks {
 	isCurrent: (state: SubagentState) => boolean;
 	onProgress: (ownerSessionId: string) => void;
+	onSessionAttached: (state: SubagentState, sessionId: string) => void;
 	onSettled: (
 		state: SubagentState,
 		status: SettledSubagentStatus,
@@ -324,6 +325,10 @@ export class SubagentSessionRunner implements SubagentRunner {
 		}
 		state.session = session;
 		session.setSessionName(formatSubagentSessionName(state));
+		this.callbacks.onSessionAttached(
+			state,
+			session.sessionManager.getSessionId(),
+		);
 		return true;
 	}
 

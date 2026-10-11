@@ -17,6 +17,8 @@ export type AgentConfigFields = {
 	skills?: string[];
 	compaction?: boolean;
 	interactive?: boolean;
+	delegatesTo?: string[];
+	rootOnly?: boolean;
 };
 
 export type AgentConfig = Omit<AgentConfigFields, "type"> & {

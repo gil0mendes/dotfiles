@@ -1,6 +1,7 @@
 ---
 name: coder
 description: Technical implementation specialist for writing and modifying code
+rootOnly: true
 mode: subagent
 model: openai-codex/gpt-5.6-terra
 variant: xhigh
