@@ -134,5 +134,17 @@
 				"effect": "allow"
 			}
 		]
-	}
+	},
+	"plugins": [
+		{
+			"package": "@devtheops/opencode-plugin-otel",
+			"options": {
+				"enabled": true,
+				"protocol": "http/json",
+				"metricPrefix": "claude_code.",
+				"resourceAttributes": "user.email=gmendes@barracuda.com",
+				"disabledTraces": ["tool"]
+			}
+		}
+	]
 }

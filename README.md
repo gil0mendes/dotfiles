@@ -41,6 +41,51 @@ For rebuilding the configuration run:
 darwin-rebuild switch --flake .#g0m
 ```
 
+### Age secrets
+
+I use some secrets for certain programs like OpenCode when running at my company machine, for telemetry purposes, for them we use Age. The seconds can be found at `./home/secrets/` directory.
+
+Command to decrypt a secret:
+
+```sh
+age -d -i $identity -o secret.txt opencode-otlp-headers.age
+```
+
+Command to encrypt a secret file:
+
+```sh
+age -e -i $identity -o opencode-otlp-headers.age secret.txt
+```
+
+Here are the instructions to update the OpenCode values when needed:
+
+```sh
+set identity "$HOME/Library/Application\ Support/sops/age/keys.txt"
+set recipient (age-keygen -y "$identity")
+
+read -s -P 'OPENCODE_OTLP_ENDPOINT: ' endpoint; printf '\n'
+set endpoint_tmp (mktemp home/secrets/.opencode-otlp-endpoint.XXXXXX)
+if test -n "$endpoint_tmp"; and printf '%s' "$endpoint" | age -r "$recipient" -a -o "$endpoint_tmp"; and mv "$endpoint_tmp" home/secrets/opencode-otlp-endpoint.age
+else
+    if test -n "$endpoint_tmp"
+        rm -f "$endpoint_tmp"
+    end
+    echo 'Could not encrypt endpoint; existing ciphertext left unchanged.' >&2
+end
+set -e endpoint
+
+read -s -P 'OPENCODE_OTLP_HEADERS: ' headers; printf '\n'
+set headers_tmp (mktemp home/secrets/.opencode-otlp-headers.XXXXXX)
+if test -n "$headers_tmp"; and printf '%s' "$headers" | age -r "$recipient" -a -o "$headers_tmp"; and mv "$headers_tmp" home/secrets/opencode-otlp-headers.age
+else
+    if test -n "$headers_tmp"
+        rm -f "$headers_tmp"
+    end
+    echo 'Could not encrypt headers; existing ciphertext left unchanged.' >&2
+end
+set -e headers
+```
+
 ### Extra steps for Kanata
 
 In order to use Kanata we need to manually install the [VirtualHIDDevice](https://github.com/pqrs-org/Karabiner-DriverKit-VirtualHIDDevice) driver.
