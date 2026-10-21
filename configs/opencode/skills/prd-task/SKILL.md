@@ -91,26 +91,26 @@ Move PRD and generate JSON in `.opencode/state/<prd-name>/`:
 
 ```json
 {
-	"prdName": "<prd-name>",
-	"tasks": [
-		{
-			"id": "functional-1",
-			"category": "functional",
-			"description": "User can register with email and password",
-			"steps": [
-				"POST /api/auth/register with valid email/password",
-				"Verify 201 response with user object",
-				"Verify password not in response",
-				"Attempt duplicate email, verify 409"
-			],
-			"passes": false
-		}
-	],
-	"context": {
-		"patterns": ["API routes: src/routes/items.ts"],
-		"keyFiles": ["src/db/schema.ts"],
-		"nonGoals": ["OAuth/social login", "Password reset"]
-	}
+  "prdName": "<prd-name>",
+  "tasks": [
+    {
+      "id": "functional-1",
+      "category": "functional",
+      "description": "User can register with email and password",
+      "steps": [
+        "POST /api/auth/register with valid email/password",
+        "Verify 201 response with user object",
+        "Verify password not in response",
+        "Attempt duplicate email, verify 409"
+      ],
+      "passes": false
+    }
+  ],
+  "context": {
+    "patterns": ["API routes: src/routes/items.ts"],
+    "keyFiles": ["src/db/schema.ts"],
+    "nonGoals": ["OAuth/social login", "Password reset"]
+  }
 }
 ```
 
@@ -285,52 +285,49 @@ User can retrieve their favorites.
 
 ```json
 {
-	"prdName": "user-favorites",
-	"tasks": [
-		{
-			"id": "db-1",
-			"category": "db",
-			"description": "Database table for storing favorites",
-			"steps": [
-				"Favorites table exists with userId, itemId, createdAt",
-				"Unique constraint prevents duplicates",
-				"Foreign keys reference users and items tables"
-			],
-			"passes": false
-		},
-		{
-			"id": "api-1",
-			"category": "api",
-			"description": "User can add an item to favorites",
-			"steps": [
-				"POST /api/favorites with itemId",
-				"Verify 201 response",
-				"Verify item appears in database",
-				"Attempt duplicate, verify 409",
-				"Attempt without auth, verify 401"
-			],
-			"passes": false
-		},
-		{
-			"id": "api-2",
-			"category": "api",
-			"description": "User can retrieve their favorites",
-			"steps": [
-				"GET /api/favorites returns array",
-				"Results are paginated (20 per page)",
-				"Results sorted by createdAt desc",
-				"Only returns current user's favorites"
-			],
-			"passes": false
-		}
-	],
-	"context": {
-		"patterns": [
-			"API routes: src/routes/items.ts",
-			"Auth middleware: src/middleware/auth.ts"
-		],
-		"keyFiles": ["src/db/schema.ts"],
-		"nonGoals": ["Favorite folders", "Sharing favorites"]
-	}
+  "prdName": "user-favorites",
+  "tasks": [
+    {
+      "id": "db-1",
+      "category": "db",
+      "description": "Database table for storing favorites",
+      "steps": [
+        "Favorites table exists with userId, itemId, createdAt",
+        "Unique constraint prevents duplicates",
+        "Foreign keys reference users and items tables"
+      ],
+      "passes": false
+    },
+    {
+      "id": "api-1",
+      "category": "api",
+      "description": "User can add an item to favorites",
+      "steps": [
+        "POST /api/favorites with itemId",
+        "Verify 201 response",
+        "Verify item appears in database",
+        "Attempt duplicate, verify 409",
+        "Attempt without auth, verify 401"
+      ],
+      "passes": false
+    },
+    {
+      "id": "api-2",
+      "category": "api",
+      "description": "User can retrieve their favorites",
+      "steps": [
+        "GET /api/favorites returns array",
+        "Results are paginated (20 per page)",
+        "Results sorted by createdAt desc",
+        "Only returns current user's favorites"
+      ],
+      "passes": false
+    }
+  ],
+  "context": {
+    "patterns": ["API routes: src/routes/items.ts", "Auth middleware: src/middleware/auth.ts"],
+    "keyFiles": ["src/db/schema.ts"],
+    "nonGoals": ["Favorite folders", "Sharing favorites"]
+  }
 }
 ```

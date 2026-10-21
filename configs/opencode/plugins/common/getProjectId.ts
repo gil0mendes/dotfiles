@@ -53,14 +53,10 @@ function hashPath(projectRoot: string): string {
  * // Returns: "def456..." (16-char path hash)
  * ```
  */
-export async function getProjectId(
-	projectRoot: string,
-): Promise<string> {
+export async function getProjectId(projectRoot: string): Promise<string> {
 	// Guard: Validate projectRoot (Law 1: Early Exit, Law 4: Fail Fast)
 	if (!projectRoot || typeof projectRoot !== "string") {
-		throw new Error(
-			"getProjectId: projectRoot is required and must be a string",
-		);
+		throw new Error("getProjectId: projectRoot is required and must be a string");
 	}
 
 	const gitPath = path.join(projectRoot, ".git");
@@ -70,10 +66,7 @@ export async function getProjectId(
 
 	// Guard: No .git directory - not a git repo (Law 1: Early Exit)
 	if (!gitStat) {
-		logWarn(
-			"project-id",
-			`No .git found at ${projectRoot}, using path hash`,
-		);
+		logWarn("project-id", `No .git found at ${projectRoot}, using path hash`);
 		return hashPath(projectRoot);
 	}
 
@@ -87,9 +80,7 @@ export async function getProjectId(
 		// Guard: Invalid .git file format (Law 4: Fail Fast)
 		const gitdirPath = match?.[1];
 		if (!gitdirPath) {
-			throw new Error(
-				`getProjectId: .git file exists but has invalid format at ${gitPath}`,
-			);
+			throw new Error(`getProjectId: .git file exists but has invalid format at ${gitPath}`);
 		}
 
 		// Resolve path (handles both relative and absolute)
@@ -110,9 +101,7 @@ export async function getProjectId(
 		// Guard: Resolved gitdir must be a directory (Law 4: Fail Fast)
 		const gitDirStat = await stat(gitDir).catch(() => null);
 		if (!gitDirStat?.isDirectory()) {
-			throw new Error(
-				`getProjectId: Resolved gitdir ${gitDir} is not a directory`,
-			);
+			throw new Error(`getProjectId: Resolved gitdir ${gitDir} is not a directory`);
 		}
 	}
 
@@ -126,10 +115,7 @@ export async function getProjectId(
 		if (/^[a-f0-9]{40}$/i.test(cached) || /^[a-f0-9]{16}$/i.test(cached)) {
 			return cached;
 		}
-		logWarn(
-			"project-id",
-			`Invalid cache content at ${cacheFile}, regenerating`,
-		);
+		logWarn("project-id", `Invalid cache content at ${cacheFile}, regenerating`);
 	}
 
 	// Generate project ID from git root commit
@@ -143,16 +129,14 @@ export async function getProjectId(
 
 		// 5 second timeout to prevent hangs on network filesystems
 		const timeoutMs = 5000;
-		const exitCode = await withTimeout(
-			proc.exited,
-			timeoutMs,
-			`git rev-list timed out`,
-		).catch((e) => {
-			if (e instanceof TimeoutError) {
-				proc.kill();
-			}
-			return 1; // Treat timeout/errors as failure, fall back to path hash
-		});
+		const exitCode = await withTimeout(proc.exited, timeoutMs, `git rev-list timed out`).catch(
+			(e) => {
+				if (e instanceof TimeoutError) {
+					proc.kill();
+				}
+				return 1; // Treat timeout/errors as failure, fall back to path hash
+			},
+		);
 
 		if (exitCode === 0) {
 			const output = await new Response(proc.stdout).text();
@@ -174,10 +158,7 @@ export async function getProjectId(
 			}
 		} else {
 			const stderr = await new Response(proc.stderr).text();
-		logWarn(
-				"project-id",
-				`git rev-list failed (${exitCode}): ${stderr.trim()}`,
-			);
+			logWarn("project-id", `git rev-list failed (${exitCode}): ${stderr.trim()}`);
 		}
 	} catch (error) {
 		logWarn("project-id", `git command failed: ${error}`);

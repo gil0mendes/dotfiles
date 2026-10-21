@@ -18,8 +18,12 @@ function executeAstGrep(args: string[]): Promise<string> {
 		const process = spawn("ast-grep", args);
 		let stdout = "";
 		let stderr = "";
-		process.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
-		process.stderr.on("data", (chunk: Buffer) => { stderr += chunk.toString(); });
+		process.stdout.on("data", (chunk: Buffer) => {
+			stdout += chunk.toString();
+		});
+		process.stderr.on("data", (chunk: Buffer) => {
+			stderr += chunk.toString();
+		});
 		process.once("error", reject);
 		process.once("exit", (code) => {
 			if (code === 0 || !stderr.trim()) resolve(stdout || "No matches found.");
@@ -37,7 +41,12 @@ export default Plugin.define({
 				description: "Search code with ast-grep structural patterns.",
 				input: {
 					type: "object",
-					properties: { pattern: { type: "string" }, path: { type: "string" }, lang: { type: "string" }, json: { type: "boolean" } },
+					properties: {
+						pattern: { type: "string" },
+						path: { type: "string" },
+						lang: { type: "string" },
+						json: { type: "boolean" },
+					},
 					required: ["pattern"],
 					additionalProperties: false,
 				},

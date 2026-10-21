@@ -10,20 +10,20 @@ CSS variables, OKLCH colors, dark mode for Tailwind v4.
 @theme {
   --color-background: oklch(1 0 0);
   --color-foreground: oklch(0.15 0.02 264);
-  
+
   --color-primary: oklch(0.55 0.22 264);
   --color-primary-foreground: oklch(0.98 0.01 264);
-  
+
   --color-secondary: oklch(0.96 0.01 264);
   --color-secondary-foreground: oklch(0.15 0.02 264);
-  
+
   --color-muted: oklch(0.96 0.01 264);
   --color-muted-foreground: oklch(0.55 0.02 264);
-  
+
   --color-destructive: oklch(0.55 0.22 25);
-  --color-border: oklch(0.90 0.01 264);
+  --color-border: oklch(0.9 0.01 264);
   --color-ring: oklch(0.55 0.22 264);
-  
+
   --radius: 0.5rem;
 }
 ```
@@ -53,32 +53,36 @@ npm install next-themes
 
 ```tsx
 // components/theme-provider.tsx
-"use client"
-import { ThemeProvider as NextThemesProvider } from "next-themes"
+"use client";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 export function ThemeProvider({ children, ...props }) {
-  return <NextThemesProvider {...props}>{children}</NextThemesProvider>
+  return <NextThemesProvider {...props}>{children}</NextThemesProvider>;
 }
 
 // app/layout.tsx
 <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
   {children}
-</ThemeProvider>
+</ThemeProvider>;
 ```
 
 ## Theme Toggle
 
 ```tsx
-import { useTheme } from "next-themes"
+import { useTheme } from "next-themes";
 
 export function ThemeToggle() {
-  const { setTheme, theme } = useTheme()
+  const { setTheme, theme } = useTheme();
   return (
-    <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+    >
       <Sun className="h-5 w-5 dark:hidden" />
       <Moon className="h-5 w-5 hidden dark:block" />
     </Button>
-  )
+  );
 }
 ```
 
@@ -90,19 +94,25 @@ export function ThemeToggle() {
   --color-foreground: oklch(0.98 0.01 264);
   --color-primary: oklch(0.75 0.18 264);
   --color-muted: oklch(0.25 0.02 264);
-  --color-border: oklch(0.30 0.02 264);
+  --color-border: oklch(0.3 0.02 264);
 }
 ```
 
 ## Multiple Themes
 
 ```css
-[data-theme="violet"] { --color-primary: oklch(0.55 0.25 290); }
-[data-theme="rose"] { --color-primary: oklch(0.60 0.22 350); }
+[data-theme="violet"] {
+  --color-primary: oklch(0.55 0.25 290);
+}
+[data-theme="rose"] {
+  --color-primary: oklch(0.6 0.22 350);
+}
 ```
 
 ```tsx
-<div data-theme="violet"><Button>Violet</Button></div>
+<div data-theme="violet">
+  <Button>Violet</Button>
+</div>
 ```
 
 ## Custom Button Variants
@@ -118,14 +128,14 @@ const buttonVariants = cva("...", {
       xl: "h-14 rounded-lg px-10 text-lg",
     },
   },
-})
+});
 ```
 
 ## Radius
 
 ```css
 @theme {
-  --radius: 0.5rem;    /* Default */
+  --radius: 0.5rem; /* Default */
   /* --radius: 0rem;   /* Sharp */
   /* --radius: 1rem;   /* Rounded */
 }

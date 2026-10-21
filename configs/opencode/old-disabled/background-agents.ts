@@ -22,7 +22,14 @@ export default Plugin.define({
 	async setup(ctx) {
 		const log = createLogger();
 		const projectId = await getProjectId(ctx.location.directory);
-		const baseDir = path.join(os.homedir(), ".local", "share", "opencode", "delegations", projectId);
+		const baseDir = path.join(
+			os.homedir(),
+			".local",
+			"share",
+			"opencode",
+			"delegations",
+			projectId,
+		);
 		await fs.mkdir(baseDir, { recursive: true });
 		const manager = new DelegationManager(ctx, baseDir, log);
 		await registerDelegationTools(ctx, manager);
@@ -33,7 +40,9 @@ export default Plugin.define({
 			if (!agent) return;
 			const { isReadOnly } = await parseAgentWriteCapability(ctx, agent, log);
 			if (!isReadOnly) return;
-			throw new Error(`Agent '${agent}' is read-only. Use delegate for async background execution.`);
+			throw new Error(
+				`Agent '${agent}' is read-only. Use delegate for async background execution.`,
+			);
 		});
 
 		await ctx.session.hook("context", (event) => {
@@ -60,7 +69,10 @@ export default Plugin.define({
 				if (event.type === "session.idle") await manager.handleSessionIdle(event.data.sessionID);
 			}
 		})().catch((error: unknown) => {
-			if (!controller.signal.aborted) log.warn(`event subscription failed: ${error instanceof Error ? error.message : String(error)}`);
+			if (!controller.signal.aborted)
+				log.warn(
+					`event subscription failed: ${error instanceof Error ? error.message : String(error)}`,
+				);
 		});
 
 		return () => controller.abort();

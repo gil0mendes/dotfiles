@@ -132,14 +132,9 @@ const READ_POLL_INTERVAL_MS = 250;
 const ALL_COMPLETE_QUIET_PERIOD_MS = 50;
 const PARENT_NOTIFICATION_TIMEOUT_MS = 5_000;
 
-function isTerminalStatus(
-	status: DelegationStatus,
-): status is DelegationTerminalStatus {
+function isTerminalStatus(status: DelegationStatus): status is DelegationTerminalStatus {
 	return (
-		status === "complete" ||
-		status === "error" ||
-		status === "cancelled" ||
-		status === "timeout"
+		status === "complete" || status === "error" || status === "cancelled" || status === "timeout"
 	);
 }
 
@@ -165,17 +160,13 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
 }
 
-function parseSessionMessageInfo(
-	value: unknown,
-): SessionMessageItem["info"] | undefined {
+function parseSessionMessageInfo(value: unknown): SessionMessageItem["info"] | undefined {
 	if (!isRecord(value)) return undefined;
 	if (typeof value.role !== "string") return undefined;
 	return { role: value.role };
 }
 
-function parseSessionMessagePart(
-	value: unknown,
-): SessionMessageItem["parts"][number] | undefined {
+function parseSessionMessagePart(value: unknown): SessionMessageItem["parts"][number] | undefined {
 	if (!isRecord(value)) return undefined;
 	if (typeof value.type !== "string") return undefined;
 	if (value.text !== undefined && typeof value.text !== "string") return undefined;
@@ -208,10 +199,7 @@ function parseSessionMessages(data: unknown): SessionMessageItem[] {
 export class DelegationManager {
 	private delegations = new Map<string, DelegationRecord>();
 	private delegationsBySession = new Map<string, string>();
-	private terminalWaiters = new Map<
-		string,
-		{ promise: Promise<void>; resolve: () => void }
-	>();
+	private terminalWaiters = new Map<string, { promise: Promise<void>; resolve: () => void }>();
 	private timeoutTimers = new Map<string, ReturnType<typeof setTimeout>>();
 	private pendingByParent = new Map<string, Set<string>>();
 	private parentNotificationState = new Map<string, ParentNotificationState>();
@@ -236,10 +224,8 @@ export class DelegationManager {
 		this.baseDir = baseDir;
 		this.log = log;
 		this.maxRunTimeMs = options.maxRunTimeMs ?? DEFAULT_MAX_RUN_TIME_MS;
-		this.readPollIntervalMs =
-			options.readPollIntervalMs ?? READ_POLL_INTERVAL_MS;
-		this.terminalWaitGraceMs =
-			options.terminalWaitGraceMs ?? TERMINAL_WAIT_GRACE_MS;
+		this.readPollIntervalMs = options.readPollIntervalMs ?? READ_POLL_INTERVAL_MS;
+		this.terminalWaitGraceMs = options.terminalWaitGraceMs ?? TERMINAL_WAIT_GRACE_MS;
 		this.allCompleteQuietPeriodMs =
 			options.allCompleteQuietPeriodMs ?? ALL_COMPLETE_QUIET_PERIOD_MS;
 		this.idGenerator = options.idGenerator ?? generateReadableId;
@@ -287,9 +273,7 @@ export class DelegationManager {
 		// Promise executors run synchronously, so resolve is assigned before this
 		// branch is evaluated. The undefined type remains for TS narrowing only.
 		if (!resolve) {
-			throw new Error(
-				`Failed to initialize terminal waiter for delegation ${id}`,
-			);
+			throw new Error(`Failed to initialize terminal waiter for delegation ${id}`);
 		}
 
 		this.terminalWaiters.set(id, { promise, resolve });
@@ -329,28 +313,20 @@ export class DelegationManager {
 		return delegation;
 	}
 
-	private getParentNotificationState(
-		parentSessionID: string,
-	): ParentNotificationState {
+	private getParentNotificationState(parentSessionID: string): ParentNotificationState {
 		const existing = this.parentNotificationState.get(parentSessionID);
 		if (existing) return existing;
 
 		const initialized: ParentNotificationState = {
 			allCompleteNotificationCount: 0,
 			allCompleteCycle: 0,
-			allCompleteCycleToken: this.buildAllCompleteCycleToken(
-				parentSessionID,
-				0,
-			),
+			allCompleteCycleToken: this.buildAllCompleteCycleToken(parentSessionID, 0),
 		};
 		this.parentNotificationState.set(parentSessionID, initialized);
 		return initialized;
 	}
 
-	private buildAllCompleteCycleToken(
-		parentSessionID: string,
-		cycle: number,
-	): string {
+	private buildAllCompleteCycleToken(parentSessionID: string, cycle: number): string {
 		return `${parentSessionID}:${cycle}`;
 	}
 
@@ -363,9 +339,7 @@ export class DelegationManager {
 		state.allCompleteScheduledCycleToken = undefined;
 	}
 
-	private resetParentAllCompleteNotificationCycle(
-		parentSessionID: string,
-	): void {
+	private resetParentAllCompleteNotificationCycle(parentSessionID: string): void {
 		const state = this.getParentNotificationState(parentSessionID);
 		this.cancelScheduledAllComplete(state);
 		state.allCompleteCycle += 1;
@@ -392,9 +366,7 @@ export class DelegationManager {
 			this.resetParentAllCompleteNotificationCycle(input.parentSessionID);
 		}
 
-		const parentNotificationState = this.getParentNotificationState(
-			input.parentSessionID,
-		);
+		const parentNotificationState = this.getParentNotificationState(input.parentSessionID);
 		const now = new Date();
 		const delegation: DelegationRecord = {
 			id: input.id,
@@ -444,10 +416,7 @@ export class DelegationManager {
 		});
 	}
 
-	private markProgress(
-		id: string,
-		messageText?: string,
-	): DelegationRecord | undefined {
+	private markProgress(id: string, messageText?: string): DelegationRecord | undefined {
 		return this.updateDelegation(id, (delegation, now) => {
 			if (isTerminalStatus(delegation.status)) return;
 			if (delegation.status === "registered") {
@@ -504,10 +473,7 @@ export class DelegationManager {
 		});
 	}
 
-	private markRetrieved(
-		id: string,
-		readerSessionID: string,
-	): DelegationRecord | undefined {
+	private markRetrieved(id: string, readerSessionID: string): DelegationRecord | undefined {
 		return this.updateDelegation(id, (delegation, now) => {
 			delegation.retrieval.retrievedAt = now;
 			delegation.retrieval.retrievalCount += 1;
@@ -522,16 +488,10 @@ export class DelegationManager {
 		if (!delegation.notification.terminalNotifiedAt) return false;
 		if (!delegation.completedAt) return false;
 		if (!delegation.retrieval.retrievedAt) return true;
-		return (
-			delegation.retrieval.retrievedAt.getTime() <
-			delegation.completedAt.getTime()
-		);
+		return delegation.retrieval.retrievedAt.getTime() < delegation.completedAt.getTime();
 	}
 
-	private async waitForTerminal(
-		id: string,
-		timeoutMs: number,
-	): Promise<"terminal" | "timeout"> {
+	private async waitForTerminal(id: string, timeoutMs: number): Promise<"terminal" | "timeout"> {
 		const delegation = this.delegations.get(id);
 		if (!delegation) return "timeout";
 		if (isTerminalStatus(delegation.status)) return "terminal";
@@ -552,9 +512,7 @@ export class DelegationManager {
 		}
 	}
 
-	private async generateUniqueDelegationId(
-		artifactDir: string,
-	): Promise<string> {
+	private async generateUniqueDelegationId(artifactDir: string): Promise<string> {
 		for (let attempt = 0; attempt < 20; attempt++) {
 			const candidate = this.idGenerator();
 			if (this.delegations.has(candidate)) continue;
@@ -567,31 +525,21 @@ export class DelegationManager {
 			}
 		}
 
-		throw new Error(
-			"Failed to generate unique delegation ID after 20 attempts",
-		);
+		throw new Error("Failed to generate unique delegation ID after 20 attempts");
 	}
 
-	private isVisibleToSession(
-		delegation: DelegationRecord,
-		rootSessionID: string,
-	): boolean {
+	private isVisibleToSession(delegation: DelegationRecord, rootSessionID: string): boolean {
 		return delegation.rootSessionID === rootSessionID;
 	}
 
-	private buildTerminalNotification(
-		delegation: DelegationRecord,
-		remainingCount: number,
-	): string {
+	private buildTerminalNotification(delegation: DelegationRecord, remainingCount: number): string {
 		const lines = [
 			"<task-notification>",
 			`<task-id>${delegation.id}</task-id>`,
 			`<status>${delegation.status}</status>`,
 			`<summary>Background agent ${delegation.status}: ${delegation.title || delegation.id}</summary>`,
 			delegation.title ? `<title>${delegation.title}</title>` : "",
-			delegation.description
-				? `<description>${delegation.description}</description>`
-				: "",
+			delegation.description ? `<description>${delegation.description}</description>` : "",
 			delegation.error ? `<error>${delegation.error}</error>` : "",
 			`<artifact>${delegation.artifact.filePath}</artifact>`,
 			`<retrieval>Use delegation_read("${delegation.id}") for full output.</retrieval>`,
@@ -619,9 +567,7 @@ export class DelegationManager {
 		].join("\n");
 	}
 
-	private buildDeterministicTerminalReadResponse(
-		delegation: DelegationRecord,
-	): string {
+	private buildDeterministicTerminalReadResponse(delegation: DelegationRecord): string {
 		const lines = [
 			`Delegation ID: ${delegation.id}`,
 			`Status: ${delegation.status}`,
@@ -632,19 +578,14 @@ export class DelegationManager {
 		];
 
 		if (delegation.title) lines.push(`Title: ${delegation.title}`);
-		if (delegation.description)
-			lines.push(`Description: ${delegation.description}`);
+		if (delegation.description) lines.push(`Description: ${delegation.description}`);
 		if (delegation.error) lines.push(`Error: ${delegation.error}`);
 
-		lines.push(
-			`\nUse delegation_read("${delegation.id}") again after persistence completes.`,
-		);
+		lines.push(`\nUse delegation_read("${delegation.id}") again after persistence completes.`);
 		return lines.join("\n");
 	}
 
-	private async readPersistedArtifact(
-		filePath: string,
-	): Promise<string | null> {
+	private async readPersistedArtifact(filePath: string): Promise<string | null> {
 		try {
 			return await fs.readFile(filePath, "utf8");
 		} catch {
@@ -669,9 +610,7 @@ export class DelegationManager {
 		return null;
 	}
 
-	private async resolveDelegationResult(
-		delegation: DelegationRecord,
-	): Promise<string> {
+	private async resolveDelegationResult(delegation: DelegationRecord): Promise<string> {
 		if (delegation.status === "error") {
 			return `Error: ${delegation.error || "Delegation failed."}`;
 		}
@@ -707,17 +646,12 @@ export class DelegationManager {
 		return cycleDelegationCount > 0;
 	}
 
-	private scheduleAllCompleteForParent(
-		parentSessionID: string,
-		parentAgent: string,
-	): void {
+	private scheduleAllCompleteForParent(parentSessionID: string, parentAgent: string): void {
 		const state = this.getParentNotificationState(parentSessionID);
 		const cycle = state.allCompleteCycle;
 		const cycleToken = state.allCompleteCycleToken;
 
-		if (
-			!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)
-		) {
+		if (!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)) {
 			return;
 		}
 		if (state.allCompleteNotifiedCycleToken === cycleToken) return;
@@ -727,12 +661,7 @@ export class DelegationManager {
 		state.allCompleteScheduledCycle = cycle;
 		state.allCompleteScheduledCycleToken = cycleToken;
 		state.allCompleteScheduledTimer = setTimeout(() => {
-			void this.dispatchScheduledAllComplete(
-				parentSessionID,
-				parentAgent,
-				cycle,
-				cycleToken,
-			);
+			void this.dispatchScheduledAllComplete(parentSessionID, parentAgent, cycle, cycleToken);
 		}, this.allCompleteQuietPeriodMs);
 	}
 
@@ -747,9 +676,7 @@ export class DelegationManager {
 		if (state.allCompleteScheduledCycleToken !== cycleToken) return;
 		this.cancelScheduledAllComplete(state);
 		if (state.allCompleteCycleToken !== cycleToken) return;
-		if (
-			!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)
-		) {
+		if (!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)) {
 			return;
 		}
 		if (state.allCompleteNotifiedCycleToken === cycleToken) return;
@@ -762,9 +689,7 @@ export class DelegationManager {
 		);
 
 		if (state.allCompleteCycleToken !== cycleToken) return;
-		if (
-			!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)
-		) {
+		if (!this.areCycleTerminalNotificationsComplete(parentSessionID, cycleToken)) {
 			return;
 		}
 
@@ -776,10 +701,7 @@ export class DelegationManager {
 		);
 	}
 
-	private queuePendingNotification(
-		parentSessionID: string,
-		notification: string,
-	): void {
+	private queuePendingNotification(parentSessionID: string, notification: string): void {
 		const pending = this.pendingNotifications.get(parentSessionID) ?? [];
 		pending.push(notification);
 		this.pendingNotifications.set(parentSessionID, pending);
@@ -805,10 +727,7 @@ export class DelegationManager {
 					})
 					.then((): "sent" => "sent"),
 				new Promise<"timed-out">((resolve) => {
-					timeout = setTimeout(
-						() => resolve("timed-out"),
-						PARENT_NOTIFICATION_TIMEOUT_MS,
-					);
+					timeout = setTimeout(() => resolve("timed-out"), PARENT_NOTIFICATION_TIMEOUT_MS);
 				}),
 			]);
 
@@ -863,17 +782,12 @@ export class DelegationManager {
 			if (!delegation) return;
 			if (!isTerminalStatus(delegation.status)) return;
 			if (delegation.notification.terminalNotifiedAt) {
-				await this.debugLog(
-					`notifyParent skipped for ${delegation.id}; already notified`,
-				);
+				await this.debugLog(`notifyParent skipped for ${delegation.id}; already notified`);
 				return;
 			}
 
 			const remainingCount = this.getPendingCount(delegation.parentSessionID);
-			const terminalNotification = this.buildTerminalNotification(
-				delegation,
-				remainingCount,
-			);
+			const terminalNotification = this.buildTerminalNotification(delegation, remainingCount);
 
 			const deliveryStatus = await this.sendParentNotification(
 				delegation.parentSessionID,
@@ -883,10 +797,7 @@ export class DelegationManager {
 			);
 
 			this.markNotified(delegation.id);
-			this.scheduleAllCompleteForParent(
-				delegation.parentSessionID,
-				delegation.parentAgent,
-			);
+			this.scheduleAllCompleteForParent(delegation.parentSessionID, delegation.parentAgent);
 
 			await this.debugLog(
 				`notifyParent ${deliveryStatus} for ${delegation.id} (remaining=${remainingCount}, status=${delegation.status})`,
@@ -903,25 +814,16 @@ export class DelegationManager {
 		status: DelegationTerminalStatus,
 		error?: string,
 	): Promise<void> {
-		const { transitioned, delegation } = this.markTerminal(
-			delegationID,
-			status,
-			error,
-		);
+		const { transitioned, delegation } = this.markTerminal(delegationID, status, error);
 		if (!transitioned || !delegation) return;
 
-		await this.debugLog(
-			`finalizeDelegation(${delegation.id}, ${status}) started`,
-		);
+		await this.debugLog(`finalizeDelegation(${delegation.id}, ${status}) started`);
 
 		const resolvedResult = await this.resolveDelegationResult(delegation);
 		delegation.result = resolvedResult;
 
 		if (resolvedResult.trim().length > 0) {
-			const metadata = await this.metadataGenerator(
-				resolvedResult,
-				(msg) => this.debugLog(msg),
-			);
+			const metadata = await this.metadataGenerator(resolvedResult, (msg) => this.debugLog(msg));
 			delegation.title = metadata.title;
 			delegation.description = metadata.description;
 		}
@@ -948,11 +850,7 @@ export class DelegationManager {
 			);
 		}
 
-		const { isReadOnly } = await parseAgentWriteCapability(
-			this.client,
-			input.agent,
-			this.log,
-		);
+		const { isReadOnly } = await parseAgentWriteCapability(this.client, input.agent, this.log);
 		if (!isReadOnly) {
 			throw new Error(
 				`Agent "${input.agent}" is write-capable and requires the native \`task\` tool for proper undo/branching support.\n\n` +
@@ -974,9 +872,7 @@ export class DelegationManager {
 			agent: input.agent,
 		});
 
-		await this.debugLog(
-			`session.create result: ${JSON.stringify(sessionResult)}`,
-		);
+		await this.debugLog(`session.create result: ${JSON.stringify(sessionResult)}`);
 
 		if (!sessionResult.id) {
 			throw new Error("Failed to create delegation session");
@@ -994,9 +890,7 @@ export class DelegationManager {
 			artifactPath,
 		});
 
-		await this.debugLog(
-			`Registered delegation ${delegation.id} before execution`,
-		);
+		await this.debugLog(`Registered delegation ${delegation.id} before execution`);
 		this.scheduleTimeout(delegation.id);
 		this.markStarted(delegation.id);
 
@@ -1045,9 +939,7 @@ export class DelegationManager {
 			const messageData = parseSessionMessages(messages);
 
 			if (messageData.length === 0) {
-				await this.debugLog(
-					`getResult: No messages found for session ${delegation.sessionID}`,
-				);
+				await this.debugLog(`getResult: No messages found for session ${delegation.sessionID}`);
 				return `Delegation "${delegation.description || delegation.id}" completed but produced no output.`;
 			}
 
@@ -1056,8 +948,7 @@ export class DelegationManager {
 			);
 
 			const assistantMessages = messageData.filter(
-				(message): message is AssistantSessionMessageItem =>
-					message.info.role === "assistant",
+				(message): message is AssistantSessionMessageItem => message.info.role === "assistant",
 			);
 
 			if (assistantMessages.length === 0) {
@@ -1090,14 +981,10 @@ export class DelegationManager {
 		}
 	}
 
-	private async persistOutput(
-		delegation: DelegationRecord,
-		content: string,
-	): Promise<void> {
+	private async persistOutput(delegation: DelegationRecord, content: string): Promise<void> {
 		try {
 			const title = delegation.title || delegation.id;
-			const description =
-				delegation.description || "(No description generated)";
+			const description = delegation.description || "(No description generated)";
 			const header = `# ${title}
 
 ${description}
@@ -1113,11 +1000,7 @@ ${description}
 
 `;
 
-			await fs.writeFile(
-				delegation.artifact.filePath,
-				header + content,
-				"utf8",
-			);
+			await fs.writeFile(delegation.artifact.filePath, header + content, "utf8");
 
 			const stats = await fs.stat(delegation.artifact.filePath);
 			this.updateDelegation(delegation.id, (record, now) => {
@@ -1126,9 +1009,7 @@ ${description}
 				record.artifact.persistError = undefined;
 			});
 
-			await this.debugLog(
-				`Persisted output to ${delegation.artifact.filePath}`,
-			);
+			await this.debugLog(`Persisted output to ${delegation.artifact.filePath}`);
 		} catch (error) {
 			this.updateDelegation(delegation.id, (record) => {
 				record.artifact.persistError =
@@ -1156,11 +1037,8 @@ ${description}
 			await this.getDelegationsDir(sessionID),
 			`${normalizedID}.md`,
 		);
-		const immediateArtifactPath =
-			delegation?.artifact.filePath || fallbackFilePath;
-		const immediateRead = await this.readPersistedArtifact(
-			immediateArtifactPath,
-		);
+		const immediateArtifactPath = delegation?.artifact.filePath || fallbackFilePath;
+		const immediateRead = await this.readPersistedArtifact(immediateArtifactPath);
 		if (immediateRead !== null) {
 			if (delegation) this.markRetrieved(delegation.id, sessionID);
 			return immediateRead;
@@ -1201,9 +1079,7 @@ ${description}
 			}
 		}
 
-		const persisted = await this.readPersistedArtifact(
-			delegation.artifact.filePath,
-		);
+		const persisted = await this.readPersistedArtifact(delegation.artifact.filePath);
 		if (persisted !== null) {
 			this.markRetrieved(delegation.id, sessionID);
 			return persisted;
@@ -1229,9 +1105,7 @@ ${description}
 				title: delegation.title || delegation.id,
 				description:
 					delegation.description ||
-					(isActiveStatus(delegation.status)
-						? "(running)"
-						: "(no description)"),
+					(isActiveStatus(delegation.status) ? "(running)" : "(no description)"),
 				agent: delegation.agent,
 				unread: this.hasUnreadCompletion(delegation),
 			});
@@ -1304,11 +1178,7 @@ ${description}
 				} catch {
 					// Session may already be deleted.
 				}
-				await this.finalizeDelegation(
-					delegation.id,
-					"cancelled",
-					"Delegation deleted by cleanup",
-				);
+				await this.finalizeDelegation(delegation.id, "cancelled", "Delegation deleted by cleanup");
 			}
 
 			this.terminalWaiters.delete(delegation.id);
@@ -1354,16 +1224,12 @@ ${description}
 
 	getRunningDelegations(rootSessionID?: string): DelegationRecord[] {
 		return Array.from(this.delegations.values()).filter((delegation) => {
-			if (rootSessionID && delegation.rootSessionID !== rootSessionID)
-				return false;
+			if (rootSessionID && delegation.rootSessionID !== rootSessionID) return false;
 			return isActiveStatus(delegation.status);
 		});
 	}
 
-	getUnreadCompletedDelegations(
-		rootSessionID: string,
-		limit: number = 10,
-	): DelegationRecord[] {
+	getUnreadCompletedDelegations(rootSessionID: string, limit: number = 10): DelegationRecord[] {
 		return Array.from(this.delegations.values())
 			.filter((delegation) => delegation.rootSessionID === rootSessionID)
 			.filter((delegation) => this.hasUnreadCompletion(delegation))
@@ -1380,9 +1246,7 @@ ${description}
 		limit: number = 10,
 	): Promise<DelegationListItem[]> {
 		const all = await this.listDelegations(sessionID);
-		return all
-			.filter((delegation) => isTerminalStatus(delegation.status))
-			.slice(-limit);
+		return all.filter((delegation) => isTerminalStatus(delegation.status)).slice(-limit);
 	}
 
 	async debugLog(msg: string): Promise<void> {

@@ -197,9 +197,12 @@ Review triggers:
 
 export function ruleInjection(agent: string, system: Array<{ type: "text"; text: string }>): void {
 	const today = new Date().toISOString().split("T")[0] ?? "";
-	system.push({ type: "text", text: `<date-awareness>
+	system.push({
+		type: "text",
+		text: `<date-awareness>
 Today is ${today}. When searching for documentation, APIs, or external resources, use the current year (${new Date().getFullYear()}). Do not default to outdated years from training data.
-</date-awareness>` });
+</date-awareness>`,
+	});
 
 	// Agent-specific rules
 	if (agent === "plan") {

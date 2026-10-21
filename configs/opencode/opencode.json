@@ -617,11 +617,6 @@
 		},
 		{
 			"action": "shell",
-			"resource": "print *",
-			"effect": "allow"
-		},
-		{
-			"action": "shell",
 			"resource": "agent-browser *",
 			"effect": "allow"
 		},
@@ -652,6 +647,11 @@
 		},
 		{
 			"action": "webfetch",
+			"resource": "*",
+			"effect": "allow"
+		},
+		{
+			"action": "test",
 			"resource": "*",
 			"effect": "allow"
 		}

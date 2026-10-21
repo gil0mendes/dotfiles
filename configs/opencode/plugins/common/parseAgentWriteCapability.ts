@@ -27,8 +27,7 @@ export async function parseAgentWriteCapability(
 		};
 
 		return {
-			isReadOnly:
-				lastEffect("edit") === "deny" && lastEffect("shell") === "deny",
+			isReadOnly: lastEffect("edit") === "deny" && lastEffect("shell") === "deny",
 		};
 	} catch (error) {
 		// Fail-safe: Config errors shouldn't block task calls

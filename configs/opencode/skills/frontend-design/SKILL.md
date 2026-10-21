@@ -44,12 +44,13 @@ Search: `Field`, `InputGroup`, `Spinner`, `ButtonGroup`, `next-themes`
 - `./references/animation/motion-advanced.md` - AnimatePresence, scroll, orchestration, TypeScript
 
 **Stack**:
-| Animation Type | Tool |
-|----------------|------|
-| Hover/transitions | Tailwind CSS (`transition-*`) |
-| shadcn states | `tailwindcss-animate` (built-in) |
-| Gestures/layout/exit | Motion (`motion/react`) |
-| Complex SVG morphing | anime.js v4 (niche only) |
+
+| Animation Type       | Tool                             |
+| -------------------- | -------------------------------- |
+| Hover/transitions    | Tailwind CSS (`transition-*`)    |
+| shadcn states        | `tailwindcss-animate` (built-in) |
+| Gestures/layout/exit | Motion (`motion/react`)          |
+| Complex SVG morphing | anime.js v4 (niche only)         |
 
 ### Visual Design
 
@@ -100,8 +101,8 @@ Choose beautiful, unique fonts. Pair distinctive display with refined body:
 
 ```css
 @theme {
-	--font-display: "Playfair Display", serif;
-	--font-body: "Source Sans 3", sans-serif;
+  --font-display: "Playfair Display", serif;
+  --font-body: "Source Sans 3", sans-serif;
 }
 ```
 
@@ -111,8 +112,8 @@ Use OKLCH for vivid colors. Dominant colors with sharp accents:
 
 ```css
 @theme {
-	--color-primary-500: oklch(0.55 0.22 264);
-	--color-accent: oklch(0.75 0.18 45);
+  --color-primary-500: oklch(0.55 0.22 264);
+  --color-accent: oklch(0.75 0.18 45);
 }
 ```
 
@@ -142,11 +143,11 @@ CSS fallback (no JS):
 
 ```css
 dialog[open] {
-	opacity: 1;
-	@starting-style {
-		opacity: 0;
-		transform: scale(0.95);
-	}
+  opacity: 1;
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.95);
+  }
 }
 ```
 

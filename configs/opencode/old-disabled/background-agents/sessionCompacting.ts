@@ -36,8 +36,7 @@ export function formatDelegationContext(
 				sections.push(`**Last heartbeat:** ${d.lastHeartbeatAt.toISOString()}`);
 			}
 			if (d.prompt) {
-				const truncatedPrompt =
-					d.prompt.length > 200 ? `${d.prompt.slice(0, 200)}...` : d.prompt;
+				const truncatedPrompt = d.prompt.length > 200 ? `${d.prompt.slice(0, 200)}...` : d.prompt;
 				sections.push(`**Prompt:** ${truncatedPrompt}`);
 			}
 			sections.push("");
@@ -47,9 +46,7 @@ export function formatDelegationContext(
 		sections.push(
 			"> **Note:** You WILL be notified via `<task-notification>` when delegations complete.",
 		);
-		sections.push(
-			"> Do NOT poll `delegation_list` - continue productive work.",
-		);
+		sections.push("> Do NOT poll `delegation_list` - continue productive work.");
 		sections.push("");
 	}
 
@@ -76,16 +73,12 @@ export function formatDelegationContext(
 			sections.push(`**Retrieve:** \`delegation_read("${d.id}")\``);
 			sections.push("");
 		}
-		sections.push(
-			"> These are unread terminal delegations carried forward through compaction.",
-		);
+		sections.push("> These are unread terminal delegations carried forward through compaction.");
 		sections.push("");
 	}
 
 	sections.push("## Retrieval");
-	sections.push(
-		'Use `delegation_read("id")` to access full delegation output.',
-	);
+	sections.push('Use `delegation_read("id")` to access full delegation output.');
 	sections.push("</delegation-context>");
 
 	return sections.join("\n");
@@ -93,10 +86,7 @@ export function formatDelegationContext(
 
 export const sessionCompacting =
 	(manager: DelegationManager) =>
-	async (
-		input: { sessionID: string },
-		output: { context: string[]; prompt?: string },
-	) => {
+	async (input: { sessionID: string }, output: { context: string[]; prompt?: string }) => {
 		const rootSessionID = await manager.getRootSessionID(input.sessionID);
 
 		// Get running delegations for this session tree
@@ -111,16 +101,14 @@ export const sessionCompacting =
 			prompt: d.prompt,
 		}));
 
-		const unreadCompleted = manager
-			.getUnreadCompletedDelegations(rootSessionID)
-			.map((d) => ({
-				id: d.id,
-				agent: d.agent,
-				title: d.title,
-				description: d.description,
-				status: d.status,
-				completedAt: d.completedAt,
-			}));
+		const unreadCompleted = manager.getUnreadCompletedDelegations(rootSessionID).map((d) => ({
+			id: d.id,
+			agent: d.agent,
+			title: d.title,
+			description: d.description,
+			status: d.status,
+			completedAt: d.completedAt,
+		}));
 
 		// Early exit if nothing to inject
 		if (running.length === 0 && unreadCompleted.length === 0) return;

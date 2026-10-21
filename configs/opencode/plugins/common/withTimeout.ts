@@ -60,9 +60,7 @@ export async function withTimeout<T>(
 ): Promise<T> {
 	// Guard: Invalid timeout value (Law 1: Early Exit, Law 4: Fail Fast)
 	if (typeof ms !== "number" || ms < 0) {
-		throw new Error(
-			`withTimeout: timeout must be a non-negative number, got ${ms}`,
-		);
+		throw new Error(`withTimeout: timeout must be a non-negative number, got ${ms}`);
 	}
 
 	// Guard: Zero timeout means immediate rejection

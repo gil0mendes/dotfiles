@@ -22,7 +22,14 @@ import { Button } from "@/components/ui/button"
 ## Card
 
 ```tsx
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
 
 <Card>
   <CardHeader>
@@ -30,31 +37,51 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
     <CardDescription>Description</CardDescription>
   </CardHeader>
   <CardContent>Content</CardContent>
-  <CardFooter><Button>Action</Button></CardFooter>
-</Card>
+  <CardFooter>
+    <Button>Action</Button>
+  </CardFooter>
+</Card>;
 ```
 
 ## Dialog
 
 ```tsx
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 <Dialog>
-  <DialogTrigger asChild><Button>Open</Button></DialogTrigger>
+  <DialogTrigger asChild>
+    <Button>Open</Button>
+  </DialogTrigger>
   <DialogContent>
     <DialogHeader>
       <DialogTitle>Are you sure?</DialogTitle>
       <DialogDescription>Cannot be undone.</DialogDescription>
     </DialogHeader>
-    <DialogFooter><Button>Confirm</Button></DialogFooter>
+    <DialogFooter>
+      <Button>Confirm</Button>
+    </DialogFooter>
   </DialogContent>
-</Dialog>
+</Dialog>;
 ```
 
 ## Select
 
 ```tsx
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select"
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
+} from "@/components/ui/select";
 
 <Select>
   <SelectTrigger className="w-[180px]">
@@ -64,13 +91,13 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
     <SelectItem value="light">Light</SelectItem>
     <SelectItem value="dark">Dark</SelectItem>
   </SelectContent>
-</Select>
+</Select>;
 ```
 
 ## Tabs
 
 ```tsx
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 <Tabs defaultValue="account">
   <TabsList>
@@ -79,24 +106,31 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
   </TabsList>
   <TabsContent value="account">Account settings</TabsContent>
   <TabsContent value="password">Password settings</TabsContent>
-</Tabs>
+</Tabs>;
 ```
 
 ## Toast (Sonner)
 
 ```tsx
-import { toast } from "sonner"
+import { toast } from "sonner";
 
-toast("Event created")
-toast.success("Saved")
-toast.error("Failed")
-toast.promise(saveData(), { loading: "Saving...", success: "Done!", error: "Error" })
+toast("Event created");
+toast.success("Saved");
+toast.error("Failed");
+toast.promise(saveData(), { loading: "Saving...", success: "Done!", error: "Error" });
 ```
 
 ## Command
 
 ```tsx
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+} from "@/components/ui/command";
 
 <Command>
   <CommandInput placeholder="Search..." />
@@ -107,13 +141,21 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
       <CommandItem>Search</CommandItem>
     </CommandGroup>
   </CommandList>
-</Command>
+</Command>;
 ```
 
 ## Sidebar
 
 ```tsx
-import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuItem, SidebarMenuButton } from "@/components/ui/sidebar"
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar";
 
 <Sidebar>
   <SidebarContent>
@@ -122,19 +164,29 @@ import { Sidebar, SidebarContent, SidebarGroup, SidebarGroupLabel, SidebarMenu, 
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton asChild>
-            <a href="/dashboard"><HomeIcon />Dashboard</a>
+            <a href="/dashboard">
+              <HomeIcon />
+              Dashboard
+            </a>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarGroup>
   </SidebarContent>
-</Sidebar>
+</Sidebar>;
 ```
 
 ## Table
 
 ```tsx
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table"
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from "@/components/ui/table";
 
 <Table>
   <TableHeader>
@@ -149,5 +201,5 @@ import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@
       <TableCell>Active</TableCell>
     </TableRow>
   </TableBody>
-</Table>
+</Table>;
 ```

@@ -12,8 +12,7 @@ export async function generateMetadata(
 	debugLog: (message: string) => Promise<void>,
 ): Promise<GeneratedMetadata> {
 	const firstLine =
-		_resultContent.split("\n").find((line) => line.trim().length > 0) ??
-		"Delegation result";
+		_resultContent.split("\n").find((line) => line.trim().length > 0) ?? "Delegation result";
 	const title = `${firstLine.slice(0, 30).trim()}${firstLine.length > 30 ? "..." : ""}`;
 	const description = `${_resultContent.slice(0, 150).trim()}${
 		_resultContent.length > 150 ? "..." : ""

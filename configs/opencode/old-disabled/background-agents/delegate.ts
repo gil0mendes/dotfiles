@@ -43,7 +43,9 @@ export async function registerDelegationTools(
 						content: `Delegation started: ${delegation.id}\nAgent: ${agent}\nYou will be notified when complete. Do not poll.`,
 					};
 				} catch (error) {
-					return { content: `❌ Delegation failed:\n\n${error instanceof Error ? error.message : "Unknown error"}` };
+					return {
+						content: `❌ Delegation failed:\n\n${error instanceof Error ? error.message : "Unknown error"}`,
+					};
 				}
 			},
 		});

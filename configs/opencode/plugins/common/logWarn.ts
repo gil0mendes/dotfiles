@@ -23,9 +23,6 @@
  * logWarn(undefined, "delegation", "Task timed out after 30s")
  * ```
  */
-export function logWarn(
-	service: string,
-	message: string,
-): void {
+export function logWarn(service: string, message: string): void {
 	console.warn(`[${service}] ${message}`);
 }

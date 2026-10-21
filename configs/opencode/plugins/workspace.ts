@@ -5,6 +5,7 @@ import { Plugin } from "@opencode/plugin";
 import { z } from "zod";
 import { getProjectId } from "./common/getProjectId";
 import { ruleInjection } from "./workspace/rules";
+import { Logger } from "./common/logger";
 
 // ==========================================
 // PLAN SCHEMA & VALIDATION
@@ -13,18 +14,13 @@ import { ruleInjection } from "./workspace/rules";
 const PhaseStatus = z.enum(["PENDING", "IN PROGRESS", "COMPLETE", "BLOCKED"]);
 
 const TaskSchema = z.object({
-	id: z
-		.string()
-		.regex(/^\d+\.\d+$/, "Task ID must be hierarchical (e.g., '2.1')"),
+	id: z.string().regex(/^\d+\.\d+$/, "Task ID must be hierarchical (e.g., '2.1')"),
 	checked: z.boolean(),
 	content: z.string().min(1, "Task content cannot be empty"),
 	isCurrent: z.boolean().optional(),
 	citation: z
 		.string()
-		.regex(
-			/^ref:[a-z]+-[a-z]+-[a-z]+$/,
-			"Citation must be ref:word-word-word format",
-		)
+		.regex(/^ref:[a-z]+-[a-z]+-[a-z]+$/, "Citation must be ref:word-word-word format")
 		.optional(),
 });
 
@@ -103,16 +99,13 @@ function extractMarkdownParts(content: string): ExtractedParts {
 			const [key, ...valueParts] = line.split(":");
 			if (key && valueParts.length > 0) {
 				const value = valueParts.join(":").trim();
-				frontmatter[key.trim()] =
-					key.trim() === "phase" ? parseInt(value, 10) : value;
+				frontmatter[key.trim()] = key.trim() === "phase" ? parseInt(value, 10) : value;
 			}
 		}
 	}
 
 	// Extract goal section body (supports blank line + multi-line text)
-	const goalMatch = content.match(
-		/## Goal\s*\n([\s\S]*?)(?=\n## |\n# |\n---|$)/,
-	);
+	const goalMatch = content.match(/## Goal\s*\n([\s\S]*?)(?=\n## |\n# |\n---|$)/);
 	const goal = goalMatch?.[1]?.trim() || null;
 
 	// Extract phases (no validation - just extraction)
@@ -181,10 +174,7 @@ function formatZodErrors(error: z.ZodError): string {
 			const values = (issue as { values?: unknown[] }).values;
 			const input = (issue as { input?: unknown }).input;
 			message = `Invalid value "${input}". Expected: ${values?.join(" | ") ?? "valid value"}`;
-		} else if (
-			issue.code === "invalid_type" &&
-			(issue as { input?: unknown }).input === null
-		) {
+		} else if (issue.code === "invalid_type" && (issue as { input?: unknown }).input === null) {
 			message = "Required field missing";
 		}
 
@@ -267,9 +257,7 @@ function parsePlanMarkdown(content: string): ParseResult {
 	}
 
 	if (inProgressCount > 1) {
-		warnings.push(
-			"Multiple phases marked IN PROGRESS. Consider focusing on one phase at a time.",
-		);
+		warnings.push("Multiple phases marked IN PROGRESS. Consider focusing on one phase at a time.");
 	}
 
 	return { ok: true, data: result.data, warnings };
@@ -338,51 +326,44 @@ cleanupInterval.unref?.();
 export default Plugin.define({
 	id: "workspace",
 	async setup(ctx) {
-	const directory = ctx.location.directory;
+		const directory = ctx.location.directory;
 
-	// Use git root commit hash for cross-worktree consistency
-	const projectId = await getProjectId(directory);
-	const baseDir = path.join(
-		os.homedir(),
-		".local",
-		"share",
-		"opencode",
-		"workspace",
-		projectId,
-	);
+		// Use git root commit hash for cross-worktree consistency
+		const projectId = await getProjectId(directory);
+		const baseDir = path.join(os.homedir(), ".local", "share", "opencode", "workspace", projectId);
 
-	/**
-	 * Resolves the root session ID by walking up the parent chain.
-	 */
-	async function getRootSessionID(sessionID?: string): Promise<string> {
-		if (!sessionID) {
-			throw new Error("sessionID is required to resolve root session scope");
-		}
-
-		let currentID = sessionID;
-		for (let depth = 0; depth < 10; depth++) {
-			const session = await ctx.session.get({ sessionID: currentID });
-
-			if (!session.parentID) {
-				return currentID;
+		/**
+		 * Resolves the root session ID by walking up the parent chain.
+		 */
+		async function getRootSessionID(sessionID?: string): Promise<string> {
+			if (!sessionID) {
+				throw new Error("sessionID is required to resolve root session scope");
 			}
 
-			currentID = session.parentID;
+			let currentID = sessionID;
+			for (let depth = 0; depth < 10; depth++) {
+				const session = await ctx.session.get({ sessionID: currentID });
+
+				if (!session.parentID) {
+					return currentID;
+				}
+
+				currentID = session.parentID;
+			}
+
+			throw new Error("Failed to resolve root session: maximum traversal depth exceeded");
 		}
 
-		throw new Error(
-			"Failed to resolve root session: maximum traversal depth exceeded",
-		);
-	}
-
-	await ctx.tool.transform((editor) => {
-		editor.add({
+		await ctx.tool.transform((editor) => {
+			editor.add({
 				name: "plan_save",
 				description:
 					"Save the implementation plan as markdown. Must include citations (ref:delegation-id) for decisions based on research. Plan is validated before saving.",
 				input: {
 					type: "object",
-					properties: { content: { type: "string", description: "The full plan in markdown format" } },
+					properties: {
+						content: { type: "string", description: "The full plan in markdown format" },
+					},
 					required: ["content"],
 					additionalProperties: false,
 				},
@@ -404,16 +385,10 @@ export default Plugin.define({
 					}
 
 					// Happy path: save
-					await fs.writeFile(
-						path.join(sessionDir, "plan.md"),
-						content,
-						"utf8",
-					);
+					await fs.writeFile(path.join(sessionDir, "plan.md"), content, "utf8");
 					const warningCount = result.warnings?.length ?? 0;
 					const warningText =
-						warningCount > 0
-							? ` (${warningCount} warnings: ${result.warnings?.join(", ")})`
-							: "";
+						warningCount > 0 ? ` (${warningCount} warnings: ${result.warnings?.join(", ")})` : "";
 
 					return { content: `Plan saved.${warningText}` };
 				},
@@ -423,7 +398,12 @@ export default Plugin.define({
 				description: "Read the current implementation plan for this session.",
 				input: {
 					type: "object",
-					properties: { reason: { type: "string", description: "Brief explanation of why you are calling this tool" } },
+					properties: {
+						reason: {
+							type: "string",
+							description: "Brief explanation of why you are calling this tool",
+						},
+					},
 					required: ["reason"],
 					additionalProperties: false,
 				},
@@ -434,35 +414,37 @@ export default Plugin.define({
 					try {
 						return { content: await fs.readFile(planPath, "utf8") };
 					} catch (error) {
-						if (isNodeError(error) && error.code === "ENOENT")
-							return { content: "No plan found." };
+						if (isNodeError(error) && error.code === "ENOENT") return { content: "No plan found." };
 						throw error;
 					}
 				},
 			});
-	});
+		});
 
-	await ctx.session.hook("context", (event) => {
-		ruleInjection(event.agent, event.system);
-	});
+		await ctx.session.hook("context", (event) => {
+			ruleInjection(event.agent, event.system);
+		});
 
-	await ctx.tool.hook("execute.before", (event) => {
-		if (event.tool !== "task") return;
-		if (typeof event.input !== "object" || event.input === null) return;
-		if (!("subagent_type" in event.input) || event.input.subagent_type !== "coder") return;
-		activeCoderCalls.set(event.id, { startTime: Date.now() });
-	});
+		await ctx.tool.hook("execute.before", (event) => {
+			if (event.tool !== "task") return;
+			if (typeof event.input !== "object" || event.input === null) return;
+			if (!("subagent_type" in event.input) || event.input.subagent_type !== "coder") return;
+			activeCoderCalls.set(event.id, { startTime: Date.now() });
+		});
 
-	await ctx.tool.hook("execute.after", async (event) => {
+		await ctx.tool.hook("execute.after", async (event) => {
 			// Plan save triggers reviewer delegation reminder
 			if (event.tool === "plan_save" && event.status === "completed") {
-				 await ctx.session.synthetic({ sessionID: event.sessionID, text: `<system-reminder>
+				await ctx.session.synthetic({
+					sessionID: event.sessionID,
+					text: `<system-reminder>
 Plan saved successfully. You MUST now delegate to the reviewer:
 1. Use the \`delegate\` tool to send the plan to the \`reviewer\` agent
 2. The reviewer will load \`plan-review\` and \`code-philosophy\` skills
 3. Use \`plan_read\` to get the plan content for the delegation prompt
 4. This is NON-BLOCKING - continue work while review runs in background
-</system-reminder>` });
+</system-reminder>`,
+				});
 				return;
 			}
 
@@ -473,16 +455,19 @@ Plan saved successfully. You MUST now delegate to the reviewer:
 
 			if (activeCoderCalls.size === 0) {
 				if (event.status !== "completed") return;
-				await ctx.session.synthetic({ sessionID: event.sessionID, text: `<system-reminder>
+				await ctx.session.synthetic({
+					sessionID: event.sessionID,
+					text: `<system-reminder>
 Coder task complete. Proceed to code review:
 1. Delegate to \`reviewer\` agent with the changed files
 2. Include findings in your completion report
 3. Offer to fix any critical/major issues found
-</system-reminder>` });
+</system-reminder>`,
+				});
 			}
-	});
+		});
 
-	await ctx.session.hook("compaction", async (event) => {
+		await ctx.session.hook("compaction", async (event) => {
 			const rootID = await getRootSessionID(event.sessionID);
 			const planPath = path.join(baseDir, rootID, "plan.md");
 
@@ -501,11 +486,12 @@ Coder task complete. Proceed to code review:
 			if (currentMatch?.index !== undefined) {
 				const start = Math.max(0, currentMatch.index - 100);
 				const end = currentMatch.index + 50;
-				currentTask =
-					planContent.slice(start, end).match(/\d+\.\d+ [^\n←]+/)?.[0] ?? null;
+				currentTask = planContent.slice(start, end).match(/\d+\.\d+ [^\n←]+/)?.[0] ?? null;
 			}
 
-			event.system.push({ type: "text", text: `<workspace-context>
+			event.system.push({
+				type: "text",
+				text: `<workspace-context>
 ## Current Plan
 ${planContent}
 
@@ -514,7 +500,8 @@ ${currentTask ? `Current task: ${currentTask}` : "No task marked as CURRENT"}
 
 ## Verification
 To verify any cited decision, use \`delegation_read("ref:id")\`.
-</workspace-context>` });
-	});
+</workspace-context>`,
+			});
+		});
 	},
 });

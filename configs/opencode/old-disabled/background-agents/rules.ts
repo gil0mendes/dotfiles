@@ -40,8 +40,6 @@ You WILL be notified via \`<task-notification>\`. Polling wastes tokens.
 </delegation-system>
 </task-notification>`;
 
-export function injectDelegationRules(
-	system: Array<{ type: "text"; text: string }>,
-): void {
+export function injectDelegationRules(system: Array<{ type: "text"; text: string }>): void {
 	system.push({ type: "text", text: DELEGATION_RULES });
 }

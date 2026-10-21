@@ -76,7 +76,7 @@ filters: 'status == "done"'
 filters:
   and:
     - 'status == "done"'
-    - 'priority > 3'
+    - "priority > 3"
 
 # OR - any condition can be true
 filters:

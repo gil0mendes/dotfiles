@@ -1,9 +1,4 @@
-import {
-	adjectives,
-	animals,
-	colors,
-	uniqueNamesGenerator,
-} from "unique-names-generator";
+import { adjectives, animals, colors, uniqueNamesGenerator } from "unique-names-generator";
 
 export function generateReadableId(): string {
 	return uniqueNamesGenerator({
