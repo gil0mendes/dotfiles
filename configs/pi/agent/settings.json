@@ -3,7 +3,7 @@
   "defaultThinkingLevel": "medium",
   "collapseChangelog": true,
   "enableInstallTelemetry": false,
-  "lastChangelogVersion": "0.79.6",
+  "lastChangelogVersion": "1.4.0",
   "defaultProvider": "barracuda-iq",
   "defaultModel": "claude-sonnet-5-5",
   "hideThinkingBlock": true

@@ -21,8 +21,13 @@
 		"@earendil-works/pi-ai": "^0.74.1",
 		"@earendil-works/pi-coding-agent": "^0.74.1",
 		"@earendil-works/pi-tui": "^0.74.1",
+		"nanoid": "^3.3.12",
 		"pi-interview": "^0.8.7",
-		"typebox": "^1.1.38"
+		"ramda": "^0.32.0",
+		"ramda-adjunct": "^6.1.0",
+		"typebox": "^1.1.38",
+		"yaml": "^2.8.2",
+		"zod": "^4.6.7"
 	},
 	"scripts": {
 		"test": "vitest run",
