@@ -1,5 +1,6 @@
 {
   config,
+  pkgs,
   lib,
   ...
 }:
@@ -33,6 +34,8 @@ in
     "agent-browser"
     "molten-vk"
     "libkrun/krun/gvproxy"
+  ]
+  ++ lib.optionals pkgs.stdenv.hostPlatform.isAarch64 [
     "libkrun/krun/libkrunfw"
     "libkrun/krun/virglrenderer-krun"
     "libkrun/krun/libkrun"
