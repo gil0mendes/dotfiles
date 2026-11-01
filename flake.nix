@@ -194,6 +194,7 @@
 
       homeManagerModules = {
         # My configurations
+        g0m-agents = import ./home/agents.nix;
         g0m-emacs = import ./home/emacs.nix;
         g0m-fish = import ./home/fish.nix;
         g0m-git = import ./home/git.nix;
