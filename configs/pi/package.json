@@ -1,19 +1,15 @@
 {
 	"name": "pi",
-	"module": "index.ts",
-	"type": "module",
 	"private": true,
 	"workspaces": [
 		"agent/extensions/*"
 	],
-	"devDependencies": {
-		"@types/bun": "latest",
-		"oxfmt": "^0.51.0",
-		"oxlint": "^1.66.0",
-		"vitest": "^4.1.6"
-	},
-	"peerDependencies": {
-		"typescript": "^5"
+	"type": "module",
+	"module": "index.ts",
+	"scripts": {
+		"fmt": "oxfmt",
+		"test": "vitest run",
+		"test:watch": "vitest"
 	},
 	"dependencies": {
 		"@aliou/sh": "^0.1.0",
@@ -29,8 +25,13 @@
 		"yaml": "^2.8.2",
 		"zod": "^4.6.7"
 	},
-	"scripts": {
-		"test": "vitest run",
-		"test:watch": "vitest"
+	"devDependencies": {
+		"@types/bun": "latest",
+		"oxfmt": "^0.51.0",
+		"oxlint": "^1.66.0",
+		"vitest": "^4.1.6"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
 	}
 }

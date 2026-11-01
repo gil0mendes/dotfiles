@@ -36,8 +36,7 @@ export function evaluateBash(
 		const allowed = matchRegexRules(cmd, config.strictModeAllowedList);
 		if (!allowed)
 			return {
-				reason:
-					"strict mode blocks bash commands not matching strictModeAllowedList",
+				reason: "strict mode blocks bash commands not matching strictModeAllowedList",
 				ask: false,
 			};
 	}

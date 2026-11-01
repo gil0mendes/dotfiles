@@ -8,14 +8,9 @@ export const getPermittedSubagents = (
 
 	const permittedNames = new Set(caller.delegatesTo ?? []);
 	return availableAgents.filter(
-		(agent) =>
-			agent.name !== caller.name &&
-			!agent.rootOnly &&
-			permittedNames.has(agent.name),
+		(agent) => agent.name !== caller.name && !agent.rootOnly && permittedNames.has(agent.name),
 	);
 };
 
-export const canSpawnSubagent = (
-	caller: AgentConfig | undefined,
-	subagent: AgentConfig,
-): boolean => getPermittedSubagents(caller, [subagent]).length === 1;
+export const canSpawnSubagent = (caller: AgentConfig | undefined, subagent: AgentConfig): boolean =>
+	getPermittedSubagents(caller, [subagent]).length === 1;

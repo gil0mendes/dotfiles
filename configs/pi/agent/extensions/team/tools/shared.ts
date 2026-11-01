@@ -1,7 +1,4 @@
-import type {
-	AgentToolResult,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import type { AgentToolResult, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
 export type ToolContext = {
 	cwd: string;

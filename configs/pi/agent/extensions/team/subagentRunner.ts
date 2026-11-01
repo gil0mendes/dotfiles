@@ -1,9 +1,5 @@
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
-import type {
-	SettledSubagentStatus,
-	SubagentState,
-	SubagentStatus,
-} from "./types";
+import type { SettledSubagentStatus, SubagentState, SubagentStatus } from "./types";
 import {
 	createAgentSession,
 	DefaultResourceLoader,
@@ -70,21 +66,16 @@ const getSkillWarnings = (
 	const warnings: string[] = [];
 	if (!agentConfig.skills) return warnings;
 
-	const availableSkillNames = new Set(
-		resourceLoader.getSkills().skills.map((skill) => skill.name),
-	);
+	const availableSkillNames = new Set(resourceLoader.getSkills().skills.map((skill) => skill.name));
 	for (const skillName of agentConfig.skills) {
 		if (!availableSkillNames.has(skillName)) {
-			warnings.push(
-				`Unknown skill "${skillName}" in subagent config, skipping`,
-			);
+			warnings.push(`Unknown skill "${skillName}" in subagent config, skipping`);
 		}
 	}
 	return warnings;
 };
 
-const formatParsedModel = (model: ParsedModel): string =>
-	`${model.provider}/${model.modelId}`;
+const formatParsedModel = (model: ParsedModel): string => `${model.provider}/${model.modelId}`;
 
 export const resolveModel = (
 	agentConfig: AgentConfig,
@@ -106,8 +97,7 @@ export const resolveModel = (
 	for (const candidate of modelPreferences) {
 		const found = availableModels.find(
 			(availableModel) =>
-				availableModel.provider === candidate.provider &&
-				availableModel.id === candidate.modelId,
+				availableModel.provider === candidate.provider && availableModel.id === candidate.modelId,
 		);
 		if (found) {
 			return { model: found, warnings };
@@ -138,9 +128,7 @@ export const resolveTools = (
 
 	const availableTools = new Set(availableToolNames);
 	const tools = declaredTools.filter((toolName) => availableTools.has(toolName));
-	const unknownTools = declaredTools.filter(
-		(toolName) => !availableTools.has(toolName),
-	);
+	const unknownTools = declaredTools.filter((toolName) => !availableTools.has(toolName));
 	const warnings = unknownTools.map(
 		(toolName) => `Unknown tool "${toolName}" in subagent config, skipping`,
 	);
@@ -158,17 +146,14 @@ function normalizeSessionNamePart(value: string): string {
 export function formatSubagentSessionName(
 	state: Pick<SubagentState, "agentConfig" | "brief" | "id">,
 ): string {
-	const agentName =
-		normalizeSessionNamePart(state.agentConfig.name) || "subagent";
+	const agentName = normalizeSessionNamePart(state.agentConfig.name) || "subagent";
 	const brief = normalizeSessionNamePart(state.brief) || state.id;
 	return `team: ${agentName} · ${brief}`;
 }
 
 const isAborted = (state: SubagentState): boolean => state.status === "aborted";
 
-const getLastAssistantMessage = (
-	messages: AgentMessage[],
-): AssistantMessage | undefined => {
+const getLastAssistantMessage = (messages: AgentMessage[]): AssistantMessage | undefined => {
 	for (let i = messages.length - 1; i >= 0; i--) {
 		const msg = messages[i];
 		if (msg?.role === "assistant") {
@@ -179,9 +164,7 @@ const getLastAssistantMessage = (
 	return undefined;
 };
 
-const getAssistantText = (
-	message: AssistantMessage | undefined,
-): string | undefined => {
+const getAssistantText = (message: AssistantMessage | undefined): string | undefined => {
 	if (!message) return undefined;
 	const texts: string[] = [];
 	for (const part of message.content) {
@@ -225,10 +208,7 @@ async function bootstrapSession({
 	const { model, warnings: modelWarnings } = resolveModel(agentConfig, ctx);
 	warnings.push(...modelWarnings);
 
-	const { tools, warnings: toolsWarnings } = resolveTools(
-		agentConfig,
-		ctx.availableToolNames,
-	);
+	const { tools, warnings: toolsWarnings } = resolveTools(agentConfig, ctx.availableToolNames);
 	warnings.push(...toolsWarnings);
 
 	const resourceLoader = new DefaultResourceLoader({
@@ -236,16 +216,12 @@ async function bootstrapSession({
 		agentDir: ctx.agentDir,
 		skillsOverride: agentConfig.skills
 			? (base) => ({
-					skills: base.skills.filter((skill) =>
-						agentConfig.skills?.includes(skill.name),
-					),
+					skills: base.skills.filter((skill) => agentConfig.skills?.includes(skill.name)),
 					diagnostics: base.diagnostics,
 				})
 			: undefined,
 		appendSystemPromptOverride: (base) =>
-			agentConfig.systemPrompt.trim()
-				? [...base, agentConfig.systemPrompt]
-				: base,
+			agentConfig.systemPrompt.trim() ? [...base, agentConfig.systemPrompt] : base,
 	});
 
 	await resourceLoader.reload();
@@ -315,27 +291,18 @@ export class SubagentSessionRunner implements SubagentRunner {
 		state.session?.abort().catch(() => {});
 	}
 
-	private attachSpawnedSession(
-		state: SubagentState,
-		session: AgentSession,
-	): boolean {
+	private attachSpawnedSession(state: SubagentState, session: AgentSession): boolean {
 		if (!this.callbacks.isCurrent(state)) {
 			session.dispose();
 			return false;
 		}
 		state.session = session;
 		session.setSessionName(formatSubagentSessionName(state));
-		this.callbacks.onSessionAttached(
-			state,
-			session.sessionManager.getSessionId(),
-		);
+		this.callbacks.onSessionAttached(state, session.sessionManager.getSessionId());
 		return true;
 	}
 
-	private attachSessionListeners(
-		state: SubagentState,
-		session: AgentSession,
-	): void {
+	private attachSessionListeners(state: SubagentState, session: AgentSession): void {
 		state.unsubscribe = session.subscribe((event) => {
 			if (event.type === "turn_end") {
 				state.turns++;
@@ -349,20 +316,14 @@ export class SubagentSessionRunner implements SubagentRunner {
 				return;
 			}
 
-			if (
-				event.type === "compaction_end" &&
-				event.result?.estimatedTokensAfter !== undefined
-			) {
+			if (event.type === "compaction_end" && event.result?.estimatedTokensAfter !== undefined) {
 				state.contextTokens = event.result.estimatedTokensAfter;
 				this.callbacks.onProgress(state.ownerSessionId);
 			}
 		});
 	}
 
-	private async runPromptCycle(
-		state: SubagentState,
-		prompt: string,
-	): Promise<void> {
+	private async runPromptCycle(state: SubagentState, prompt: string): Promise<void> {
 		if (isAborted(state)) return;
 
 		try {

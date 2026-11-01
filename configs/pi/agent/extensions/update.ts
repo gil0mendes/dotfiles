@@ -73,10 +73,7 @@ async function safeExec(
 	}
 }
 
-async function commandExists(
-	pi: ExtensionAPI,
-	command: string,
-): Promise<boolean> {
+async function commandExists(pi: ExtensionAPI, command: string): Promise<boolean> {
 	const result = await safeExec(pi, "which", [command], 10_000);
 	return result.code === 0 && result.stdout.trim().length > 0;
 }
@@ -147,15 +144,13 @@ async function detectHomebrewFormula(
 
 async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 	const { piPath, resolvedPiPath } = await getPiPathInfo(pi);
-	const candidatePaths = [piPath, resolvedPiPath].filter(
-		(value): value is string => Boolean(value),
+	const candidatePaths = [piPath, resolvedPiPath].filter((value): value is string =>
+		Boolean(value),
 	);
 
 	if (candidatePaths.length > 0) {
 		if (
-			candidatePaths.some(
-				(path) => path.includes(".vite-plus/") || path.includes("/vite-plus/"),
-			)
+			candidatePaths.some((path) => path.includes(".vite-plus/") || path.includes("/vite-plus/"))
 		) {
 			return {
 				method: "vite-plus",
@@ -176,11 +171,7 @@ async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 			};
 		}
 
-		if (
-			candidatePaths.some(
-				(path) => path.includes(".bun") || path.includes("/bun/"),
-			)
-		) {
+		if (candidatePaths.some((path) => path.includes(".bun") || path.includes("/bun/"))) {
 			return {
 				method: "bun",
 				details: `Installed via bun at: ${resolvedPiPath ?? piPath}`,
@@ -192,9 +183,7 @@ async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 		if (
 			candidatePaths.some(
 				(path) =>
-					path.includes(".npm") ||
-					path.includes("npm-global") ||
-					path.includes("node_modules"),
+					path.includes(".npm") || path.includes("npm-global") || path.includes("node_modules"),
 			)
 		) {
 			return {
@@ -206,12 +195,7 @@ async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 		}
 
 		if (await commandExists(pi, "npm")) {
-			const npmPrefix = await safeExec(
-				pi,
-				"npm",
-				["config", "get", "prefix"],
-				10_000,
-			);
+			const npmPrefix = await safeExec(pi, "npm", ["config", "get", "prefix"], 10_000);
 			const prefix = npmPrefix.code === 0 ? npmPrefix.stdout.trim() : "";
 			if (prefix && candidatePaths.some((path) => path.startsWith(prefix))) {
 				return {
@@ -250,12 +234,7 @@ async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 	}
 
 	if (await commandExists(pi, "npm")) {
-		const npmList = await safeExec(
-			pi,
-			"npm",
-			["list", "-g", "--depth=0", PACKAGE_NAME],
-			20_000,
-		);
+		const npmList = await safeExec(pi, "npm", ["list", "-g", "--depth=0", PACKAGE_NAME], 20_000);
 		if (npmList.code === 0 && npmList.stdout.includes(PACKAGE_NAME)) {
 			return {
 				method: "npm",
@@ -277,8 +256,7 @@ async function detectInstallMethod(pi: ExtensionAPI): Promise<DetectionResult> {
 
 	return {
 		method: "native",
-		details:
-			"Could not determine installation method; assuming native/manual install",
+		details: "Could not determine installation method; assuming native/manual install",
 	};
 }
 
@@ -412,23 +390,14 @@ async function performUpdate(
 
 		const afterVersion = await getPiVersion(pi);
 		if (beforeVersion && afterVersion && beforeVersion !== afterVersion) {
-			reporter.notify(
-				`Update complete: ${beforeVersion} -> ${afterVersion}`,
-				"success",
-			);
+			reporter.notify(`Update complete: ${beforeVersion} -> ${afterVersion}`, "success");
 		} else if (afterVersion) {
-			reporter.notify(
-				`Update complete. Current version: ${afterVersion}`,
-				"success",
-			);
+			reporter.notify(`Update complete. Current version: ${afterVersion}`, "success");
 		} else {
 			reporter.notify("Update complete.", "success");
 		}
 
-		reporter.notify(
-			"Restart pi to ensure the updated version is used everywhere.",
-			"info",
-		);
+		reporter.notify("Restart pi to ensure the updated version is used everywhere.", "info");
 	} catch (error) {
 		reporter.notify(
 			`Update failed: ${error instanceof Error ? error.message : String(error)}`,

@@ -33,12 +33,12 @@ Example:
 
 ```markdown
 {
-  "id": "deadbeef",
-  "title": "Add tests",
-  "tags": ["qa"],
-  "status": "open",
-  "created_at": "2026-01-25T17:00:00.000Z",
-  "assigned_to_session": "session-id"
+"id": "deadbeef",
+"title": "Add tests",
+"tags": ["qa"],
+"status": "open",
+"created_at": "2026-01-25T17:00:00.000Z",
+"assigned_to_session": "session-id"
 }
 
 Notes about the work go here.

@@ -53,8 +53,7 @@ function removeComment(line: string): string {
 		const ch = line[i] ?? "";
 		if ((ch === '"' || ch === "'") && line[i - 1] !== "\\")
 			quote = quote === ch ? null : (quote ?? ch);
-		if (ch === "#" && !quote && (i === 0 || /\s/.test(line[i - 1] ?? "")))
-			return line.slice(0, i);
+		if (ch === "#" && !quote && (i === 0 || /\s/.test(line[i - 1] ?? ""))) return line.slice(0, i);
 	}
 	return line;
 }

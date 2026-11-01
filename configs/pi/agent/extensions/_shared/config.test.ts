@@ -113,10 +113,7 @@ describe("loadYamlConfig", () => {
 		const globalConfig = path.join(globalDir, "tool.yaml");
 		fs.mkdirSync(path.dirname(projectConfig), { recursive: true });
 		fs.writeFileSync(globalConfig, "name: global\n");
-		fs.writeFileSync(
-			projectConfig,
-			"enabled: true\nname: project\nitems:\n  - alpha\n",
-		);
+		fs.writeFileSync(projectConfig, "enabled: true\nname: project\nitems:\n  - alpha\n");
 
 		const result = loadYamlConfig<TestConfig>({
 			cwd,

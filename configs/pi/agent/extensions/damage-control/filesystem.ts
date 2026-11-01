@@ -11,8 +11,7 @@ export function isInsideOrSame(target: string, root: string): boolean {
 export function normalizeForDisplay(target: string, cwd: string): string {
 	const home = os.homedir();
 	if (target === home) return "~";
-	if (target.startsWith(home + path.sep))
-		return `~${target.slice(home.length)}`;
+	if (target.startsWith(home + path.sep)) return `~${target.slice(home.length)}`;
 	const rel = path.relative(cwd, target);
 	return rel && !rel.startsWith("..") && !path.isAbsolute(rel) ? rel : target;
 }

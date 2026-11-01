@@ -3,10 +3,7 @@ import type { Runtime } from "../runtime";
 import Type from "typebox";
 import { getToolContext, toolError, toolSuccess } from "./shared";
 
-export const registerTeamRespondTool = (
-	pi: ExtensionAPI,
-	runtime: Runtime,
-): void =>
+export const registerTeamRespondTool = (pi: ExtensionAPI, runtime: Runtime): void =>
 	pi.registerTool({
 		name: "team_respond",
 		label: "Respond to team",
@@ -14,8 +11,7 @@ export const registerTeamRespondTool = (
 			"Send a follow-up message to a waiting interactive subagent. Returns immediately; the response is delivered as a steering message that starts a new turn.",
 		parameters: Type.Object({
 			subagentId: Type.String({
-				description:
-					"ID of the waiting subagent (from team_list or team_spawn result)",
+				description: "ID of the waiting subagent (from team_list or team_spawn result)",
 			}),
 			message: Type.String({ description: "Message to send to the subagent" }),
 		}),
@@ -31,11 +27,7 @@ export const registerTeamRespondTool = (
 				return toolError("Message is required and must not be empty");
 			}
 
-			const { error } = runtime.respond(
-				params.subagentId,
-				message,
-				toolCtx.callerSessionId,
-			);
+			const { error } = runtime.respond(params.subagentId, message, toolCtx.callerSessionId);
 			if (error) {
 				return toolError(error);
 			}

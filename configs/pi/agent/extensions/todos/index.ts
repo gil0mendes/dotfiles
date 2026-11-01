@@ -29,7 +29,15 @@
  * Use `/todos` to bring up the visual todo manager or just let the LLM use them
  * naturally.
  */
-import { DynamicBorder, copyToClipboard, getMarkdownTheme, keyHint, type ExtensionAPI, type ExtensionContext, type Theme } from "@earendil-works/pi-coding-agent";
+import {
+	DynamicBorder,
+	copyToClipboard,
+	getMarkdownTheme,
+	keyHint,
+	type ExtensionAPI,
+	type ExtensionContext,
+	type Theme,
+} from "@earendil-works/pi-coding-agent";
 import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 import path from "node:path";
@@ -105,9 +113,7 @@ const TodoParams = Type.Object({
 		"claim",
 		"release",
 	] as const),
-	id: Type.Optional(
-		Type.String({ description: "Todo id (TODO-<hex> or raw hex filename)" }),
-	),
+	id: Type.Optional(Type.String({ description: "Todo id (TODO-<hex> or raw hex filename)" })),
 	title: Type.Optional(Type.String({ description: "Short summary shown in lists" })),
 	status: Type.Optional(Type.String({ description: "Todo status" })),
 	tags: Type.Optional(Type.Array(Type.String({ description: "Todo tag" }))),
@@ -142,12 +148,17 @@ type TodoMenuAction =
 	| "view";
 
 type TodoToolDetails =
-	| { action: "list" | "list-all"; todos: TodoFrontMatter[]; currentSessionId?: string; error?: string }
+	| {
+			action: "list" | "list-all";
+			todos: TodoFrontMatter[];
+			currentSessionId?: string;
+			error?: string;
+	  }
 	| {
 			action: "get" | "create" | "update" | "append" | "delete" | "claim" | "release";
 			todo: TodoRecord;
 			error?: string;
-		};
+	  };
 
 function formatTodoId(id: string): string {
 	return `${TODO_ID_PREFIX}${id}`;
@@ -367,7 +378,10 @@ class TodoSelectorComponent extends Container implements Focusable {
 		const maxVisible = 10;
 		const startIndex = Math.max(
 			0,
-			Math.min(this.selectedIndex - Math.floor(maxVisible / 2), this.filteredTodos.length - maxVisible),
+			Math.min(
+				this.selectedIndex - Math.floor(maxVisible / 2),
+				this.filteredTodos.length - maxVisible,
+			),
 		);
 		const endIndex = Math.min(startIndex + maxVisible, this.filteredTodos.length);
 
@@ -406,13 +420,15 @@ class TodoSelectorComponent extends Container implements Focusable {
 		const kb = this.keybindings;
 		if (kb.matches(keyData, "tui.select.up")) {
 			if (this.filteredTodos.length === 0) return;
-			this.selectedIndex = this.selectedIndex === 0 ? this.filteredTodos.length - 1 : this.selectedIndex - 1;
+			this.selectedIndex =
+				this.selectedIndex === 0 ? this.filteredTodos.length - 1 : this.selectedIndex - 1;
 			this.updateList();
 			return;
 		}
 		if (kb.matches(keyData, "tui.select.down")) {
 			if (this.filteredTodos.length === 0) return;
-			this.selectedIndex = this.selectedIndex === this.filteredTodos.length - 1 ? 0 : this.selectedIndex + 1;
+			this.selectedIndex =
+				this.selectedIndex === this.filteredTodos.length - 1 ? 0 : this.selectedIndex + 1;
 			this.updateList();
 			return;
 		}
@@ -481,12 +497,7 @@ class TodoActionMenuComponent extends Container {
 
 		this.addChild(new DynamicBorder((s: string) => theme.fg("accent", s)));
 		this.addChild(
-			new Text(
-				theme.fg(
-					"accent",
-					theme.bold(`Actions for ${formatTodoId(todo.id)} "${title}"`),
-				),
-			),
+			new Text(theme.fg("accent", theme.bold(`Actions for ${formatTodoId(todo.id)} "${title}"`))),
 		);
 
 		this.selectList = new SelectList(options, options.length, {
@@ -854,13 +865,13 @@ function findJsonObjectEnd(content: string): number {
 				escaped = true;
 				continue;
 			}
-			if (char === "\"") {
+			if (char === '"') {
 				inString = false;
 			}
 			continue;
 		}
 
-		if (char === "\"") {
+		if (char === '"') {
 			inString = true;
 			continue;
 		}
@@ -998,7 +1009,9 @@ async function acquireLock(
 				return { error: `Todo ${displayTodoId(id)} is locked${owner}. Try again later.` };
 			}
 			if (!ctx.hasUI) {
-				return { error: `Todo ${displayTodoId(id)} lock is stale; rerun in interactive mode to steal it.` };
+				return {
+					error: `Todo ${displayTodoId(id)} lock is stale; rerun in interactive mode to steal it.`,
+				};
 			}
 			const ok = await ctx.ui.confirm(
 				"Todo locked",
@@ -1279,7 +1292,11 @@ async function ensureTodoExists(filePath: string, id: string): Promise<TodoRecor
 	return readTodoFile(filePath, id);
 }
 
-async function appendTodoBody(filePath: string, todo: TodoRecord, text: string): Promise<TodoRecord> {
+async function appendTodoBody(
+	filePath: string,
+	todo: TodoRecord,
+	text: string,
+): Promise<TodoRecord> {
 	const spacer = todo.body.trim().length ? "\n\n" : "";
 	todo.body = `${todo.body.replace(/\s+$/, "")}${spacer}${text.trim()}\n`;
 	await writeTodoFile(filePath, todo);
@@ -1446,7 +1463,7 @@ export default function todosExtension(pi: ExtensionAPI) {
 			`Manage file-based todos in ${todosDirLabel} (list, list-all, get, create, update, append, delete, claim, release). ` +
 			"Title is the short summary; body is long-form markdown notes (update replaces, append adds). " +
 			"Todo ids are shown as TODO-<hex>; id parameters accept TODO-<hex> or the raw hex filename. " +
-			"Claim tasks before working on them to avoid conflicts, and close them when complete.", 
+			"Claim tasks before working on them to avoid conflicts, and close them when complete.",
 		parameters: TodoParams,
 
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
@@ -1648,12 +1665,7 @@ export default function todosExtension(pi: ExtensionAPI) {
 							details: { action: "claim", error: "id required" },
 						};
 					}
-					const result = await claimTodoAssignment(
-						todosDir,
-						params.id,
-						ctx,
-						Boolean(params.force),
-					);
+					const result = await claimTodoAssignment(todosDir, params.id, ctx, Boolean(params.force));
 					if (typeof result === "object" && "error" in result) {
 						return {
 							content: [{ type: "text", text: result.error }],
@@ -1723,7 +1735,6 @@ export default function todosExtension(pi: ExtensionAPI) {
 				}
 			}
 		},
-
 
 		renderCall(args, theme) {
 			const action = typeof args.action === "string" ? args.action : "";
@@ -1818,25 +1829,21 @@ export default function todosExtension(pi: ExtensionAPI) {
 				let selector: TodoSelectorComponent | null = null;
 				let actionMenu: TodoActionMenuComponent | null = null;
 				let deleteConfirm: TodoDeleteConfirmComponent | null = null;
-				let activeComponent:
-					| {
-							render: (width: number) => string[];
-							invalidate: () => void;
-							handleInput?: (data: string) => void;
-							focused?: boolean;
-						}
-					| null = null;
+				let activeComponent: {
+					render: (width: number) => string[];
+					invalidate: () => void;
+					handleInput?: (data: string) => void;
+					focused?: boolean;
+				} | null = null;
 				let wrapperFocused = false;
 
 				const setActiveComponent = (
-					component:
-						| {
-								render: (width: number) => string[];
-								invalidate: () => void;
-								handleInput?: (data: string) => void;
-								focused?: boolean;
-							}
-						| null,
+					component: {
+						render: (width: number) => string[];
+						invalidate: () => void;
+						handleInput?: (data: string) => void;
+						focused?: boolean;
+					} | null,
 				) => {
 					if (activeComponent && "focused" in activeComponent) {
 						activeComponent.focused = false;
@@ -2078,5 +2085,4 @@ export default function todosExtension(pi: ExtensionAPI) {
 			}
 		},
 	});
-
 }

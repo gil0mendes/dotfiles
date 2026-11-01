@@ -24,9 +24,7 @@ Prompt
 			provider: "openai-codex",
 			modelId: "gpt-5.5",
 		});
-		expect(result.agent?.parsedModels).toEqual([
-			{ provider: "openai-codex", modelId: "gpt-5.5" },
-		]);
+		expect(result.agent?.parsedModels).toEqual([{ provider: "openai-codex", modelId: "gpt-5.5" }]);
 		expect(result.warnings).toEqual([]);
 	});
 
@@ -101,10 +99,7 @@ model:
 Prompt
 `);
 
-		expect(result.agent?.model).toEqual([
-			"anthropic/claude-opus-4-5",
-			"openai-codex/gpt-5.5",
-		]);
+		expect(result.agent?.model).toEqual(["anthropic/claude-opus-4-5", "openai-codex/gpt-5.5"]);
 		expect(result.agent?.parsedModel).toEqual({
 			provider: "anthropic",
 			modelId: "claude-opus-4-5",

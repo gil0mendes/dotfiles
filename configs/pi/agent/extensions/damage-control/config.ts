@@ -41,14 +41,11 @@ function configReason(
 	defaultKey: "pattern" | "command",
 	value: string,
 ): string {
-	return typeof rule.reason === "string"
-		? rule.reason
-		: `${defaultKey} ${value} is protected`;
+	return typeof rule.reason === "string" ? rule.reason : `${defaultKey} ${value} is protected`;
 }
 
 function normalizeBashToolPattern(raw: unknown): BashToolPatternConfig | null {
-	if (typeof raw === "string")
-		return { pattern: raw, reason: `pattern ${raw} is protected` };
+	if (typeof raw === "string") return { pattern: raw, reason: `pattern ${raw} is protected` };
 	if (!isRawObject(raw) || typeof raw.pattern !== "string") return null;
 	return {
 		pattern: raw.pattern,
@@ -57,11 +54,8 @@ function normalizeBashToolPattern(raw: unknown): BashToolPatternConfig | null {
 	};
 }
 
-function normalizeStrictModeCommand(
-	raw: unknown,
-): StrictModeAllowedCommandConfig | null {
-	if (typeof raw === "string")
-		return { command: raw, reason: `command ${raw} is protected` };
+function normalizeStrictModeCommand(raw: unknown): StrictModeAllowedCommandConfig | null {
+	if (typeof raw === "string") return { command: raw, reason: `command ${raw} is protected` };
 	if (!isRawObject(raw) || typeof raw.command !== "string") return null;
 	return {
 		command: raw.command,
@@ -82,16 +76,12 @@ function normalizeFilesystem(raw: unknown): FilesystemGateConfig {
 		allowRead: normalizeStringArray(raw.allowRead),
 		allowWrite: normalizeStringArray(raw.allowWrite),
 		denyWrite: normalizeStringArray(raw.denyWrite),
-		allowGitConfig:
-			typeof raw.allowGitConfig === "boolean" ? raw.allowGitConfig : undefined,
+		allowGitConfig: typeof raw.allowGitConfig === "boolean" ? raw.allowGitConfig : undefined,
 	});
 }
 
 function normalizeConfig(loaded: RawConfig): Config {
-	const normalize = <T>(
-		key: keyof Config,
-		parse: (raw: unknown) => T | null,
-	): T[] =>
+	const normalize = <T>(key: keyof Config, parse: (raw: unknown) => T | null): T[] =>
 		(Array.isArray(loaded[key]) ? (loaded[key] as unknown[]) : [])
 			.map((r) => parse(r))
 			.filter((r): r is T => Boolean(r));
@@ -101,14 +91,8 @@ function normalizeConfig(loaded: RawConfig): Config {
 		strictMode: loaded.strictMode === true,
 		useBuiltinCommandMatchers: loaded.useBuiltinCommandMatchers !== false,
 		filesystem: normalizeFilesystem(loaded.filesystem),
-		bashToolPatterns: normalize(
-			"bashToolPatterns",
-			normalizeBashToolPattern,
-		),
-		strictModeAllowedList: normalize(
-			"strictModeAllowedList",
-			normalizeStrictModeCommand,
-		),
+		bashToolPatterns: normalize("bashToolPatterns", normalizeBashToolPattern),
+		strictModeAllowedList: normalize("strictModeAllowedList", normalizeStrictModeCommand),
 	};
 }
 
@@ -138,9 +122,7 @@ export const configs = (() => {
 		totalRules: () =>
 			(current.permissionGate === false
 				? 0
-				: (current.useBuiltinCommandMatchers
-						? BUILTIN_DANGEROUS_COMMAND_COUNT
-						: 0) +
+				: (current.useBuiltinCommandMatchers ? BUILTIN_DANGEROUS_COMMAND_COUNT : 0) +
 					current.bashToolPatterns.length +
 					current.strictModeAllowedList.length) +
 			current.filesystem.denyRead.length +

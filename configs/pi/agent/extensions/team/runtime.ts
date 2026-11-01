@@ -1,8 +1,4 @@
-import type {
-	EventBus,
-	ExtensionAPI,
-	ModelRegistry,
-} from "@earendil-works/pi-coding-agent";
+import type { EventBus, ExtensionAPI, ModelRegistry } from "@earendil-works/pi-coding-agent";
 import {
 	SubagentSessionRunner,
 	type BootstrapContext,
@@ -19,11 +15,7 @@ import type {
 import type { AgentConfig } from "./loader/types";
 import type { Api, Model } from "@earendil-works/pi-ai";
 import { nanoid } from "nanoid";
-import {
-	emitTeamRuntimeChanged,
-	emitTeamWarning,
-	type TeamRuntimeChangeReason,
-} from "./events";
+import { emitTeamRuntimeChanged, emitTeamWarning, type TeamRuntimeChangeReason } from "./events";
 import { getSteeringMessagePayload } from "./message/steeringPayload";
 
 const PENDING_MESSAGE_TTL_MS = 86_400_000; // 24 hours
@@ -84,8 +76,7 @@ const buildActiveAgentSummary = (state: SubagentState): ActiveAgentSummary => {
 };
 
 /** Generates a unique agent ID based on the agent name and a random nanoid. */
-const generateAgentId = (agentName: string): string =>
-	`${agentName}-${nanoid(8)}`;
+const generateAgentId = (agentName: string): string => `${agentName}-${nanoid(8)}`;
 
 const createAgent = (
 	agentConfig: AgentConfig,
@@ -180,11 +171,7 @@ export class Runtime {
 
 	abortAllOwnedBy(ownerSessionId: string, opts: AbortOptions) {
 		const ids = Array.from(this.agents.values())
-			.filter(
-				(state) =>
-					state.ownerSessionId === ownerSessionId &&
-					isAbortableStatus(state.status),
-			)
+			.filter((state) => state.ownerSessionId === ownerSessionId && isAbortableStatus(state.status))
 			.map((state) => state.id);
 
 		for (const id of ids) {
@@ -222,12 +209,7 @@ export class Runtime {
 		ownerSessionId: string,
 		ctx: SpawnContext,
 	): string {
-		const agentState = createAgent(
-			subagent,
-			task,
-			ctx.brief ?? "",
-			ownerSessionId,
-		);
+		const agentState = createAgent(subagent, task, ctx.brief ?? "", ownerSessionId);
 		this.agents.set(agentState.id, agentState);
 		this.notifyRuntimeChanged(ownerSessionId, "spawned", agentState.id);
 
@@ -240,11 +222,7 @@ export class Runtime {
 		return agentState.id;
 	}
 
-	respond(
-		subagentId: string,
-		message: string,
-		ownerSessionId: string,
-	): { error?: string } {
+	respond(subagentId: string, message: string, ownerSessionId: string): { error?: string } {
 		const transition = this.startSubagentResponse(subagentId, ownerSessionId);
 		if (transition.ok === false) {
 			return { error: transition.error };
@@ -267,11 +245,7 @@ export class Runtime {
 
 	getActiveSummariesForOwner(ownerSessionId: string): ActiveAgentSummary[] {
 		return Array.from(this.agents.values())
-			.filter(
-				(state) =>
-					isAbortableStatus(state.status) &&
-					state.ownerSessionId === ownerSessionId,
-			)
+			.filter((state) => isAbortableStatus(state.status) && state.ownerSessionId === ownerSessionId)
 			.map(buildActiveAgentSummary);
 	}
 
@@ -318,11 +292,7 @@ export class Runtime {
 		id: string,
 		callerSessionId: string,
 	): { ok: true; state: SubagentState } | { ok: false; error: string } {
-		const owned = this.validateOwnedSubagent(
-			id,
-			callerSessionId,
-			`No subagent with id "${id}"`,
-		);
+		const owned = this.validateOwnedSubagent(id, callerSessionId, `No subagent with id "${id}"`);
 		if (!owned.ok) {
 			return owned;
 		}
@@ -357,9 +327,7 @@ export class Runtime {
 
 	private cleanStaleMessages(): void {
 		const cutoffTime = this.now() - PENDING_MESSAGE_TTL_MS;
-		this.pendingMessages = this.pendingMessages.filter(
-			(entry) => entry.queuedAt >= cutoffTime,
-		);
+		this.pendingMessages = this.pendingMessages.filter((entry) => entry.queuedAt >= cutoffTime);
 	}
 
 	private flushPendingFor(sessionId: string): void {
@@ -390,10 +358,7 @@ export class Runtime {
 		});
 	}
 
-	private countRunningForOwner(
-		ownerSessionId: string,
-		excludeId: string,
-	): number {
+	private countRunningForOwner(ownerSessionId: string, excludeId: string): number {
 		let count = 0;
 		for (const state of this.agents.values()) {
 			if (
@@ -423,8 +388,7 @@ export class Runtime {
 
 		const remaining = this.countRunningForOwner(ownerSessionId, payload.id);
 		const isIdle = binding.isIdle();
-		const triggerResultTurn =
-			payload.status === "waiting" || !(isIdle && remaining > 0);
+		const triggerResultTurn = payload.status === "waiting" || !(isIdle && remaining > 0);
 
 		const steeringPayload = getSteeringMessagePayload(payload, {
 			isIdle,

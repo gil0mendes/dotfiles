@@ -82,7 +82,10 @@ test("extractSearchTextFromResponse extracts the provider text blob", () => {
 
 test("extractSearchErrorFromResponse extracts provider-side MCP errors", () => {
 	assert.equal(extractSearchTextFromResponse(SSE_ERROR_RESPONSE, "text/event-stream"), "");
-	assert.equal(extractSearchErrorFromResponse(SSE_ERROR_RESPONSE, "text/event-stream"), "MCP error -32602: Invalid enum value");
+	assert.equal(
+		extractSearchErrorFromResponse(SSE_ERROR_RESPONSE, "text/event-stream"),
+		"MCP error -32602: Invalid enum value",
+	);
 });
 
 test("parseExaSearchText converts legacy provider text into normalized results", () => {

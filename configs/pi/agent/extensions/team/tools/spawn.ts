@@ -6,10 +6,7 @@ import { canSpawnSubagent } from "../delegationPolicy";
 import type { Runtime } from "../runtime";
 import { getToolContext, toolError, toolSuccess } from "./shared";
 
-export const registerTeamSpawnTool = (
-	pi: ExtensionAPI,
-	runtime: Runtime,
-): void => {
+export const registerTeamSpawnTool = (pi: ExtensionAPI, runtime: Runtime): void => {
 	pi.registerTool({
 		name: "team_spawn",
 		label: "Spawn team agent",
@@ -23,8 +20,7 @@ export const registerTeamSpawnTool = (
 			}),
 			task: Type.String({ description: "Task to delegate to the subagent" }),
 		}),
-		promptSnippet:
-			"Spawn a non-blocking subagent. Use team_list first to see available subagents.",
+		promptSnippet: "Spawn a non-blocking subagent. Use team_list first to see available subagents.",
 		promptGuidelines: [
 			"team_spawn: Use only after team_list, for one bounded self-contained task.",
 			"team_spawn: Keep brief short; put necessary context and criteria in task.",
@@ -45,8 +41,7 @@ export const registerTeamSpawnTool = (
 
 			const subagent = catalog.getAgent(params.subagent);
 			if (!subagent) {
-				const availableAgents =
-					catalog.agents.map((agent) => agent.name).join(", ") || "none";
+				const availableAgents = catalog.agents.map((agent) => agent.name).join(", ") || "none";
 				return toolError(
 					`Agent "${params.subagent}" not found. Available agents: ${availableAgents}`,
 				);
@@ -59,23 +54,17 @@ export const registerTeamSpawnTool = (
 				);
 			}
 
-			const id = runtime.spawn(
-				subagent,
-				params.task,
-				toolCtx.cwd,
-				toolCtx.callerSessionId,
-				{
-					brief,
-					model: ctx.model,
-					modelRegistry: ctx.modelRegistry,
-					agentDir: getAgentDir(),
-					parentSessionFile: ctx.sessionManager.getSessionFile(),
-					availableToolNames: pi.getAllTools().map((tool) => tool.name),
-					onWarning: (message) => {
-						runtime.reportWarning(toolCtx.callerSessionId, message);
-					},
+			const id = runtime.spawn(subagent, params.task, toolCtx.cwd, toolCtx.callerSessionId, {
+				brief,
+				model: ctx.model,
+				modelRegistry: ctx.modelRegistry,
+				agentDir: getAgentDir(),
+				parentSessionFile: ctx.sessionManager.getSessionFile(),
+				availableToolNames: pi.getAllTools().map((tool) => tool.name),
+				onWarning: (message) => {
+					runtime.reportWarning(toolCtx.callerSessionId, message);
 				},
-			);
+			});
 
 			return toolSuccess(
 				`Subagent "${subagent.name}" spawned as ${id}. Result will be delivered via steering messages.`,

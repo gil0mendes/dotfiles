@@ -20,39 +20,27 @@ function findMatch(words: string[]): string | undefined {
 
 describe("rm matcher", () => {
 	it("matches rm -rf", () => {
-		expect(findMatch(["rm", "-rf", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "-rf", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("matches rm -fr (reversed flags)", () => {
-		expect(findMatch(["rm", "-fr", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "-fr", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("matches rm -r -f (separate flags)", () => {
-		expect(findMatch(["rm", "-r", "-f", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "-r", "-f", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("matches rm --recursive --force (long options)", () => {
-		expect(findMatch(["rm", "--recursive", "--force", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "--recursive", "--force", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("matches rm --force --recursive (reversed long options)", () => {
-		expect(findMatch(["rm", "--force", "--recursive", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "--force", "--recursive", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("matches rm -Rfv (grouped with extra flags)", () => {
-		expect(findMatch(["rm", "-Rfv", "/tmp/test"])).toBe(
-			"recursive force delete",
-		);
+		expect(findMatch(["rm", "-Rfv", "/tmp/test"])).toBe("recursive force delete");
 	});
 
 	it("does not match rm -r (no force)", () => {
@@ -80,43 +68,33 @@ describe("sudo matcher", () => {
 
 describe("doas matcher", () => {
 	it("matches doas", () => {
-		expect(findMatch(["doas", "pkg_add", "vim"])).toBe(
-			"privileged command execution",
-		);
+		expect(findMatch(["doas", "pkg_add", "vim"])).toBe("privileged command execution");
 	});
 });
 
 describe("pkexec matcher", () => {
 	it("matches pkexec", () => {
-		expect(findMatch(["pkexec", "apt", "install", "firefox"])).toBe(
-			"privileged command execution",
-		);
+		expect(findMatch(["pkexec", "apt", "install", "firefox"])).toBe("privileged command execution");
 	});
 });
 
 describe("dd matcher", () => {
 	it("matches dd with of= (output file)", () => {
-		expect(findMatch(["dd", "if=/dev/zero", "of=/dev/sda"])).toBe(
-			"disk write operation",
-		);
+		expect(findMatch(["dd", "if=/dev/zero", "of=/dev/sda"])).toBe("disk write operation");
 	});
 
 	it("matches dd with of= in any order", () => {
-		expect(findMatch(["dd", "of=/dev/sda", "if=/dev/zero"])).toBe(
-			"disk write operation",
-		);
+		expect(findMatch(["dd", "of=/dev/sda", "if=/dev/zero"])).toBe("disk write operation");
 	});
 
 	it("matches dd with progress and of=", () => {
-		expect(
-			findMatch(["dd", "status=progress", "of=/dev/sdb", "if=image.img"]),
-		).toBe("disk write operation");
+		expect(findMatch(["dd", "status=progress", "of=/dev/sdb", "if=image.img"])).toBe(
+			"disk write operation",
+		);
 	});
 
 	it("matches dd writing to /dev/null", () => {
-		expect(findMatch(["dd", "if=/dev/sda", "of=/dev/null"])).toBe(
-			"disk write operation",
-		);
+		expect(findMatch(["dd", "if=/dev/sda", "of=/dev/null"])).toBe("disk write operation");
 	});
 
 	it("does not match dd with only if= (read-only)", () => {
@@ -144,25 +122,19 @@ describe("mkfs matcher", () => {
 
 describe("shred matcher", () => {
 	it("matches shred", () => {
-		expect(findMatch(["shred", "-u", "secret.txt"])).toBe(
-			"secure file overwrite",
-		);
+		expect(findMatch(["shred", "-u", "secret.txt"])).toBe("secure file overwrite");
 	});
 });
 
 describe("wipefs matcher", () => {
 	it("matches wipefs", () => {
-		expect(findMatch(["wipefs", "-a", "/dev/sda"])).toBe(
-			"filesystem signature wipe",
-		);
+		expect(findMatch(["wipefs", "-a", "/dev/sda"])).toBe("filesystem signature wipe");
 	});
 });
 
 describe("blkdiscard matcher", () => {
 	it("matches blkdiscard", () => {
-		expect(findMatch(["blkdiscard", "/dev/nvme0n1"])).toBe(
-			"block device discard",
-		);
+		expect(findMatch(["blkdiscard", "/dev/nvme0n1"])).toBe("block device discard");
 	});
 });
 
@@ -192,9 +164,7 @@ describe("parted matcher", () => {
 
 describe("chmod matcher", () => {
 	it("matches chmod -R 777", () => {
-		expect(findMatch(["chmod", "-R", "777", "/tmp"])).toBe(
-			"insecure recursive permissions",
-		);
+		expect(findMatch(["chmod", "-R", "777", "/tmp"])).toBe("insecure recursive permissions");
 	});
 
 	it("matches chmod --recursive 777", () => {
@@ -204,21 +174,15 @@ describe("chmod matcher", () => {
 	});
 
 	it("matches chmod -R 0777", () => {
-		expect(findMatch(["chmod", "-R", "0777", "/tmp"])).toBe(
-			"insecure recursive permissions",
-		);
+		expect(findMatch(["chmod", "-R", "0777", "/tmp"])).toBe("insecure recursive permissions");
 	});
 
 	it("matches chmod -R a+rwx", () => {
-		expect(findMatch(["chmod", "-R", "a+rwx", "/tmp"])).toBe(
-			"insecure recursive permissions",
-		);
+		expect(findMatch(["chmod", "-R", "a+rwx", "/tmp"])).toBe("insecure recursive permissions");
 	});
 
 	it("matches chmod -R ugo+rwx", () => {
-		expect(findMatch(["chmod", "-R", "ugo+rwx", "/tmp"])).toBe(
-			"insecure recursive permissions",
-		);
+		expect(findMatch(["chmod", "-R", "ugo+rwx", "/tmp"])).toBe("insecure recursive permissions");
 	});
 
 	it("does not match chmod 755 (not world-writable)", () => {
@@ -232,15 +196,11 @@ describe("chmod matcher", () => {
 
 describe("chown matcher", () => {
 	it("matches chown -R", () => {
-		expect(findMatch(["chown", "-R", "user:group", "/tmp"])).toBe(
-			"recursive ownership change",
-		);
+		expect(findMatch(["chown", "-R", "user:group", "/tmp"])).toBe("recursive ownership change");
 	});
 
 	it("matches chown --recursive", () => {
-		expect(findMatch(["chown", "--recursive", "user", "/tmp"])).toBe(
-			"recursive ownership change",
-		);
+		expect(findMatch(["chown", "--recursive", "user", "/tmp"])).toBe("recursive ownership change");
 	});
 
 	it("does not match chown without -R", () => {
@@ -281,9 +241,7 @@ describe("container matcher (docker/podman)", () => {
 		});
 
 		it("matches docker run --ipc=host", () => {
-			expect(findMatch(["docker", "run", "--ipc=host", "alpine"])).toBe(
-				"container with host IPC",
-			);
+			expect(findMatch(["docker", "run", "--ipc=host", "alpine"])).toBe("container with host IPC");
 		});
 
 		it("matches docker run with root mount", () => {
@@ -294,26 +252,16 @@ describe("container matcher (docker/podman)", () => {
 
 		it("matches docker run with docker socket", () => {
 			expect(
-				findMatch([
-					"docker",
-					"run",
-					"-v",
-					"/var/run/docker.sock:/var/run/docker.sock",
-					"alpine",
-				]),
+				findMatch(["docker", "run", "-v", "/var/run/docker.sock:/var/run/docker.sock", "alpine"]),
 			).toBe("container with docker socket access");
 		});
 
 		it("does not match docker build", () => {
-			expect(
-				findMatch(["docker", "build", "-t", "myimage", "."]),
-			).toBeUndefined();
+			expect(findMatch(["docker", "build", "-t", "myimage", "."])).toBeUndefined();
 		});
 
 		it("does not match docker run without dangerous flags", () => {
-			expect(
-				findMatch(["docker", "run", "alpine", "echo", "hello"]),
-			).toBeUndefined();
+			expect(findMatch(["docker", "run", "alpine", "echo", "hello"])).toBeUndefined();
 		});
 	});
 
@@ -340,9 +288,7 @@ describe("checkDangerousCommand", () => {
 				{ pattern: "rm -rf", description: "recursive force delete" },
 			]),
 			useBuiltinMatchers: true,
-			fallbackPatterns: [
-				{ pattern: "rm -rf", description: "recursive force delete" },
-			],
+			fallbackPatterns: [{ pattern: "rm -rf", description: "recursive force delete" }],
 		});
 
 		expect(result).toEqual({
@@ -358,9 +304,7 @@ describe("checkDangerousCommand", () => {
 				{ pattern: "rm -rf", description: "recursive force delete" },
 			]),
 			useBuiltinMatchers: true,
-			fallbackPatterns: [
-				{ pattern: "rm -rf", description: "recursive force delete" },
-			],
+			fallbackPatterns: [{ pattern: "rm -rf", description: "recursive force delete" }],
 		});
 
 		expect(result).toBeUndefined();
@@ -389,9 +333,7 @@ describe("checkDangerousCommand", () => {
 	it("ignores invalid regex patterns", () => {
 		const result = checkDangerousCommand({
 			command: "anything",
-			patterns: compileCommandPatterns([
-				{ pattern: "[", description: "invalid", regex: true },
-			]),
+			patterns: compileCommandPatterns([{ pattern: "[", description: "invalid", regex: true }]),
 			useBuiltinMatchers: false,
 			fallbackPatterns: [],
 		});
@@ -420,9 +362,7 @@ describe("checkDangerousCommand", () => {
 			command: "if then rm -rf /tmp/example",
 			patterns: [],
 			useBuiltinMatchers: true,
-			fallbackPatterns: [
-				{ pattern: "rm -rf", description: "recursive force delete" },
-			],
+			fallbackPatterns: [{ pattern: "rm -rf", description: "recursive force delete" }],
 		});
 
 		expect(result).toEqual({
@@ -435,19 +375,16 @@ describe("checkDangerousCommand", () => {
 		["logical command", "echo ok && sudo true", "superuser command"],
 		["pipeline", "echo ok | sudo tee /tmp/out", "superuser command"],
 		["subshell", "(sudo true)", "superuser command"],
-	])(
-		"matches dangerous commands nested in a %s",
-		(_label, command, description) => {
-			const result = checkDangerousCommand({
-				command,
-				patterns: [],
-				useBuiltinMatchers: true,
-				fallbackPatterns: [],
-			});
+	])("matches dangerous commands nested in a %s", (_label, command, description) => {
+		const result = checkDangerousCommand({
+			command,
+			patterns: [],
+			useBuiltinMatchers: true,
+			fallbackPatterns: [],
+		});
 
-			expect(result).toEqual({ description, pattern: "(structural)" });
-		},
-	);
+		expect(result).toEqual({ description, pattern: "(structural)" });
+	});
 });
 
 describe("matchDangerousCommand", () => {

@@ -1,12 +1,5 @@
 import { homedir } from "node:os";
-import {
-	Container,
-	Key,
-	matchesKey,
-	Spacer,
-	Text,
-	visibleWidth,
-} from "@earendil-works/pi-tui";
+import { Container, Key, matchesKey, Spacer, Text, visibleWidth } from "@earendil-works/pi-tui";
 
 export type PromptResult =
 	| "allow-file-once"
@@ -69,47 +62,26 @@ export function createPathAccessPromptComponent(
 		const container = new Container();
 		const border = (s: string) => theme.fg("warning", s);
 
+		container.addChild(new Text(theme.fg("warning", theme.bold("Outside Workspace Access")), 1, 0));
+		container.addChild(new Spacer(1));
 		container.addChild(
 			new Text(
-				theme.fg("warning", theme.bold("Outside Workspace Access")),
+				theme.fg("text", `\`${toolName}\` targets a path outside the working directory.`),
 				1,
 				0,
 			),
 		);
 		container.addChild(new Spacer(1));
-		container.addChild(
-			new Text(
-				theme.fg(
-					"text",
-					`\`${toolName}\` targets a path outside the working directory.`,
-				),
-				1,
-				0,
-			),
-		);
-		container.addChild(new Spacer(1));
-		container.addChild(
-			new Text(theme.fg("dim", `  Cwd:  ${displayCwd(cwd)}`), 1, 0),
-		);
-		container.addChild(
-			new Text(theme.fg("dim", `  Path: ${displayPath}`), 1, 0),
-		);
-		container.addChild(
-			new Text(theme.fg("dim", `  Dir:  ${displayDir}`), 1, 0),
-		);
+		container.addChild(new Text(theme.fg("dim", `  Cwd:  ${displayCwd(cwd)}`), 1, 0));
+		container.addChild(new Text(theme.fg("dim", `  Path: ${displayPath}`), 1, 0));
+		container.addChild(new Text(theme.fg("dim", `  Dir:  ${displayDir}`), 1, 0));
 		container.addChild(new Spacer(1));
 
 		const optionLines = options.map(() => new Text("", 1, 0));
 		for (const line of optionLines) container.addChild(line);
 
 		container.addChild(new Spacer(1));
-		container.addChild(
-			new Text(
-				theme.fg("dim", "↑/↓/Tab select · Enter select · Esc deny"),
-				1,
-				0,
-			),
-		);
+		container.addChild(new Text(theme.fg("dim", "↑/↓/Tab select · Enter select · Esc deny"), 1, 0));
 
 		const renderOptions = () => {
 			options.forEach((option, index) => {
@@ -123,8 +95,7 @@ export function createPathAccessPromptComponent(
 		};
 
 		const moveSelection = (direction: number) => {
-			selectedIndex =
-				(selectedIndex + direction + options.length) % options.length;
+			selectedIndex = (selectedIndex + direction + options.length) % options.length;
 			renderOptions();
 			tui.requestRender();
 		};
@@ -151,20 +122,11 @@ export function createPathAccessPromptComponent(
 			},
 			invalidate: () => container.invalidate(),
 			handleInput: (data: string) => {
-				if (
-					matchesKey(data, Key.up) ||
-					data === "k" ||
-					matchesKey(data, Key.shift("tab"))
-				)
+				if (matchesKey(data, Key.up) || data === "k" || matchesKey(data, Key.shift("tab")))
 					return moveSelection(-1);
-				if (
-					matchesKey(data, Key.down) ||
-					data === "j" ||
-					matchesKey(data, Key.tab)
-				)
+				if (matchesKey(data, Key.down) || data === "j" || matchesKey(data, Key.tab))
 					return moveSelection(1);
-				if (matchesKey(data, Key.enter))
-					return done(options[selectedIndex]?.result ?? "deny");
+				if (matchesKey(data, Key.enter)) return done(options[selectedIndex]?.result ?? "deny");
 				if (matchesKey(data, Key.escape)) done("deny");
 			},
 		};

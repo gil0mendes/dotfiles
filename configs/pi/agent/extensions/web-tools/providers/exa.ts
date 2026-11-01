@@ -59,7 +59,9 @@ export class ExaSearchProvider implements SearchProvider {
 		if (contentLength) {
 			const declaredBytes = Number.parseInt(contentLength, 10);
 			if (Number.isFinite(declaredBytes) && declaredBytes > MAX_SEARCH_RESPONSE_BYTES) {
-				throw new Error(`Search response too large (exceeds ${Math.floor(MAX_SEARCH_RESPONSE_BYTES / (1024 * 1024))}MB limit)`);
+				throw new Error(
+					`Search response too large (exceeds ${Math.floor(MAX_SEARCH_RESPONSE_BYTES / (1024 * 1024))}MB limit)`,
+				);
 			}
 		}
 
@@ -83,7 +85,9 @@ export class ExaSearchProvider implements SearchProvider {
 	}
 }
 
-export function normalizeExaDepth(depth: SearchRequest["depth"]): Exclude<SearchRequest["depth"], "deep"> {
+export function normalizeExaDepth(
+	depth: SearchRequest["depth"],
+): Exclude<SearchRequest["depth"], "deep"> {
 	// Exa MCP currently accepts only "auto" and "fast". Keep "deep" as a caller-facing
 	// compatibility alias so existing prompts and docs continue to work.
 	return depth === "deep" ? "fast" : depth;
@@ -97,7 +101,10 @@ export function extractSearchTextFromResponse(body: string, contentType: string)
 		.trim();
 }
 
-export function extractSearchErrorFromResponse(body: string, contentType: string): string | undefined {
+export function extractSearchErrorFromResponse(
+	body: string,
+	contentType: string,
+): string | undefined {
 	const text = extractSearchMessagesFromResponse(body, contentType)
 		.filter((message) => message.isError)
 		.map((message) => message.text)
@@ -291,7 +298,10 @@ function stripRepeatedLeadingTitle(snippet: string, title: string): string {
 		if (lines[firstIndex]?.trim().toLowerCase() !== normalizedTitle) {
 			return current.trim();
 		}
-		current = lines.slice(firstIndex + 1).join("\n").trim();
+		current = lines
+			.slice(firstIndex + 1)
+			.join("\n")
+			.trim();
 	}
 	return current.trim();
 }
@@ -311,5 +321,9 @@ function normalizeMetadataValue(value: string): string | undefined {
 function isExplicitNoResultsText(text: string): boolean {
 	const normalized = text.trim().toLowerCase();
 	if (!normalized) return true;
-	return normalized === "no results found" || normalized.startsWith("no results found") || normalized.includes("no relevant results");
+	return (
+		normalized === "no results found" ||
+		normalized.startsWith("no results found") ||
+		normalized.includes("no relevant results")
+	);
 }

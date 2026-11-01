@@ -1,11 +1,10 @@
 {
-  "theme": "modern-dark",
-  "defaultThinkingLevel": "medium",
-  "collapseChangelog": true,
-  "enableInstallTelemetry": false,
-  "lastChangelogVersion": "1.4.0",
-  "lastChangelogVersion": "1.5.0",
-  "defaultProvider": "barracuda-iq",
-  "defaultModel": "claude-sonnet-5",
-  "hideThinkingBlock": true
+	"theme": "modern-dark",
+	"defaultThinkingLevel": "medium",
+	"collapseChangelog": true,
+	"enableInstallTelemetry": false,
+	"lastChangelogVersion": "1.5.0",
+	"defaultProvider": "barracuda-iq",
+	"defaultModel": "claude-sonnet-5",
+	"hideThinkingBlock": true
 }

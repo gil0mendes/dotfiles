@@ -46,5 +46,3 @@ export type Config = {
 	bashToolPatterns: BashToolPatternConfig[];
 	strictModeAllowedList: StrictModeAllowedCommandConfig[];
 };
-
-

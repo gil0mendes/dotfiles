@@ -8,9 +8,7 @@ import type {
 } from "./types";
 
 export function expandHome(p: string): string {
-	return p === "~" || p.startsWith("~/")
-		? path.join(os.homedir(), p.slice(2))
-		: p;
+	return p === "~" || p.startsWith("~/") ? path.join(os.homedir(), p.slice(2)) : p;
 }
 
 export function absoluteTarget(p: string, cwd: string): string {
@@ -19,9 +17,7 @@ export function absoluteTarget(p: string, cwd: string): string {
 
 function globToRegex(glob: string): RegExp {
 	const expanded = expandHome(glob).replace(/\/+$|\\+$/g, "");
-	const escaped = expanded
-		.replace(/[.+^${}()|[\]\\]/g, "\\$&")
-		.replace(/\*/g, "[^/]*");
+	const escaped = expanded.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, "[^/]*");
 	return new RegExp(`(^|/)${escaped}($|/)`);
 }
 
@@ -32,9 +28,7 @@ function pathMatches(target: string, rulePath: string, cwd: string): boolean {
 
 	if (expandedRule.endsWith("/")) {
 		const absRule = (
-			path.isAbsolute(expandedRule)
-				? expandedRule
-				: path.resolve(cwd, expandedRule)
+			path.isAbsolute(expandedRule) ? expandedRule : path.resolve(cwd, expandedRule)
 		).replace(/\/+$|\\+$/g, "");
 		return absTarget === absRule || absTarget.startsWith(absRule + path.sep);
 	}
@@ -64,9 +58,10 @@ export function matchPathRules(
 	return null;
 }
 
-export function matchRegexRules<
-	T extends BashToolPatternConfig | StrictModeAllowedCommandConfig,
->(text: string, rules: readonly T[]): T | null {
+export function matchRegexRules<T extends BashToolPatternConfig | StrictModeAllowedCommandConfig>(
+	text: string,
+	rules: readonly T[],
+): T | null {
 	for (const rule of rules) {
 		const value = ruleValue(rule);
 		if (!value) continue;
@@ -78,4 +73,3 @@ export function matchRegexRules<
 	}
 	return null;
 }
-

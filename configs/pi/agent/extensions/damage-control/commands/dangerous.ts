@@ -47,9 +47,7 @@ function hasArg(words: string[], prefix: string): boolean {
  */
 function hasShortFlag(words: string[], flag: string): boolean {
 	return words.some(
-		(w) =>
-			w === `-${flag}` ||
-			(w.startsWith("-") && !w.startsWith("--") && w.includes(flag)),
+		(w) => w === `-${flag}` || (w.startsWith("-") && !w.startsWith("--") && w.includes(flag)),
 	);
 }
 
@@ -191,8 +189,7 @@ const partedMatcher: StructuralMatcher = (words) => {
 const chmodMatcher: StructuralMatcher = (words) => {
 	if (words[0] !== "chmod") return undefined;
 
-	const hasRecursive =
-		hasShortFlag(words, "R") || hasLongOption(words, "recursive");
+	const hasRecursive = hasShortFlag(words, "R") || hasLongOption(words, "recursive");
 
 	const hasWorldWritable = words.some(
 		(w) =>
@@ -204,9 +201,7 @@ const chmodMatcher: StructuralMatcher = (words) => {
 			w === "1777", // sticky + world writable
 	);
 
-	return hasRecursive && hasWorldWritable
-		? "insecure recursive permissions"
-		: undefined;
+	return hasRecursive && hasWorldWritable ? "insecure recursive permissions" : undefined;
 };
 
 /**
@@ -215,8 +210,7 @@ const chmodMatcher: StructuralMatcher = (words) => {
 const chownMatcher: StructuralMatcher = (words) => {
 	if (words[0] !== "chown") return undefined;
 
-	const hasRecursive =
-		hasShortFlag(words, "R") || hasLongOption(words, "recursive");
+	const hasRecursive = hasShortFlag(words, "R") || hasLongOption(words, "recursive");
 
 	return hasRecursive ? "recursive ownership change" : undefined;
 };
@@ -243,29 +237,19 @@ const containerMatcher: StructuralMatcher = (words) => {
 	if (subcommand !== "run" && subcommand !== "create") return undefined;
 
 	// Check for dangerous flags
-	const hasPrivileged = words.some(
-		(w) => w === "--privileged" || w.startsWith("--privileged="),
-	);
+	const hasPrivileged = words.some((w) => w === "--privileged" || w.startsWith("--privileged="));
 
-	const hasHostPid = words.some(
-		(w) => w === "--pid=host" || w.startsWith("--pid=host"),
-	);
+	const hasHostPid = words.some((w) => w === "--pid=host" || w.startsWith("--pid=host"));
 
 	const hasHostNetwork = words.some(
 		(w) => w === "--network=host" || w.startsWith("--network=host"),
 	);
 
-	const hasHostUsers = words.some(
-		(w) => w === "--userns=host" || w.startsWith("--userns=host"),
-	);
+	const hasHostUsers = words.some((w) => w === "--userns=host" || w.startsWith("--userns=host"));
 
-	const hasHostUts = words.some(
-		(w) => w === "--uts=host" || w.startsWith("--uts=host"),
-	);
+	const hasHostUts = words.some((w) => w === "--uts=host" || w.startsWith("--uts=host"));
 
-	const hasHostIpc = words.some(
-		(w) => w === "--ipc=host" || w.startsWith("--ipc=host"),
-	);
+	const hasHostIpc = words.some((w) => w === "--ipc=host" || w.startsWith("--ipc=host"));
 
 	// Check for root filesystem bind mount
 	const hasRootMount = words.some(
@@ -358,9 +342,7 @@ export const BUILTIN_KEYWORD_PATTERNS = new Set([
  * Match a command against all built-in dangerous patterns.
  * Returns the first match found, or undefined if no match.
  */
-export function matchDangerousCommand(
-	words: string[],
-): DangerousCommandMatch | undefined {
+export function matchDangerousCommand(words: string[]): DangerousCommandMatch | undefined {
 	for (const matcher of BUILTIN_MATCHERS) {
 		const description = matcher(words);
 		if (description) {
@@ -372,9 +354,7 @@ export function matchDangerousCommand(
 	return undefined;
 }
 
-export function compileCommandPattern(
-	config: CommandPattern,
-): CompiledCommandPattern {
+export function compileCommandPattern(config: CommandPattern): CompiledCommandPattern {
 	if (config.regex) {
 		try {
 			const re = new RegExp(config.pattern);
@@ -396,9 +376,7 @@ export function compileCommandPatterns(
 	return configs.map(compileCommandPattern);
 }
 
-function matchBuiltinDangerous(
-	words: string[],
-): DangerousCommandMatch | undefined {
+function matchBuiltinDangerous(words: string[]): DangerousCommandMatch | undefined {
 	if (words.length === 0) return undefined;
 	for (const matcher of BUILTIN_MATCHERS) {
 		const description = matcher(words);

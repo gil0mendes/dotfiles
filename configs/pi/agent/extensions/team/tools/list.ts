@@ -16,10 +16,7 @@ const STATUS_ICON: Record<ActiveAgentSummary["status"], string> = {
 	aborted: "🛑",
 };
 
-const formatAvailableAgents = (
-	agents: AgentConfig[],
-	hasConfiguredAgents: boolean,
-): string[] => {
+const formatAvailableAgents = (agents: AgentConfig[], hasConfiguredAgents: boolean): string[] => {
 	if (agents.length === 0) {
 		if (hasConfiguredAgents) {
 			return ["No subagents are permitted for this session."];
@@ -66,28 +63,18 @@ const formatActiveAgents = (running: ActiveAgentSummary[]): string[] => {
 	if (running.length === 0) return ["No subagents currently active."];
 	return running.flatMap((agent) => {
 		const icon = STATUS_ICON[agent.status] ?? "❓";
-		return [
-			"",
-			`id: ${agent.id}`,
-			`name: ${agent.agentName}`,
-			`status: ${icon} ${agent.status}`,
-		];
+		return ["", `id: ${agent.id}`, `name: ${agent.agentName}`, `status: ${icon} ${agent.status}`];
 	});
 };
 
-export const registerTeamListTool = (
-	pi: ExtensionAPI,
-	runtime: Runtime,
-): void => {
+export const registerTeamListTool = (pi: ExtensionAPI, runtime: Runtime): void => {
 	pi.registerTool({
 		name: "team_list",
 		label: "List team",
 		description: "List subagent definitions and active subagents",
 		parameters: Type.Object({}),
 		promptSnippet: "List available subagents and active subagents.",
-		promptGuidelines: [
-			"team_list: Use for discovery or a requested one-time status snapshot.",
-		],
+		promptGuidelines: ["team_list: Use for discovery or a requested one-time status snapshot."],
 		execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) => {
 			const toolCtx = getToolContext(ctx);
 			const catalog = discoverAgents(toolCtx.cwd);
@@ -95,9 +82,7 @@ export const registerTeamListTool = (
 				runtime.getSessionAgent(toolCtx.callerSessionId),
 				catalog.agents,
 			);
-			const runningAgents = runtime.getActiveSummariesForOwner(
-				toolCtx.callerSessionId,
-			);
+			const runningAgents = runtime.getActiveSummariesForOwner(toolCtx.callerSessionId);
 
 			const lines = [
 				"## Available Subagents",

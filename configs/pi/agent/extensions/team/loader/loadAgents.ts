@@ -3,17 +3,8 @@ import * as fs from "node:fs";
 
 import { isNil } from "ramda";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
-import {
-	parseModel,
-	parseModelPreferences,
-	type AgentDiscoveryWarning,
-} from "./utils";
-import type {
-	AgentConfig,
-	AgentConfigFields,
-	AgentType,
-	ParsedModel,
-} from "./types";
+import { parseModel, parseModelPreferences, type AgentDiscoveryWarning } from "./utils";
+import type { AgentConfig, AgentConfigFields, AgentType, ParsedModel } from "./types";
 import type { ThinkingLevel } from "@earendil-works/pi-ai";
 
 export type AgentDefinitionFile = {
@@ -39,10 +30,7 @@ type AgentConfigFile = {
 	warnings?: AgentDiscoveryWarning[];
 };
 
-const createDiscoveryWarning = (
-	filePath: string,
-	message: string,
-): AgentDiscoveryWarning => ({
+const createDiscoveryWarning = (filePath: string, message: string): AgentDiscoveryWarning => ({
 	filePath,
 	message,
 });
@@ -55,19 +43,12 @@ const loadAgentFile = (filePath: string): AgentDefinitionFile => {
 		return {
 			filePath,
 			content: null,
-			warnings: [
-				createDiscoveryWarning(
-					filePath,
-					`Failed to read agent file: ${reason}`,
-				),
-			],
+			warnings: [createDiscoveryWarning(filePath, `Failed to read agent file: ${reason}`)],
 		};
 	}
 };
 
-const loadAgentDefinitionGroup = (
-	agentsDir: string,
-): AgentDefinitionSourceGroup | null => {
+const loadAgentDefinitionGroup = (agentsDir: string): AgentDefinitionSourceGroup | null => {
 	const dirToLoad = path.resolve(agentsDir);
 	if (!fs.existsSync(dirToLoad)) {
 		return null;
@@ -81,12 +62,7 @@ const loadAgentDefinitionGroup = (
 		return {
 			agentsDir,
 			files: [],
-			warnings: [
-				createDiscoveryWarning(
-					agentsDir,
-					`Failed to read agent directory: ${reason}`,
-				),
-			],
+			warnings: [createDiscoveryWarning(agentsDir, `Failed to read agent directory: ${reason}`)],
 		};
 	}
 
@@ -113,12 +89,7 @@ const loadConfigFile = (filePath: string): AgentConfigFile | null => {
 		return {
 			filePath: fileToLoad,
 			content: null,
-			warnings: [
-				createDiscoveryWarning(
-					fileToLoad,
-					`Failed to read config file: ${reason}`,
-				),
-			],
+			warnings: [createDiscoveryWarning(fileToLoad, `Failed to read config file: ${reason}`)],
 		};
 	}
 };
@@ -175,24 +146,19 @@ const VALID_THINKING_LEVELS: readonly string[] = [
 	"xhigh",
 ];
 
-const validateThinkingLevel = (
-	value: string | undefined,
-): ThinkingLevel | undefined => {
+const validateThinkingLevel = (value: string | undefined): ThinkingLevel | undefined => {
 	if (!value) {
 		return undefined;
 	}
 
-	return VALID_THINKING_LEVELS.includes(value)
-		? (value as ThinkingLevel)
-		: undefined;
+	return VALID_THINKING_LEVELS.includes(value) ? (value as ThinkingLevel) : undefined;
 };
 
 const parseCommaSeparated = (value: unknown): string[] | undefined => {
 	if (isNil(value)) {
 		return undefined;
 	}
-	if (Array.isArray(value))
-		return value.map((v) => String(v).trim()).filter(Boolean);
+	if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
 	if (typeof value === "string")
 		return value
 			.split(",")
@@ -303,11 +269,7 @@ const parseSharedFields = (
 	}
 
 	if (typeof record.interactive === "boolean") {
-		const parsed = parseBooleanField(
-			"interactive",
-			record.interactive,
-			options,
-		);
+		const parsed = parseBooleanField("interactive", record.interactive, options);
 		fields.interactive = parsed.interactive;
 		warnings.push(...parsed.warnings);
 	}
@@ -355,10 +317,7 @@ const toParseWarnings = (
 	warnings: ParsedFieldWarning[],
 ): AgentDiscoveryWarning[] =>
 	warnings.map((warning) =>
-		createDiscoveryWarning(
-			filePath,
-			formatFieldWarning(subject, name, warning),
-		),
+		createDiscoveryWarning(filePath, formatFieldWarning(subject, name, warning)),
 	);
 
 const parseDefinitionFields = (
@@ -377,10 +336,7 @@ const parseDefinitionFields = (
 	};
 };
 
-const parseAgentDefinition = (
-	content: string,
-	filePath: string,
-): ParseResult => {
+const parseAgentDefinition = (content: string, filePath: string): ParseResult => {
 	let frontmatter: Record<string, unknown>;
 	let body: string;
 	try {
@@ -400,12 +356,9 @@ const parseAgentDefinition = (
 		};
 	}
 
-	const name =
-		typeof frontmatter.name === "string" ? frontmatter.name.trim() : undefined;
+	const name = typeof frontmatter.name === "string" ? frontmatter.name.trim() : undefined;
 	const description =
-		typeof frontmatter.description === "string"
-			? frontmatter.description.trim()
-			: undefined;
+		typeof frontmatter.description === "string" ? frontmatter.description.trim() : undefined;
 	if (!name || !description) {
 		return {
 			agent: null,
@@ -456,9 +409,7 @@ const parseAgentDefinition = (
 	};
 };
 
-export const loadAgentDefinitionFromFile = (
-	file: AgentDefinitionFile,
-): ParseResult => {
+export const loadAgentDefinitionFromFile = (file: AgentDefinitionFile): ParseResult => {
 	if (!file.content) return { agent: null, warnings: file.warnings ?? [] };
 	const parsed = parseAgentDefinition(file.content, file.filePath);
 	return {

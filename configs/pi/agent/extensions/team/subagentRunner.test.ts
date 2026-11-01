@@ -25,10 +25,7 @@ describe("resolveTools", () => {
 	});
 
 	it("allows extension tools supplied by the runtime", () => {
-		const result = resolveTools(createAgentConfig(["read", "web_search"]), [
-			"read",
-			"web_search",
-		]);
+		const result = resolveTools(createAgentConfig(["read", "web_search"]), ["read", "web_search"]);
 
 		expect(result).toEqual({
 			tools: ["read", "web_search"],
@@ -37,10 +34,9 @@ describe("resolveTools", () => {
 	});
 
 	it("filters unknown tools and reports each skipped declaration", () => {
-		const result = resolveTools(
-			createAgentConfig(["read", "not_registered", "another_unknown"]),
-			["read"],
-		);
+		const result = resolveTools(createAgentConfig(["read", "not_registered", "another_unknown"]), [
+			"read",
+		]);
 
 		expect(result).toEqual({
 			tools: ["read"],

@@ -7,10 +7,7 @@ import {
 	type AgentDefinitionSourceGroup,
 } from "./loader/loadAgents";
 import type { AgentConfig, AgentConfigFields } from "./loader/types";
-import {
-	createDiscoveryWarning,
-	type AgentDiscoveryWarning,
-} from "./loader/utils";
+import { createDiscoveryWarning, type AgentDiscoveryWarning } from "./loader/utils";
 
 export type AgentDiscoveryResult = {
 	agents: AgentConfig[];
@@ -23,9 +20,7 @@ type ConfigParseResult = {
 	warnings: AgentDiscoveryWarning[];
 };
 
-const mergeConfigFiles = (
-	configFiles: AgentDefinitionFile[],
-): ConfigParseResult => {
+const mergeConfigFiles = (configFiles: AgentDefinitionFile[]): ConfigParseResult => {
 	const warnings: AgentDiscoveryWarning[] = [];
 	const overrides: Record<string, AgentConfigFields> = {};
 	const overridesSources: Record<string, string> = {};
@@ -46,10 +41,7 @@ const mergeConfigFiles = (
 		} catch (error) {
 			const reason = error instanceof Error ? error.message : String(error);
 			warnings.push(
-				createDiscoveryWarning(
-					configFile.filePath,
-					`Failed to parse team config: ${reason}`,
-				),
+				createDiscoveryWarning(configFile.filePath, `Failed to parse team config: ${reason}`),
 			);
 		}
 	}

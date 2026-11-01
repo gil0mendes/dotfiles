@@ -26,8 +26,7 @@ export function stripHeredocs(command: string): string {
 		const bodySlice = command.slice(bodyStart + 1);
 		const closeMatch = closingRe.exec(bodySlice);
 		if (!closeMatch) continue;
-		const bodyEnd =
-			bodyStart + 1 + closeMatch.index + closeMatch[0].length;
+		const bodyEnd = bodyStart + 1 + closeMatch.index + closeMatch[0].length;
 		replacements.push({ start: bodyStart + 1, end: bodyEnd });
 	}
 
@@ -104,19 +103,14 @@ export function walkStatements(
 	return false;
 }
 
-function walkCommand(
-	cmd: Command,
-	callback: (cmd: SimpleCommand) => boolean | undefined,
-): boolean {
+function walkCommand(cmd: Command, callback: (cmd: SimpleCommand) => boolean | undefined): boolean {
 	switch (cmd.type) {
 		case "SimpleCommand":
 			return callback(cmd) === true;
 		case "Pipeline":
 			return walkStatements(cmd.commands, callback);
 		case "Logical":
-			return (
-				walkStatement(cmd.left, callback) || walkStatement(cmd.right, callback)
-			);
+			return walkStatement(cmd.left, callback) || walkStatement(cmd.right, callback);
 		case "Subshell":
 		case "Block":
 			return walkStatements(cmd.body, callback);
@@ -130,9 +124,7 @@ function walkCommand(
 		case "SelectClause":
 			return walkStatements(cmd.body, callback);
 		case "WhileClause":
-			return (
-				walkStatements(cmd.cond, callback) || walkStatements(cmd.body, callback)
-			);
+			return walkStatements(cmd.cond, callback) || walkStatements(cmd.body, callback);
 		case "CaseClause":
 			for (const item of cmd.items) {
 				if (walkStatements(item.body, callback)) return true;

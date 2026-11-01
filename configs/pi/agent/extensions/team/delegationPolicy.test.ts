@@ -2,11 +2,7 @@ import { describe, expect, it } from "vitest";
 import { canSpawnSubagent, getPermittedSubagents } from "./delegationPolicy";
 import type { AgentConfig } from "./loader/types";
 
-const createAgent = (
-	name: string,
-	delegatesTo?: string[],
-	rootOnly = false,
-): AgentConfig => ({
+const createAgent = (name: string, delegatesTo?: string[], rootOnly = false): AgentConfig => ({
 	name,
 	description: `${name} agent`,
 	type: "agent",
@@ -28,16 +24,11 @@ describe("delegation policy", () => {
 	const explorer = createAgent("explorer");
 
 	it("allows the root session to spawn any configured agent", () => {
-		expect(getPermittedSubagents(undefined, [planner, coder])).toEqual([
-			planner,
-			coder,
-		]);
+		expect(getPermittedSubagents(undefined, [planner, coder])).toEqual([planner, coder]);
 	});
 
 	it("allows a planner to delegate only to its configured research agents", () => {
-		expect(getPermittedSubagents(planner, [planner, coder, explorer])).toEqual([
-			explorer,
-		]);
+		expect(getPermittedSubagents(planner, [planner, coder, explorer])).toEqual([explorer]);
 		expect(canSpawnSubagent(planner, coder)).toBe(false);
 	});
 

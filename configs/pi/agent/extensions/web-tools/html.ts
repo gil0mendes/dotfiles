@@ -67,7 +67,8 @@ const PREFERRED_CONTENT_SELECTORS = [
 const BOILERPLATE_TOKEN_RE =
 	/(^|[-_\s])(nav(?:igation)?|header|footer|sidebar|aside|menu|dialog|modal|cookie|consent|promo|advert|social|share|breadcrumb|pagination|pager|toolbar|search|newsletter|subscribe|signup|login|banner|related|recommendation)s?($|[-_\s])/i;
 
-const RAW_HTML_BLOCK_TAG_RE = /<(table|tbody|thead|tfoot|tr|td|th|div|section|article|main|header|footer|nav|aside)\b/gi;
+const RAW_HTML_BLOCK_TAG_RE =
+	/<(table|tbody|thead|tfoot|tr|td|th|div|section|article|main|header|footer|nav|aside)\b/gi;
 
 const turndown = createTurndownService();
 const compiledHtmlToText = compileHtmlToText({
@@ -112,7 +113,11 @@ export function sanitizeHtml(rawHtml: string, baseUrl: string): string {
 		for (const attribute of ["href", "src", "poster"] as const) {
 			const value = element.getAttribute(attribute);
 			if (!value) continue;
-			const resolved = resolveAttributeUrl(value, baseUrl, attribute === "src" || attribute === "poster");
+			const resolved = resolveAttributeUrl(
+				value,
+				baseUrl,
+				attribute === "src" || attribute === "poster",
+			);
 			if (resolved) {
 				element.setAttribute(attribute, resolved);
 			} else {
@@ -153,7 +158,8 @@ export function htmlToTextFallback(rawHtml: string): string {
 export function isPoorMarkdownConversion(markdown: string): boolean {
 	const rawBlockTags = markdown.match(RAW_HTML_BLOCK_TAG_RE)?.length ?? 0;
 	if (rawBlockTags >= 6) return true;
-	if (/^\s*<(table|tbody|thead|tfoot|tr|td|th|div|section|article|main)\b/i.test(markdown)) return true;
+	if (/^\s*<(table|tbody|thead|tfoot|tr|td|th|div|section|article|main)\b/i.test(markdown))
+		return true;
 	return false;
 }
 
@@ -226,10 +232,20 @@ function scoreContentCandidate(element: Element): number {
 	score -= tableCount * 15;
 	score -= ownPenalty;
 
-	if (matchesAnySelector(element, "#readme, [data-testid='repository-readme-content'], article.markdown-body, .markdown-body")) {
+	if (
+		matchesAnySelector(
+			element,
+			"#readme, [data-testid='repository-readme-content'], article.markdown-body, .markdown-body",
+		)
+	) {
 		score += 1_500;
 	}
-	if (matchesAnySelector(element, "article, main, [role='main'], #content, #main-content, .main-content")) {
+	if (
+		matchesAnySelector(
+			element,
+			"article, main, [role='main'], #content, #main-content, .main-content",
+		)
+	) {
 		score += 500;
 	}
 	if (element.id === "bigbox") {
@@ -243,7 +259,9 @@ function flattenLayoutTables(root: Element): void {
 	const tables = Array.from(root.querySelectorAll("table"));
 	for (const table of tables.reverse()) {
 		if (!isLikelyLayoutTable(table)) continue;
-		for (const child of Array.from(table.querySelectorAll("thead, tbody, tfoot, tr, td, th")).reverse()) {
+		for (const child of Array.from(
+			table.querySelectorAll("thead, tbody, tfoot, tr, td, th"),
+		).reverse()) {
 			replaceTag(child, "div");
 		}
 		replaceTag(table, "div");
@@ -253,25 +271,42 @@ function flattenLayoutTables(root: Element): void {
 function isLikelyLayoutTable(table: Element): boolean {
 	if (table.querySelector("caption, thead, th")) return false;
 	if (table.getAttribute("role") === "table" || table.getAttribute("role") === "grid") return false;
-	if (matchesAnySelector(table, "#hnmain table, #bigbox table") || table.closest("#hnmain, #bigbox")) return true;
+	if (
+		matchesAnySelector(table, "#hnmain table, #bigbox table") ||
+		table.closest("#hnmain, #bigbox")
+	)
+		return true;
 	if (table.querySelector("table")) return true;
-	if (["align", "bgcolor", "border", "cellpadding", "cellspacing", "width"].some((attribute) => table.hasAttribute(attribute))) {
+	if (
+		["align", "bgcolor", "border", "cellpadding", "cellspacing", "width"].some((attribute) =>
+			table.hasAttribute(attribute),
+		)
+	) {
 		return true;
 	}
 
-	const rows = Array.from(table.querySelectorAll("tr")).filter((row) => row.closest("table") === table);
+	const rows = Array.from(table.querySelectorAll("tr")).filter(
+		(row) => row.closest("table") === table,
+	);
 	if (rows.length === 0) return true;
 
-	const cellCounts = rows.map((row) => Array.from(row.children).filter((child) => child.matches("td, th")).length).filter((count) => count > 0);
+	const cellCounts = rows
+		.map((row) => Array.from(row.children).filter((child) => child.matches("td, th")).length)
+		.filter((count) => count > 0);
 	if (cellCounts.length === 0) return true;
 	const uniqueCellCounts = new Set(cellCounts);
 	if (Math.max(...cellCounts) <= 1) return true;
 	if (uniqueCellCounts.size > 1) return true;
 
-	const cells = rows.flatMap((row) => Array.from(row.children).filter((child) => child.matches("td, th")));
+	const cells = rows.flatMap((row) =>
+		Array.from(row.children).filter((child) => child.matches("td, th")),
+	);
 	const averageCellTextLength =
-		cells.reduce((total, cell) => total + getNormalizedText(cell).length, 0) / Math.max(1, cells.length);
-	const linkCount = Array.from(table.querySelectorAll("a")).filter((link) => link.closest("table") === table).length;
+		cells.reduce((total, cell) => total + getNormalizedText(cell).length, 0) /
+		Math.max(1, cells.length);
+	const linkCount = Array.from(table.querySelectorAll("a")).filter(
+		(link) => link.closest("table") === table,
+	).length;
 	if (linkCount > cells.length * 0.6 && averageCellTextLength < 120) return true;
 
 	return false;
@@ -298,7 +333,9 @@ function normalizeBlockLinks(root: Element): void {
 }
 
 function removeEmptyContainers(root: Element): void {
-	for (const element of Array.from(root.querySelectorAll("div, section, article, main, span")).reverse()) {
+	for (const element of Array.from(
+		root.querySelectorAll("div, section, article, main, span"),
+	).reverse()) {
 		if (element.children.length > 0) continue;
 		if (getNormalizedText(element).length > 0) continue;
 		element.remove();
@@ -306,7 +343,12 @@ function removeEmptyContainers(root: Element): void {
 }
 
 function isBoilerplateElement(element: Element): boolean {
-	const tokens = [element.id, element.getAttribute("class"), element.getAttribute("role"), element.getAttribute("aria-label")]
+	const tokens = [
+		element.id,
+		element.getAttribute("class"),
+		element.getAttribute("role"),
+		element.getAttribute("aria-label"),
+	]
 		.filter(Boolean)
 		.join(" ");
 	return BOILERPLATE_TOKEN_RE.test(tokens);
@@ -337,7 +379,11 @@ function replaceTag(element: Element, tagName: string): Element {
 	return replacement;
 }
 
-function resolveAttributeUrl(value: string, baseUrl: string, allowDataUrl: boolean): string | undefined {
+function resolveAttributeUrl(
+	value: string,
+	baseUrl: string,
+	allowDataUrl: boolean,
+): string | undefined {
 	const trimmed = value.trim();
 	if (!trimmed) return undefined;
 	try {
@@ -372,9 +418,12 @@ function resolveSrcSet(srcset: string, baseUrl: string): string | undefined {
 function cleanupMarkdown(markdown: string): string {
 	return markdown
 		.replace(/\r\n/g, "\n")
-		.replace(/\[\s*\n+(#{1,6})\s+([^\n]+?)\s*\n+\s*\]\(([^)]+)\)/g, (_match, hashes: string, text: string, url: string) => {
-			return `${hashes} [${text.trim()}](${url})`;
-		})
+		.replace(
+			/\[\s*\n+(#{1,6})\s+([^\n]+?)\s*\n+\s*\]\(([^)]+)\)/g,
+			(_match, hashes: string, text: string, url: string) => {
+				return `${hashes} [${text.trim()}](${url})`;
+			},
+		)
 		.replace(/^\[\]\([^)]+\)\n?/gm, "")
 		.replace(/(\]\([^)]+\))(?=\[)/g, "$1 ")
 		.replace(/[ \t]+\n/g, "\n")

@@ -7,18 +7,9 @@ export type TeamConfig = {
 	agents: Record<string, AgentConfigFields>;
 };
 
-const thinkingLevelSchema = z.enum([
-	"minimal",
-	"low",
-	"medium",
-	"high",
-	"xhigh",
-]);
+const thinkingLevelSchema = z.enum(["minimal", "low", "medium", "high", "xhigh"]);
 
-const modelPreferencesSchema = z.union([
-	z.string(),
-	z.array(z.string()),
-]);
+const modelPreferencesSchema = z.union([z.string(), z.array(z.string())]);
 
 const parseModelFields = (
 	model: string | string[] | undefined,
@@ -36,8 +27,7 @@ const parseModelFields = (
 		}
 	}
 
-	const normalizedModel =
-		modelPreferences.length === 1 ? modelPreferences[0] : modelPreferences;
+	const normalizedModel = modelPreferences.length === 1 ? modelPreferences[0] : modelPreferences;
 
 	return {
 		model: normalizedModel,
@@ -57,10 +47,12 @@ const agentConfigFieldsSchema = z
 		delegatesTo: z.array(z.string()).optional(),
 		rootOnly: z.boolean().optional(),
 	})
-	.transform((config): AgentConfigFields => ({
-		...config,
-		...parseModelFields(config.model),
-	}));
+	.transform(
+		(config): AgentConfigFields => ({
+			...config,
+			...parseModelFields(config.model),
+		}),
+	);
 
 const teamConfigSchema = z.object({
 	agents: z.record(agentConfigFieldsSchema).default({}),

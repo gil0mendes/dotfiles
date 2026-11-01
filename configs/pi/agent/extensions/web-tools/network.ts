@@ -38,12 +38,17 @@ export interface ComposedSignal {
 	cleanup: () => void;
 }
 
-export function createOperationSignal(timeoutMs: number, outerSignal?: AbortSignal): ComposedSignal {
+export function createOperationSignal(
+	timeoutMs: number,
+	outerSignal?: AbortSignal,
+): ComposedSignal {
 	const controller = new AbortController();
 	const timeoutId = setTimeout(() => {
 		controller.abort(new Error(`Operation timed out after ${Math.ceil(timeoutMs / 1000)}s`));
 	}, timeoutMs);
-	const signal = outerSignal ? AbortSignal.any([outerSignal, controller.signal]) : controller.signal;
+	const signal = outerSignal
+		? AbortSignal.any([outerSignal, controller.signal])
+		: controller.signal;
 	return {
 		signal,
 		cleanup: () => clearTimeout(timeoutId),
@@ -97,7 +102,9 @@ export async function fetchWithRedirects(
 			await response.body?.cancel().catch(() => undefined);
 			const location = response.headers.get("location");
 			if (!location) {
-				throw new Error(`Redirect response from ${currentUrl.toString()} was missing a Location header`);
+				throw new Error(
+					`Redirect response from ${currentUrl.toString()} was missing a Location header`,
+				);
 			}
 			if (redirects >= options.maxRedirects) {
 				throw new Error(`Too many redirects while fetching ${initialUrl.toString()}`);
@@ -142,7 +149,9 @@ export async function readBodyWithLimit(
 			bytes += value.byteLength;
 			if (bytes > maxBytes) {
 				await reader.cancel().catch(() => undefined);
-				throw new Error(`Response too large (exceeds ${Math.floor(maxBytes / (1024 * 1024))}MB limit)`);
+				throw new Error(
+					`Response too large (exceeds ${Math.floor(maxBytes / (1024 * 1024))}MB limit)`,
+				);
 			}
 
 			chunks.push(Buffer.from(value.buffer, value.byteOffset, value.byteLength));
@@ -178,11 +187,19 @@ export function classifyMimeType(mime: string): ContentKind {
 	if (RASTER_IMAGE_MIME_TYPES.has(normalized)) return "raster-image";
 	if (normalized === "image/svg+xml") return "svg";
 	if (normalized.startsWith("text/")) return normalized === "text/html" ? "html" : "text";
-	if (TEXT_MIME_TYPES.has(normalized) || normalized.endsWith("+xml") || normalized.endsWith("+json")) return "text";
+	if (
+		TEXT_MIME_TYPES.has(normalized) ||
+		normalized.endsWith("+xml") ||
+		normalized.endsWith("+json")
+	)
+		return "text";
 	return "binary";
 }
 
-export function decodeTextBuffer(buffer: Buffer, charset?: string): { text: string; decoder: string } {
+export function decodeTextBuffer(
+	buffer: Buffer,
+	charset?: string,
+): { text: string; decoder: string } {
 	const normalizedCharset = normalizeCharset(charset);
 	if (normalizedCharset) {
 		try {
@@ -225,7 +242,10 @@ async function assertPublicUrl(url: URL): Promise<void> {
 			}
 		}
 	} catch (error) {
-		if (error instanceof Error && error.message.startsWith("Blocked private or local IP address:")) {
+		if (
+			error instanceof Error &&
+			error.message.startsWith("Blocked private or local IP address:")
+		) {
 			throw error;
 		}
 		// If DNS resolution fails, let the later fetch surface the real connectivity error.

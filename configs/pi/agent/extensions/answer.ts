@@ -1,11 +1,6 @@
-import type {
-	ExtensionAPI,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 
-function getTextParts(
-	content: Array<{ type: string; text?: string }>,
-): string[] {
+function getTextParts(content: Array<{ type: string; text?: string }>): string[] {
 	return content.flatMap((part) =>
 		part.type === "text" && typeof part.text === "string" ? [part.text] : [],
 	);
@@ -64,20 +59,13 @@ ${lastAssistantText}`;
 }
 
 export default function (pi: ExtensionAPI) {
-	const openInterviewForLastAssistantQuestions = async (
-		ctx: ExtensionContext,
-	) => {
+	const openInterviewForLastAssistantQuestions = async (ctx: ExtensionContext) => {
 		if (!ctx.hasUI) {
-			ctx.ui.notify(
-				"ctrl+. interview proxy requires interactive mode",
-				"error",
-			);
+			ctx.ui.notify("ctrl+. interview proxy requires interactive mode", "error");
 			return;
 		}
 
-		const hasInterviewTool = pi
-			.getAllTools()
-			.some((tool) => tool.name === "interview");
+		const hasInterviewTool = pi.getAllTools().some((tool) => tool.name === "interview");
 		if (!hasInterviewTool) {
 			ctx.ui.notify(
 				"interview tool is not available; ensure npm:pi-interview is installed and active",
@@ -118,8 +106,7 @@ export default function (pi: ExtensionAPI) {
 	};
 
 	pi.registerShortcut("ctrl+.", {
-		description:
-			"Open pi-interview for questions in the last assistant message",
+		description: "Open pi-interview for questions in the last assistant message",
 		handler: openInterviewForLastAssistantQuestions,
 	});
 }

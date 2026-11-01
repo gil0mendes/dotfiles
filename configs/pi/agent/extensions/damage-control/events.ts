@@ -7,11 +7,7 @@ export const DAMAGE_CONTROL_FEATURE_REGISTER_EVENT = "damage-control:feature:reg
 
 export type DamageControlFeatureId = "commands" | "paths" | "policies";
 export type DamageControlActionKind = "tool_call";
-export type DamageControlBlockSource =
-	| "policy"
-	| "pathAccess"
-	| "user"
-	| "nonInteractive";
+export type DamageControlBlockSource = "policy" | "pathAccess" | "user" | "nonInteractive";
 
 export type DamageControlAction = {
 	kind: DamageControlActionKind;
@@ -45,28 +41,26 @@ export type DamageControlFeatureRegisterPayload = {
 	};
 };
 
-export type DamageControlActionBlockedPayload<TMeta = unknown> =
-	DamageControlEventBase & {
-		action: DamageControlAction;
-		reason: string;
-		block: {
-			source: DamageControlBlockSource;
-			metadata?: TMeta;
-		};
-		context?: {
-			toolName?: string;
-			input?: Record<string, unknown>;
-		};
+export type DamageControlActionBlockedPayload<TMeta = unknown> = DamageControlEventBase & {
+	action: DamageControlAction;
+	reason: string;
+	block: {
+		source: DamageControlBlockSource;
+		metadata?: TMeta;
 	};
+	context?: {
+		toolName?: string;
+		input?: Record<string, unknown>;
+	};
+};
 
-export type DamageControlRiskDetectedPayload<TMeta = unknown> =
-	DamageControlEventBase & {
-		risk: DamageControlRisk<TMeta>;
-		context?: {
-			toolName?: string;
-			input?: Record<string, unknown>;
-		};
+export type DamageControlRiskDetectedPayload<TMeta = unknown> = DamageControlEventBase & {
+	risk: DamageControlRisk<TMeta>;
+	context?: {
+		toolName?: string;
+		input?: Record<string, unknown>;
 	};
+};
 
 function timestamp(): string {
 	return new Date().toISOString();
@@ -89,14 +83,8 @@ export function createFeatureRegisterPayload(
 	};
 }
 
-export function emitFeatureRegister(
-	pi: ExtensionAPI,
-	feature: DamageControlFeatureId,
-): void {
-	pi.events.emit(
-		DAMAGE_CONTROL_FEATURE_REGISTER_EVENT,
-		createFeatureRegisterPayload(feature),
-	);
+export function emitFeatureRegister(pi: ExtensionAPI, feature: DamageControlFeatureId): void {
+	pi.events.emit(DAMAGE_CONTROL_FEATURE_REGISTER_EVENT, createFeatureRegisterPayload(feature));
 }
 
 export function emitActionBlocked<TMeta = unknown>(

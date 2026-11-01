@@ -11,10 +11,7 @@ import {
 	isToolCallEventType,
 	SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import {
-	SandboxManager,
-	type SandboxRuntimeConfig,
-} from "@carderne/sandbox-runtime";
+import { SandboxManager, type SandboxRuntimeConfig } from "@carderne/sandbox-runtime";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { configs, DEFAULT_CONFIG_PATH } from "./config";
@@ -72,11 +69,7 @@ function sandboxRuntimeConfig(): SandboxRuntimeConfig {
 }
 
 async function initializeSandbox(): Promise<void> {
-	await SandboxManager.initialize(
-		sandboxRuntimeConfig(),
-		async () => true,
-		true,
-	);
+	await SandboxManager.initialize(sandboxRuntimeConfig(), async () => true, true);
 	sandboxState.initialized = true;
 }
 
@@ -92,12 +85,7 @@ function createSandboxedBashOperations(shellPath?: string): BashOperations {
 	return {
 		exec: async (command, cwd, options) => {
 			const wrapped = sandboxState.initialized
-				? await SandboxManager.wrapWithSandbox(
-						command,
-						shell,
-						undefined,
-						options.signal,
-					)
+				? await SandboxManager.wrapWithSandbox(command, shell, undefined, options.signal)
 				: command;
 			return local.exec(wrapped, cwd, options);
 		},
@@ -111,9 +99,7 @@ function appendFilesystemAllowance(
 ): void {
 	const targetPath = configPath ?? DEFAULT_CONFIG_PATH;
 	fs.mkdirSync(path.dirname(targetPath), { recursive: true });
-	const currentText = fs.existsSync(targetPath)
-		? fs.readFileSync(targetPath, "utf8")
-		: "";
+	const currentText = fs.existsSync(targetPath) ? fs.readFileSync(targetPath, "utf8") : "";
 	if (
 		currentText
 			.split(/\r?\n/)
@@ -128,9 +114,7 @@ function appendFilesystemAllowance(
 
 	const key = kind === "read" ? "allowRead" : "allowWrite";
 	const lines = currentText.trimEnd().split(/\r?\n/);
-	const filesystemIndex = lines.findIndex((line) =>
-		/^filesystem:\s*$/.test(line),
-	);
+	const filesystemIndex = lines.findIndex((line) => /^filesystem:\s*$/.test(line));
 	if (filesystemIndex === -1) {
 		lines.push("", "filesystem:", `  ${key}:`, `    - ${allowance}`);
 		fs.writeFileSync(targetPath, `${lines.join("\n")}\n`, "utf8");
@@ -138,8 +122,7 @@ function appendFilesystemAllowance(
 	}
 
 	const keyIndex = lines.findIndex(
-		(line, index) =>
-			index > filesystemIndex && new RegExp(`^  ${key}:\\s*$`).test(line),
+		(line, index) => index > filesystemIndex && new RegExp(`^  ${key}:\\s*$`).test(line),
 	);
 	if (keyIndex === -1) {
 		lines.splice(filesystemIndex + 1, 0, `  ${key}:`, `    - ${allowance}`);
@@ -148,8 +131,7 @@ function appendFilesystemAllowance(
 	}
 
 	let insertAt = keyIndex + 1;
-	while (insertAt < lines.length && /^    - /.test(lines[insertAt] ?? ""))
-		insertAt++;
+	while (insertAt < lines.length && /^    - /.test(lines[insertAt] ?? "")) insertAt++;
 	lines.splice(insertAt, 0, `    - ${allowance}`);
 	fs.writeFileSync(targetPath, `${lines.join("\n")}\n`, "utf8");
 }
@@ -187,8 +169,7 @@ async function promptForFilesystemAccess(
 	const scope = promptScope(result);
 	if (!scope) return false;
 
-	const grantTarget =
-		promptIsDirectory(result) && showFileOptions ? parentDir : target;
+	const grantTarget = promptIsDirectory(result) && showFileOptions ? parentDir : target;
 	if (promptIsDirectory(result) && isGrantTooBroad(grantTarget, ctx.cwd)) {
 		ctx.ui.notify(
 			`Cannot grant access to ${normalizeForDisplay(grantTarget, ctx.cwd)}/ — too broad. Treating as allow once.`,
@@ -197,18 +178,12 @@ async function promptForFilesystemAccess(
 		return true;
 	}
 
-	const allowance = storageForm(
-		grantTarget,
-		ctx.cwd,
-		promptIsDirectory(result),
-	);
+	const allowance = storageForm(grantTarget, ctx.cwd, promptIsDirectory(result));
 	if (scope === "session" || scope === "always" || grantOnceForSandboxRetry) {
-		const session =
-			kind === "read" ? sandboxState.sessionRead : sandboxState.sessionWrite;
+		const session = kind === "read" ? sandboxState.sessionRead : sandboxState.sessionWrite;
 		if (!session.includes(allowance)) session.push(allowance);
 	}
-	if (scope === "always")
-		appendFilesystemAllowance(configs.source, kind, allowance);
+	if (scope === "always") appendFilesystemAllowance(configs.source, kind, allowance);
 	await reinitializeSandbox();
 	return true;
 }
@@ -269,26 +244,12 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 			typeof context.input.path === "string"
 		) {
 			const target = canonicalizePath(context.input.path, ctx.cwd);
-			if (
-				shouldPromptForRead(target, sandboxRuntimeConfig().filesystem, ctx.cwd)
-			) {
-				const allowed = await promptForFilesystemAccess(
-					ctx,
-					"read",
-					event.toolName,
-					target,
-					true,
-				);
+			if (shouldPromptForRead(target, sandboxRuntimeConfig().filesystem, ctx.cwd)) {
+				const allowed = await promptForFilesystemAccess(ctx, "read", event.toolName, target, true);
 				if (!allowed)
-					return block(
-						`read access denied for ${target}`,
-						false,
-						"paths",
-						"user",
-						{
-							path: target,
-						},
-					);
+					return block(`read access denied for ${target}`, false, "paths", "user", {
+						path: target,
+					});
 			}
 		}
 
@@ -300,33 +261,15 @@ function setupPolicyHook(pi: ExtensionAPI): void {
 			const target = canonicalizePath(context.input.path, ctx.cwd);
 			const filesystem = sandboxRuntimeConfig().filesystem;
 			if (isWriteDenied(target, filesystem, ctx.cwd))
-				return block(
-					`write access denied by denyWrite for ${target}`,
-					false,
-					"paths",
-					"policy",
-					{
-						path: target,
-					},
-				);
+				return block(`write access denied by denyWrite for ${target}`, false, "paths", "policy", {
+					path: target,
+				});
 			if (shouldPromptForWrite(target, filesystem, ctx.cwd)) {
-				const allowed = await promptForFilesystemAccess(
-					ctx,
-					"write",
-					event.toolName,
-					target,
-					true,
-				);
+				const allowed = await promptForFilesystemAccess(ctx, "write", event.toolName, target, true);
 				if (!allowed)
-					return block(
-						`write access denied for ${target}`,
-						false,
-						"paths",
-						"user",
-						{
-							path: target,
-						},
-					);
+					return block(`write access denied for ${target}`, false, "paths", "user", {
+						path: target,
+					});
 			}
 		}
 
@@ -346,10 +289,7 @@ function setupSessionStart(pi: ExtensionAPI): void {
 			emitFeatureRegister(pi, feature);
 		}
 		if (configsError) {
-			ctx.ui.notify(
-				`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`,
-				"error",
-			);
+			ctx.ui.notify(`🛡️ Damage Control failed to load ${configs.source}: ${configsError}`, "error");
 			return;
 		}
 		if (process.platform !== "darwin" && process.platform !== "linux") {
@@ -437,23 +377,15 @@ function parseSandboxViolation(line: string): SandboxBlockedAccess | null {
 	return { kind: match[1] === "file-read" ? "read" : "write", path: match[2] };
 }
 
-function classifyOperationNotPermitted(
-	line: string,
-	cwd: string,
-): SandboxBlockedAccess | null {
-	const match = line.match(
-		/^(?:(.+?):\s+)?(\/[^\s:]+): Operation not permitted$/,
-	);
+function classifyOperationNotPermitted(line: string, cwd: string): SandboxBlockedAccess | null {
+	const match = line.match(/^(?:(.+?):\s+)?(\/[^\s:]+): Operation not permitted$/);
 	if (!match) return null;
 	const commandName = path.basename((match[1] ?? "").trim());
 	const target = canonicalizePath(match[2], cwd);
 	const filesystem = sandboxRuntimeConfig().filesystem;
-	if (READ_ERROR_COMMANDS.has(commandName))
-		return { kind: "read", path: target };
-	if (SHELL_ERROR_COMMANDS.has(commandName))
-		return { kind: "write", path: target };
-	if (shouldPromptForRead(target, filesystem, cwd))
-		return { kind: "read", path: target };
+	if (READ_ERROR_COMMANDS.has(commandName)) return { kind: "read", path: target };
+	if (SHELL_ERROR_COMMANDS.has(commandName)) return { kind: "write", path: target };
+	if (shouldPromptForRead(target, filesystem, cwd)) return { kind: "read", path: target };
 	return { kind: "write", path: target };
 }
 

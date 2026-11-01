@@ -54,7 +54,10 @@ test("sanitizeHtml prefers likely main content over surrounding site chrome", ()
 
 test("html markdown conversion normalizes heading links that wrap block content", () => {
 	const input = `<html><body><a href="/story"><h2>Story title</h2></a></body></html>`;
-	assert.equal(htmlToMarkdown(input, "https://example.com/"), "## [Story title](https://example.com/story)");
+	assert.equal(
+		htmlToMarkdown(input, "https://example.com/"),
+		"## [Story title](https://example.com/story)",
+	);
 });
 
 test("html markdown conversion flattens layout tables instead of returning raw table markup", () => {

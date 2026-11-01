@@ -12,15 +12,10 @@ export const registerTeamDoneTool = (pi: ExtensionAPI, runtime: Runtime) =>
 			subagentId: Type.String({ description: "ID of the subagent to close" }),
 		}),
 		promptSnippet: "Close a waiting interactive subagent.",
-		promptGuidelines: [
-			"team_done: Use only when no further follow-up is needed.",
-		],
+		promptGuidelines: ["team_done: Use only when no further follow-up is needed."],
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const toolCtx = getToolContext(ctx);
-			const { error } = runtime.done(
-				params.subagentId,
-				toolCtx.callerSessionId,
-			);
+			const { error } = runtime.done(params.subagentId, toolCtx.callerSessionId);
 
 			if (error) {
 				return toolError(error);
