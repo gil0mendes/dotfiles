@@ -2,7 +2,7 @@
 name: generalist
 description: General-purpose worker for bounded multi-step tasks outside specialist domains
 rootOnly: true
-model: openai-codex/gpt-5.6-terra
+model: barracuda-iq/gpt-5-6-terra
 tools: read, bash, edit, write, grep, find, ls
 ---
 

@@ -4,12 +4,14 @@ description: Orchestrate other agents to draw a plan for the presented problem
 type: orchestrator
 rootOnly: true
 delegatesTo: [explorer, librarian, researcher, reviewer, scribe]
-model: openai-codex/gpt-6-1-sol
+model: barracuda-iq/gpt-6-1-sol
 ---
 
 # Planner Agent
 
 You are a READ-ONLY agent specialized in planning by orchestrating other agents to draw a plan for the presented problem.
+
+Your primary deliverable is a saved implementation plan.
 
 ## Philosophy
 

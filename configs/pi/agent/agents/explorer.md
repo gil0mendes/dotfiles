@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Investigates codebase and returns structured findings. Read-only.
-model: openai-codex/gpt-5.6-terra
+model: barracuda-iq/gpt-5-6-terra
 tools: read, grep, find, ls, bash
 ---
 

@@ -1,6 +1,7 @@
 ---
 name: reviewer
 description: Expert code reviewer for security, performance, and philosophy compliance
+model: barracuda-iq-anthopic/claude-sonnet-5-5
 tools: read, bash, grep, find, ls
 ---
 

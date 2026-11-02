@@ -43,8 +43,6 @@
 			"models": {
 				"claude-opus-5-5": {
 					"modelID": "claude-opus-5-5",
-				"claude-opus-4-8": {
-					"modelID": "claude-opus-4-8",
 					"capabilities": {
 						"tools": true,
 						"input": ["text", "image"],
@@ -53,8 +51,6 @@
 				},
 				"claude-sonnet-5-5": {
 					"modelID": "claude-sonnet-5-5",
-				"claude-sonnet-5": {
-					"modelID": "claude-sonnet-5",
 					"capabilities": {
 						"tools": true,
 						"input": ["text", "image"],
