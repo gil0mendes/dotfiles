@@ -24,12 +24,18 @@ in
   homebrew.taps = [
     "homebrew/services"
     "anomalyco/tap"
+    "libkrun/krun"
   ];
 
   homebrew.brews = [
     "anomalyco/tap/opencode-v2"
     "jj"
     "agent-browser"
+    "molten-vk"
+    "libkrun/krun/gvproxy"
+    "libkrun/krun/libkrunfw"
+    "libkrun/krun/virglrenderer-krun"
+    "libkrun/krun/libkrun"
   ];
 
   homebrew.casks = [
