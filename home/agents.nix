@@ -4,5 +4,5 @@ let
   inherit (config.home.user-info) nixConfigDirectory;
 in
 {
-  home.file.".agents/skills".source = mkOutOfStoreSymlink "${nixConfigDirectory}/configs/agents/skills";
+  home.file.".agents".source = mkOutOfStoreSymlink "${nixConfigDirectory}/configs/agents";
 }
