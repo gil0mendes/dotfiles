@@ -1,11 +1,9 @@
-import type {
-	ExtensionAPI,
-	ExtensionContext,
-} from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Runtime, team } from "./runtime";
 import { setupTools } from "./tools/registerTools";
 import { registerUIRenderers } from "./ui";
 import { registerSystemPrompt } from "./systemPrompt";
+import { registerTeamCommand } from "./commands";
 
 type ProcessHooks = {
 	once(event: "SIGINT", listener: () => void): unknown;
@@ -18,11 +16,7 @@ const processHooksSetupKey = Symbol.for("team.processHooksSetup");
 const globalWithProcessHooks = globalThis as typeof globalThis &
 	Record<symbol, boolean | undefined>;
 
-function setupProcessHooks(
-	runtime: Runtime,
-	processHooks: ProcessHooks,
-	setupKey: symbol,
-) {
+function setupProcessHooks(runtime: Runtime, processHooks: ProcessHooks, setupKey: symbol) {
 	if (globalWithProcessHooks[setupKey]) {
 		return;
 	}
@@ -67,5 +61,6 @@ export default function teamExtension(pi: ExtensionAPI) {
 	registerUIRenderers(pi, team);
 	registerPiHooks(pi);
 	setupTools(pi, team);
+	registerTeamCommand(pi, team);
 	registerSystemPrompt(pi, team);
 }

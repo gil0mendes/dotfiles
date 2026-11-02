@@ -7,6 +7,7 @@ import {
 	SubagentSessionRunner,
 	type BootstrapContext,
 	type SubagentRunner,
+	type SubagentRunnerCallbacks,
 } from "./subagentRunner";
 import type {
 	PendingMessage,
@@ -55,10 +56,15 @@ export type ActiveAgentSummary = {
 	turns: number;
 	contextTokens: number;
 	model: string | undefined;
+	startedAt: number;
 };
 
 type AbortOptions = {
 	reason: string;
+};
+
+type RuntimeOptions = {
+	createRunner?: (callbacks: SubagentRunnerCallbacks) => SubagentRunner;
 };
 
 const isAbortableStatus = (status: SubagentStatus): boolean => {
@@ -73,6 +79,7 @@ const buildActiveAgentSummary = (state: SubagentState): ActiveAgentSummary => {
 		turns: state.turns,
 		contextTokens: state.contextTokens,
 		model: state.model,
+		startedAt: state.startedAt,
 	};
 };
 
@@ -94,6 +101,7 @@ const createAgent = (
 		brief,
 		status: "running",
 		ownerSessionId,
+		startedAt: Date.now(),
 		session: null,
 		turns: 0,
 		contextTokens: 0,
@@ -120,10 +128,10 @@ export class Runtime {
 	private readonly scheduledFlushes = new Set<string>();
 	private pendingMessages: PendingMessage[] = [];
 
-	constructor() {
+	constructor(options: RuntimeOptions = {}) {
 		// TODO: move this logic outside to make it more modular
 		this.scheduleFlush = (fn) => setTimeout(fn, 0);
-		this.runner = new SubagentSessionRunner({
+		const callbacks: SubagentRunnerCallbacks = {
 			isCurrent: (state) => this.agents.get(state.id) === state,
 			onSessionAttached: (state, sessionId) => {
 				this.sessionAgents.set(sessionId, state.agentConfig);
@@ -138,7 +146,8 @@ export class Runtime {
 			) => {
 				this.settleAgent(state, status, outcome);
 			},
-		});
+		};
+		this.runner = options.createRunner?.(callbacks) ?? new SubagentSessionRunner(callbacks);
 	}
 
 	abort(id: string, opts: AbortOptions): boolean {
@@ -150,6 +159,14 @@ export class Runtime {
 		this.runner.abort(state);
 		this.settleAgent(state, "aborted", { error: opts.reason });
 		return true;
+	}
+
+	abortOwned(id: string, ownerSessionId: string, opts: AbortOptions): boolean {
+		const state = this.agents.get(id);
+		if (!state || state.ownerSessionId !== ownerSessionId) {
+			return false;
+		}
+		return this.abort(id, opts);
 	}
 
 	abortAll() {
