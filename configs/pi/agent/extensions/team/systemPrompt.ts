@@ -1,4 +1,4 @@
-import { type ExtensionAPI } from "@earendil-works/pi-coding-agent";
+import type { ExtensionAPI } from "@earendil-works/pi-coding-agent";
 import { discoverAgents } from "./catalog";
 import { getPermittedSubagents } from "./delegationPolicy";
 import type { Runtime } from "./runtime";
@@ -23,8 +23,9 @@ const buildSystemPrompt = ({ agents }: BuildSystemPromptArgs) => `
 
 export const registerSystemPrompt = (pi: ExtensionAPI, runtime: Runtime) => {
 	pi.on("before_agent_start", (event, ctx) => {
-		const caller = runtime.getSessionAgent(ctx.sessionManager.getSessionId());
-		if (caller?.type !== "orchestrator") return;
+		const sessionId = ctx.sessionManager.getSessionId();
+		const caller = runtime.getSessionAgent(sessionId);
+		if (caller) return;
 
 		const catalog = discoverAgents(ctx.cwd);
 		const agents = getPermittedSubagents(caller, catalog.agents)
