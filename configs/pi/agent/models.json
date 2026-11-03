@@ -6,9 +6,32 @@
 			"api": "openai-completions",
 			"models": [
 				{
+					"id": "gpt-6-astra",
+					"api": "openai-responses",
+					"name": "GPT 6 Astra",
+					"contextWindow": 922000,
+					"maxTokens": 128000,
+					"cost": {
+						"input": 10,
+						"output": 50,
+						"cacheRead": 0,
+						"cacheWrite": 0
+					},
+					"input": ["text", "image"],
+					"reasoning": true
+				},
+				{
 					"id": "gpt-6-1-sol",
 					"api": "openai-responses",
 					"name": "GPT 6.1 Sol",
+					"contextWindow": 922000,
+					"maxTokens": 128000,
+					"cost": {
+						"input": 2,
+						"output": 10,
+						"cacheRead": 0,
+						"cacheWrite": 0
+					},
 					"input": ["text", "image"],
 					"reasoning": true,
 					"thinkingLevelMap": {
