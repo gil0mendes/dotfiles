@@ -11,11 +11,14 @@ import {
 const agent = (id: string, status: ActiveAgentSummary["status"]): ActiveAgentSummary => ({
 	id,
 	agentName: `agent-${id}`,
+	brief: "Test brief",
 	status,
 	turns: 2,
 	contextTokens: 120,
 	model: undefined,
 	startedAt: 10_000,
+	result: undefined,
+	error: undefined,
 });
 
 describe("team status presentation", () => {

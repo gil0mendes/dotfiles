@@ -1,11 +1,19 @@
 import type { ExtensionAPI, ExtensionCommandContext } from "@earendil-works/pi-coding-agent";
 import type { ActiveAgentSummary, Runtime } from "./runtime";
 
-export type TeamCommandAction = "menu" | "list" | "respond" | "abort";
+export type TeamCommandAction = "menu" | "list" | "fleet" | "respond" | "abort";
+
+type TeamCommandContext = Pick<ExtensionCommandContext, "hasUI"> & {
+	sessionManager: Pick<ExtensionCommandContext["sessionManager"], "getSessionId">;
+	ui: Pick<ExtensionCommandContext["ui"], "confirm" | "custom" | "input" | "notify" | "select">;
+};
+
+export type ShowFleet = (ctx: TeamCommandContext) => Promise<void>;
 
 const actionDescriptions: Record<TeamCommandAction, string> = {
 	menu: "Show available team actions",
 	list: "List active agents",
+	fleet: "Open fleet overlay",
 	respond: "Respond to a waiting agent",
 	abort: "Abort active agents",
 };
@@ -21,22 +29,30 @@ const summarizeAgents = (agents: ActiveAgentSummary[]): string => {
 export const parseTeamCommandAction = (args: string): TeamCommandAction | undefined => {
 	const action = args.trim().toLowerCase();
 	if (!action) return "menu";
-	if (action === "list" || action === "respond" || action === "abort") {
+	if (action === "list" || action === "fleet" || action === "respond" || action === "abort") {
 		return action;
 	}
 	return undefined;
 };
 
 const notify = (
-	ctx: ExtensionCommandContext,
+	ctx: TeamCommandContext,
 	message: string,
 	type: "info" | "warning" | "error" = "info",
 ): void => {
 	ctx.ui.notify(message, type);
 };
 
+const printResult = (message: string): void => {
+	console.log(message);
+};
+
+const showRoster = (ctx: TeamCommandContext, agents: ActiveAgentSummary[]): void => {
+	notify(ctx, summarizeAgents(agents));
+};
+
 const selectAgent = async (
-	ctx: ExtensionCommandContext,
+	ctx: TeamCommandContext,
 	title: string,
 	agents: ActiveAgentSummary[],
 ): Promise<ActiveAgentSummary | undefined> => {
@@ -47,7 +63,7 @@ const selectAgent = async (
 };
 
 const respondToWaitingAgent = async (
-	ctx: ExtensionCommandContext,
+	ctx: TeamCommandContext,
 	runtime: Runtime,
 	sessionId: string,
 ): Promise<void> => {
@@ -78,7 +94,7 @@ const respondToWaitingAgent = async (
 };
 
 const abortAgents = async (
-	ctx: ExtensionCommandContext,
+	ctx: TeamCommandContext,
 	runtime: Runtime,
 	sessionId: string,
 ): Promise<void> => {
@@ -120,13 +136,18 @@ const abortAgents = async (
 };
 
 const runTeamCommand = async (
-	ctx: ExtensionCommandContext,
+	ctx: TeamCommandContext,
 	runtime: Runtime,
 	action: TeamCommandAction,
+	showFleet: ShowFleet,
 ): Promise<void> => {
 	const sessionId = ctx.sessionManager.getSessionId();
 	if (action === "list") {
-		notify(ctx, summarizeAgents(runtime.getActiveSummariesForOwner(sessionId)));
+		showRoster(ctx, runtime.getActiveSummariesForOwner(sessionId));
+		return;
+	}
+	if (action === "fleet") {
+		await showFleet(ctx);
 		return;
 	}
 	if (action === "respond") {
@@ -139,13 +160,17 @@ const runTeamCommand = async (
 	}
 
 	const agents = runtime.getActiveSummariesForOwner(sessionId);
-	notify(ctx, summarizeAgents(agents));
-	if (agents.length === 0) return;
+	showRoster(ctx, agents);
 
 	const selected = await ctx.ui.select("Team actions", [
+		actionDescriptions.fleet,
 		actionDescriptions.respond,
 		actionDescriptions.abort,
 	]);
+	if (selected === actionDescriptions.fleet) {
+		await showFleet(ctx);
+		return;
+	}
 	if (selected === actionDescriptions.respond) {
 		await respondToWaitingAgent(ctx, runtime, sessionId);
 		return;
@@ -155,19 +180,38 @@ const runTeamCommand = async (
 	}
 };
 
-export const registerTeamCommand = (pi: ExtensionAPI, runtime: Runtime): void => {
+export const handleTeamCommand = async (
+	args: string,
+	ctx: TeamCommandContext,
+	runtime: Runtime,
+	showFleet: ShowFleet,
+): Promise<void> => {
+	const action = parseTeamCommandAction(args);
+	if (!action) {
+		const usage = "Usage: /team [list|fleet|respond|abort]";
+		if (ctx.hasUI) notify(ctx, usage, "warning");
+		else printResult(usage);
+		return;
+	}
+	if (!ctx.hasUI) {
+		const sessionId = ctx.sessionManager.getSessionId();
+		if (action === "list" || action === "menu") {
+			printResult(summarizeAgents(runtime.getActiveSummariesForOwner(sessionId)));
+			return;
+		}
+		printResult(`/team ${action} requires interactive UI mode.`);
+		return;
+	}
+	await runTeamCommand(ctx, runtime, action, showFleet);
+};
+
+export const registerTeamCommand = (
+	pi: ExtensionAPI,
+	runtime: Runtime,
+	showFleet: ShowFleet,
+): void => {
 	pi.registerCommand("team", {
-		description: "List active team agents, respond to waiting agents, or abort agents",
-		handler: async (args, ctx) => {
-			const action = parseTeamCommandAction(args);
-			if (!action) {
-				notify(ctx, "Usage: /team [list|respond|abort]", "warning");
-				return;
-			}
-			if (!ctx.hasUI) {
-				return;
-			}
-			await runTeamCommand(ctx, runtime, action);
-		},
+		description: "List team agents, open the fleet, respond to waiting agents, or abort agents",
+		handler: (args, ctx) => handleTeamCommand(args, ctx, runtime, showFleet),
 	});
 };

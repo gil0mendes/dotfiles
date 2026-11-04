@@ -2,6 +2,7 @@ import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-a
 import { Runtime, team } from "./runtime";
 import { setupTools } from "./tools/registerTools";
 import { registerUIRenderers } from "./ui";
+import { createFleetController } from "./ui/controller";
 import { registerSystemPrompt } from "./systemPrompt";
 import { registerTeamCommand } from "./commands";
 
@@ -31,7 +32,7 @@ function setupProcessHooks(runtime: Runtime, processHooks: ProcessHooks, setupKe
 	globalWithProcessHooks[setupKey] = true;
 }
 
-function registerPiHooks(pi: ExtensionAPI) {
+function registerPiHooks(pi: ExtensionAPI, disposeFleetOverlay: () => void) {
 	const activateSession = (ctx: ExtensionContext) => {
 		team.activateSession({
 			cwd: ctx.cwd,
@@ -43,10 +44,12 @@ function registerPiHooks(pi: ExtensionAPI) {
 	};
 
 	pi.on("session_start", (_event, ctx) => {
+		disposeFleetOverlay();
 		activateSession(ctx);
 	});
 
 	pi.on("session_shutdown", (event, ctx) => {
+		disposeFleetOverlay();
 		const sessionId = ctx.sessionManager.getSessionId();
 		team.terminateSession(sessionId);
 
@@ -58,9 +61,10 @@ function registerPiHooks(pi: ExtensionAPI) {
 
 export default function teamExtension(pi: ExtensionAPI) {
 	setupProcessHooks(team, process, processHooksSetupKey);
+	const fleetController = createFleetController(pi.events, team);
 	registerUIRenderers(pi, team);
-	registerPiHooks(pi);
+	registerPiHooks(pi, fleetController.dispose);
 	setupTools(pi, team);
-	registerTeamCommand(pi, team);
+	registerTeamCommand(pi, team, fleetController.show);
 	registerSystemPrompt(pi, team);
 }

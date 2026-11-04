@@ -19,6 +19,7 @@ import { emitTeamRuntimeChanged, emitTeamWarning, type TeamRuntimeChangeReason }
 import { getSteeringMessagePayload } from "./message/steeringPayload";
 
 const PENDING_MESSAGE_TTL_MS = 86_400_000; // 24 hours
+export const RECENT_AGENT_TTL_MS = 30_000;
 
 export type ActiveRuntimeBinding = {
 	/**
@@ -44,11 +45,24 @@ type SpawnContext = {
 export type ActiveAgentSummary = {
 	id: string;
 	agentName: string;
+	brief: string;
 	status: SubagentStatus;
 	turns: number;
 	contextTokens: number;
 	model: string | undefined;
 	startedAt: number;
+	result: string | undefined;
+	error: string | undefined;
+};
+
+export type RecentAgentSummary = ActiveAgentSummary & {
+	settledAt: number;
+};
+
+export type FleetSnapshot = {
+	active: ActiveAgentSummary[];
+	recent: RecentAgentSummary[];
+	detachedActiveCount: number;
 };
 
 type AbortOptions = {
@@ -57,6 +71,7 @@ type AbortOptions = {
 
 type RuntimeOptions = {
 	createRunner?: (callbacks: SubagentRunnerCallbacks) => SubagentRunner;
+	now?: () => number;
 };
 
 const isAbortableStatus = (status: SubagentStatus): boolean => {
@@ -67,11 +82,14 @@ const buildActiveAgentSummary = (state: SubagentState): ActiveAgentSummary => {
 	return {
 		id: state.id,
 		agentName: state.agentConfig.name,
+		brief: state.brief,
 		status: state.status,
 		turns: state.turns,
 		contextTokens: state.contextTokens,
 		model: state.model,
 		startedAt: state.startedAt,
+		result: state.result,
+		error: state.error,
 	};
 };
 
@@ -113,8 +131,9 @@ export class Runtime {
 	private readonly agents = new Map<string, SubagentState>();
 	private readonly runner: SubagentRunner;
 	private readonly scheduleFlush: (callback: () => void) => void;
-	private readonly now = Date.now;
+	private readonly now: () => number;
 	private readonly bindings = new Map<string, ActiveRuntimeBinding>();
+	private readonly recentByOwner = new Map<string, RecentAgentSummary[]>();
 	private readonly sessionAgents = new Map<string, AgentConfig>();
 	private readonly scheduledFlushes = new Set<string>();
 	private pendingMessages: PendingMessage[] = [];
@@ -122,6 +141,7 @@ export class Runtime {
 	constructor(options: RuntimeOptions = {}) {
 		// TODO: move this logic outside to make it more modular
 		this.scheduleFlush = (fn) => setTimeout(fn, 0);
+		this.now = options.now ?? Date.now;
 		const callbacks: SubagentRunnerCallbacks = {
 			isCurrent: (state) => this.agents.get(state.id) === state,
 			onSessionAttached: (state, sessionId) => {
@@ -191,6 +211,7 @@ export class Runtime {
 	terminateSession(sessionId: string): void {
 		this.bindings.delete(sessionId);
 		this.sessionAgents.delete(sessionId);
+		this.recentByOwner.delete(sessionId);
 	}
 
 	reportWarning(ownerSessionId: string, message: string): void {
@@ -253,6 +274,23 @@ export class Runtime {
 		return Array.from(this.agents.values())
 			.filter((state) => isAbortableStatus(state.status) && state.ownerSessionId === ownerSessionId)
 			.map(buildActiveAgentSummary);
+	}
+
+	getFleetSnapshotForOwner(ownerSessionId: string): FleetSnapshot {
+		this.cleanRecentForOwner(ownerSessionId);
+		return {
+			active: this.getActiveSummariesForOwner(ownerSessionId),
+			recent: [...(this.recentByOwner.get(ownerSessionId) ?? [])],
+			detachedActiveCount: this.getDetachedActiveCount(ownerSessionId),
+		};
+	}
+
+	getDetachedActiveCount(ownerSessionId: string): number {
+		let count = 0;
+		for (const state of this.agents.values()) {
+			if (isAbortableStatus(state.status) && state.ownerSessionId !== ownerSessionId) count++;
+		}
+		return count;
 	}
 
 	private validateOwnedSubagent(
@@ -410,12 +448,38 @@ export class Runtime {
 		agentId?: string,
 	): void {
 		const binding = this.bindings.get(ownerSessionId);
-		if (!binding) return;
-		emitTeamRuntimeChanged(binding.events, {
-			ownerSessionId,
-			reason,
-			agentId,
-		});
+		if (binding) {
+			emitTeamRuntimeChanged(binding.events, { ownerSessionId, reason, agentId });
+		}
+		if (reason !== "spawned" && reason !== "settled" && reason !== "removed") return;
+		for (const [sessionId, otherBinding] of this.bindings) {
+			if (sessionId === ownerSessionId) continue;
+			emitTeamRuntimeChanged(otherBinding.events, {
+				ownerSessionId: sessionId,
+				reason: "detached_changed",
+			});
+		}
+	}
+
+	private cleanRecentForOwner(ownerSessionId: string): void {
+		const cutoff = this.now() - RECENT_AGENT_TTL_MS;
+		const recent = (this.recentByOwner.get(ownerSessionId) ?? []).filter(
+			(agent) => agent.settledAt >= cutoff,
+		);
+		if (recent.length === 0) {
+			this.recentByOwner.delete(ownerSessionId);
+			return;
+		}
+		this.recentByOwner.set(ownerSessionId, recent);
+	}
+
+	private rememberSettledAgent(state: SubagentState): void {
+		const summary: RecentAgentSummary = {
+			...buildActiveAgentSummary(state),
+			settledAt: this.now(),
+		};
+		const recent = [summary, ...(this.recentByOwner.get(state.ownerSessionId) ?? [])].slice(0, 20);
+		this.recentByOwner.set(state.ownerSessionId, recent);
 	}
 
 	private settleAgent(
@@ -428,6 +492,7 @@ export class Runtime {
 		state.status = nextStatus;
 		state.result = opts.result;
 		state.error = opts.error;
+		if (state.status !== "waiting") this.rememberSettledAgent(state);
 		this.notifyRuntimeChanged(state.ownerSessionId, "settled", state.id);
 
 		this.deliver(state.ownerSessionId, {

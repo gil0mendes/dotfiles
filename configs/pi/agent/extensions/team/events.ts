@@ -10,7 +10,8 @@ export type TeamRuntimeChangeReason =
 	| "progressed"
 	| "responded"
 	| "settled"
-	| "removed";
+	| "removed"
+	| "detached_changed";
 
 export type TeamRuntimeChangedPayload = {
 	ownerSessionId: string;
@@ -44,7 +45,8 @@ const isRuntimeChangeReason = (value: unknown): value is TeamRuntimeChangeReason
 	value === "progressed" ||
 	value === "responded" ||
 	value === "settled" ||
-	value === "removed";
+	value === "removed" ||
+	value === "detached_changed";
 
 export const isTeamRuntimeChangedPayload = (value: unknown): value is TeamRuntimeChangedPayload =>
 	isRecord(value) &&

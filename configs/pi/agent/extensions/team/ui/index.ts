@@ -7,6 +7,9 @@ import {
 	TEAM_WARNING_EVENT,
 } from "../events";
 import type { ActiveAgentSummary, Runtime } from "../runtime";
+import { formatElapsed } from "./formatElapsed";
+
+export { formatElapsed } from "./formatElapsed";
 
 const WIDGET_ID = "team-subagents";
 const STATUS_ID = "team-subagents";
@@ -33,14 +36,6 @@ const SPINNER_FRAMES = ["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", 
 const truncate = (value: string, maxLength: number): string => {
 	if (value.length <= maxLength) return value;
 	return `${value.slice(0, Math.max(0, maxLength - 1))}…`;
-};
-
-export const formatElapsed = (startedAt: number, now: number): string => {
-	const elapsedSeconds = Math.max(0, Math.floor((now - startedAt) / 1000));
-	const minutes = Math.floor(elapsedSeconds / 60);
-	const seconds = elapsedSeconds % 60;
-	if (minutes === 0) return `${seconds}s`;
-	return `${minutes}m${String(seconds).padStart(2, "0")}s`;
 };
 
 export const buildAgentStatusPresentation = (

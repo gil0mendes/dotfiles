@@ -150,6 +150,95 @@ describe("Runtime session bindings", () => {
 		expect(changes).toContain("model_updated");
 	});
 
+	it("reports changed-session work only as a detached count and preserves ownership controls", () => {
+		const runtime = new Runtime({
+			createRunner: () => ({ start: () => Promise.resolve(), respond: () => {}, abort: () => {} }),
+		});
+		const agentId = runtime.spawn(agentConfig, "private task", "/root", "old-session", {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+			brief: "private brief",
+		});
+
+		expect(runtime.getFleetSnapshotForOwner("new-session")).toEqual({
+			active: [],
+			recent: [],
+			detachedActiveCount: 1,
+		});
+		expect(runtime.abortOwned(agentId, "new-session", { reason: "nope" })).toBe(false);
+		expect(runtime.respond(agentId, "nope", "new-session").error).toContain("different session");
+	});
+
+	it("retains settled rows for thirty seconds without retaining them indefinitely", () => {
+		let now = 1_000;
+		let settle: (() => void) | undefined;
+		const runtime = new Runtime({
+			now: () => now,
+			createRunner: (callbacks) => ({
+				start: (state) => {
+					settle = () => callbacks.onSettled(state, "done", { result: "complete" });
+					return Promise.resolve();
+				},
+				respond: () => {},
+				abort: () => {},
+			}),
+		});
+		runtime.spawn(agentConfig, "task", "/root", "owner", {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+		});
+		if (!settle) throw new Error("Fake runner did not start the agent");
+		settle();
+
+		expect(runtime.getFleetSnapshotForOwner("owner").recent).toHaveLength(1);
+		now += 30_001;
+		expect(runtime.getFleetSnapshotForOwner("owner").recent).toEqual([]);
+	});
+
+	it("clears only terminated owner history while preserving active work and pending results", () => {
+		let settle: (() => void) | undefined;
+		const runtime = new Runtime({
+			createRunner: (callbacks) => ({
+				start: (state) => {
+					settle = () => callbacks.onSettled(state, "done", { result: "after reload" });
+					return Promise.resolve();
+				},
+				respond: () => {},
+				abort: () => {},
+			}),
+		});
+		const firstId = runtime.spawn(agentConfig, "first", "/root", "owner", {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+		});
+		const firstState = runtime.getActiveSummariesForOwner("owner");
+		expect(firstState.map((agent) => agent.id)).toEqual([firstId]);
+		if (!settle) throw new Error("Fake runner did not start the agent");
+		settle();
+
+		const snapshot = runtime.getFleetSnapshotForOwner("owner");
+		snapshot.recent.pop();
+		expect(runtime.getFleetSnapshotForOwner("owner").recent).toHaveLength(1);
+		runtime.terminateSession("owner");
+		expect(runtime.getFleetSnapshotForOwner("owner").recent).toEqual([]);
+
+		const activeId = runtime.spawn(agentConfig, "active", "/root", "owner", {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+		});
+		expect(runtime.getActiveSummariesForOwner("owner").map((agent) => agent.id)).toEqual([
+			activeId,
+		]);
+	});
+
 	it("keeps a parent session bound while a child session starts and stops", () => {
 		const runtime = new Runtime();
 		const rootEvents = createEventBus();
