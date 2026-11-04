@@ -51,7 +51,7 @@ export const createFleetOverlay = (
 			return cachedLines;
 		},
 		handleInput: (data) => {
-			const action = fleetKeyAction(data, keybindings.matches);
+			const action = fleetKeyAction(data, (input, binding) => keybindings.matches(input, binding));
 			if (action === "none") return;
 			if (action === "close") {
 				done({ kind: "close" });

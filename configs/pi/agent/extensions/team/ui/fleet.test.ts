@@ -1,4 +1,4 @@
-import { visibleWidth } from "@earendil-works/pi-tui";
+import { KeybindingsManager, TUI_KEYBINDINGS, visibleWidth } from "@earendil-works/pi-tui";
 import { describe, expect, it } from "vitest";
 import type { ActiveAgentSummary } from "../runtime";
 import { createFleetOverlay } from "./overlay";
@@ -80,6 +80,28 @@ describe("fleet state and presentation", () => {
 				8,
 			),
 		).toEqual(createFleetState());
+	});
+
+	it("handles configured keys with a real keybindings manager", () => {
+		const keybindings = new KeybindingsManager(TUI_KEYBINDINGS, {
+			"tui.select.up": "h",
+			"tui.select.down": "l",
+			"tui.select.cancel": "x",
+		});
+		const actions: string[] = [];
+		const overlay = createFleetOverlay(
+			{ requestRender: () => {} },
+			keybindings,
+			view,
+			(action) => actions.push(action.kind === "respond" ? action.agentId : action.kind),
+		);
+
+		overlay.handleInput("l");
+		overlay.handleInput("h");
+		overlay.handleInput("j");
+		overlay.handleInput("r");
+		overlay.handleInput("x");
+		expect(actions).toEqual(["two", "close"]);
 	});
 
 	it("turns selected waiting rows into a response action", () => {
