@@ -126,6 +126,7 @@ export class Runtime {
 			isCurrent: (state) => this.agents.get(state.id) === state,
 			onSessionAttached: (state, sessionId) => {
 				this.sessionAgents.set(sessionId, state.agentConfig);
+				this.notifyRuntimeChanged(state.ownerSessionId, "model_updated", state.id);
 			},
 			onProgress: (ownerSessionId) => {
 				this.notifyRuntimeChanged(ownerSessionId, "progressed");
@@ -213,11 +214,16 @@ export class Runtime {
 		this.agents.set(agentState.id, agentState);
 		this.notifyRuntimeChanged(ownerSessionId, "spawned", agentState.id);
 
-		this.runner.start(agentState, {
-			cwd,
-			ctx: toBootstrapContext(ctx),
-			onWarning: ctx.onWarning,
-		});
+		void this.runner
+			.start(agentState, {
+				cwd,
+				ctx: toBootstrapContext(ctx),
+				onWarning: ctx.onWarning,
+			})
+			.catch((error: unknown) => {
+				const message = error instanceof Error ? error.message : String(error);
+				this.settleAgent(agentState, "error", { error: message });
+			});
 
 		return agentState.id;
 	}

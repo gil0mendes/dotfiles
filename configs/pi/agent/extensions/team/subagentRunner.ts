@@ -46,6 +46,8 @@ type BootstrapOptions = {
 	agentConfig: AgentConfig;
 	cwd: string;
 	ctx: BootstrapContext;
+	model?: Model<Api>;
+	tools?: string[];
 };
 
 type BootstrapResult = {
@@ -75,43 +77,134 @@ const getSkillWarnings = (
 	return warnings;
 };
 
-const formatParsedModel = (model: ParsedModel): string => `${model.provider}/${model.modelId}`;
+export type AvailableModelIdentity = {
+	provider: string;
+	id: string;
+};
+
+export type ModelResolution = {
+	model?: AvailableModelIdentity;
+	warnings: string[];
+};
+
+const MAX_AMBIGUITY_CANDIDATES = 3;
+
+const formatModelIdentity = (model: AvailableModelIdentity): string =>
+	`${model.provider}/${model.id}`;
+const formatSelector = (selector: ParsedModel): string =>
+	JSON.stringify(`${selector.provider}/${selector.modelId}`);
+
+const tokenizeModelId = (modelId: string): string[] =>
+	modelId
+		.toLowerCase()
+		.split(/[^a-z0-9]+/i)
+		.filter(Boolean);
+
+const isFuzzyModelMatch = (selector: ParsedModel, candidate: AvailableModelIdentity): boolean => {
+	if (selector.provider !== candidate.provider) return false;
+
+	const queryTokens = tokenizeModelId(selector.modelId);
+	const candidateTokens = tokenizeModelId(candidate.id);
+	let candidateIndex = 0;
+	for (const queryToken of queryTokens) {
+		while (
+			candidateIndex < candidateTokens.length &&
+			!candidateTokens[candidateIndex]?.startsWith(queryToken)
+		) {
+			candidateIndex++;
+		}
+		if (candidateIndex === candidateTokens.length) return false;
+		candidateIndex++;
+	}
+	return true;
+};
+
+const uniqueAvailableModels = (
+	availableModels: readonly AvailableModelIdentity[],
+): AvailableModelIdentity[] => {
+	const models: AvailableModelIdentity[] = [];
+	const identities = new Set<string>();
+	for (const model of availableModels) {
+		const identity = formatModelIdentity(model);
+		if (identities.has(identity)) continue;
+		identities.add(identity);
+		models.push(model);
+	}
+	return models;
+};
+
+const formatAmbiguousCandidates = (candidates: readonly AvailableModelIdentity[]): string => {
+	const formattedCandidates = candidates
+		.map((candidate) => JSON.stringify(formatModelIdentity(candidate)))
+		.sort();
+	const visibleCandidates = formattedCandidates.slice(0, MAX_AMBIGUITY_CANDIDATES);
+	const remaining = formattedCandidates.length - visibleCandidates.length;
+	return `${visibleCandidates.join(", ")}${remaining > 0 ? `, … ${remaining} more` : ""}`;
+};
+
+/**
+ * Resolves provider-qualified selectors against authenticated available models only.
+ * Fuzzy model-id matching is case-insensitive: selector tokens are an ordered
+ * subsequence and each token must prefix its aligned candidate token.
+ */
+export const resolveModelPreferences = (
+	preferences: readonly ParsedModel[],
+	availableModels: readonly AvailableModelIdentity[],
+): ModelResolution => {
+	const models = uniqueAvailableModels(availableModels);
+	const warnings: string[] = [];
+	for (const selector of preferences) {
+		const exact = models.find(
+			(candidate) => candidate.provider === selector.provider && candidate.id === selector.modelId,
+		);
+		if (exact) return { model: exact, warnings };
+
+		const fuzzyMatches = models.filter((candidate) => isFuzzyModelMatch(selector, candidate));
+		if (fuzzyMatches.length === 1) {
+			const fuzzyMatch = fuzzyMatches[0];
+			if (!fuzzyMatch) continue;
+			warnings.push(
+				`Model selector ${formatSelector(selector)} resolved to ${JSON.stringify(formatModelIdentity(fuzzyMatch))}`,
+			);
+			return { model: fuzzyMatch, warnings };
+		}
+		if (fuzzyMatches.length > 1) {
+			warnings.push(
+				`Model selector ${formatSelector(selector)} is ambiguous among ${formatAmbiguousCandidates(fuzzyMatches)}, skipping`,
+			);
+		}
+	}
+	return { warnings };
+};
 
 export const resolveModel = (
 	agentConfig: AgentConfig,
 	ctx: BootstrapContext,
 ): { model?: Model<Api>; warnings: string[] } => {
-	const { model } = ctx;
-	const warnings: string[] = [];
-	const modelPreferences = agentConfig.parsedModels?.length
+	const preferences = agentConfig.parsedModels?.length
 		? agentConfig.parsedModels
 		: agentConfig.parsedModel
 			? [agentConfig.parsedModel]
 			: [];
-
-	if (modelPreferences.length === 0) {
-		return { model, warnings };
-	}
+	if (preferences.length === 0) return { model: ctx.model, warnings: [] };
 
 	const availableModels = ctx.modelRegistry.getAvailable();
-	for (const candidate of modelPreferences) {
-		const found = availableModels.find(
-			(availableModel) =>
-				availableModel.provider === candidate.provider && availableModel.id === candidate.modelId,
+	const resolution = resolveModelPreferences(preferences, availableModels);
+	if (resolution.model) {
+		const model = availableModels.find(
+			(candidate) =>
+				candidate.provider === resolution.model?.provider && candidate.id === resolution.model.id,
 		);
-		if (found) {
-			return { model: found, warnings };
-		}
+		if (model) return { model, warnings: resolution.warnings };
 	}
 
-	const formattedPreferences = modelPreferences
-		.map((candidate) => `"${formatParsedModel(candidate)}"`)
-		.join(", ");
-	warnings.push(
-		`Model preferences ${formattedPreferences} not available, using current session model`,
-	);
-
-	return { model, warnings };
+	return {
+		model: ctx.model,
+		warnings: [
+			...resolution.warnings,
+			`Model preferences ${preferences.map(formatSelector).join(", ")} not available, using current session model`,
+		],
+	};
 };
 
 export const resolveTools = (
@@ -200,16 +293,12 @@ async function bootstrapSession({
 	agentConfig,
 	ctx,
 	cwd,
+	model,
+	tools,
 }: BootstrapOptions): Promise<BootstrapResult> {
 	const { modelRegistry } = ctx;
 	const { authStorage } = modelRegistry;
 	const warnings: string[] = [];
-
-	const { model, warnings: modelWarnings } = resolveModel(agentConfig, ctx);
-	warnings.push(...modelWarnings);
-
-	const { tools, warnings: toolsWarnings } = resolveTools(agentConfig, ctx.availableToolNames);
-	warnings.push(...toolsWarnings);
 
 	const resourceLoader = new DefaultResourceLoader({
 		cwd,
@@ -259,10 +348,18 @@ export class SubagentSessionRunner implements SubagentRunner {
 				return;
 			}
 
+			const modelResolution = resolveModel(state.agentConfig, opts.ctx);
+			const toolResolution = resolveTools(state.agentConfig, opts.ctx.availableToolNames);
+			for (const warning of [...modelResolution.warnings, ...toolResolution.warnings]) {
+				opts.onWarning?.(warning);
+			}
+
 			const { session, warnings } = await bootstrapSession({
 				agentConfig: state.agentConfig,
 				cwd: opts.cwd,
 				ctx: opts.ctx,
+				model: modelResolution.model,
+				tools: toolResolution.tools,
 			});
 
 			for (const warning of warnings) {
@@ -278,9 +375,9 @@ export class SubagentSessionRunner implements SubagentRunner {
 			if (isAborted(state)) {
 				return;
 			}
-
-			// TODO: check if this handled correctly by the caller
-			throw error;
+			this.callbacks.onSettled(state, "error", {
+				error: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 	respond(state: SubagentState, message: string): void {
@@ -297,6 +394,9 @@ export class SubagentSessionRunner implements SubagentRunner {
 			return false;
 		}
 		state.session = session;
+		if (session.model) {
+			state.model = formatModelIdentity(session.model);
+		}
 		session.setSessionName(formatSubagentSessionName(state));
 		this.callbacks.onSessionAttached(state, session.sessionManager.getSessionId());
 		return true;
@@ -310,7 +410,7 @@ export class SubagentSessionRunner implements SubagentRunner {
 				if (msg.role === "assistant") {
 					const assistantMsg = msg as AssistantMessage;
 					state.contextTokens = assistantMsg.usage.totalTokens;
-					state.model = assistantMsg.model;
+					state.model = `${assistantMsg.provider}/${assistantMsg.model}`;
 				}
 				this.callbacks.onProgress(state.ownerSessionId);
 				return;

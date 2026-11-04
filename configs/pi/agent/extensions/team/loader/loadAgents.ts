@@ -3,8 +3,8 @@ import * as fs from "node:fs";
 
 import { isNil } from "ramda";
 import { getAgentDir, parseFrontmatter } from "@earendil-works/pi-coding-agent";
-import { parseModel, parseModelPreferences, type AgentDiscoveryWarning } from "./utils";
-import type { AgentConfig, AgentConfigFields, AgentType, ParsedModel } from "./types";
+import { parseModelDeclaration, type AgentDiscoveryWarning } from "./utils";
+import type { AgentConfig, AgentConfigFields, AgentType } from "./types";
 import type { ThinkingLevel } from "@earendil-works/pi-ai";
 
 export type AgentDefinitionFile = {
@@ -115,7 +115,7 @@ type ParsedFieldWarning =
 			fieldName: ParsedFieldName;
 			expected: "string" | "string or YAML string array" | "boolean";
 	  }
-	| { code: "invalid-model-format"; model: string }
+	| { code: "invalid-model-format"; model: unknown }
 	| { code: "invalid-thinking-level"; thinking: string };
 
 type ParsedFieldSet = AgentConfigFields & {
@@ -205,32 +205,17 @@ const parseSharedFields = (
 	const fields: AgentConfigFields = {};
 
 	if (!isNil(record.model)) {
-		const modelPreferences = parseModelPreferences(record.model);
-		if (modelPreferences) {
-			if (modelPreferences.length === 1) {
-				fields.model = modelPreferences[0];
-			} else if (modelPreferences.length > 1) {
-				fields.model = modelPreferences;
-			}
-
-			const parsedModels: ParsedModel[] = [];
-			for (const model of modelPreferences) {
-				const parsedModel = parseModel(model);
-				if (parsedModel) {
-					parsedModels.push(parsedModel);
-				} else {
-					warnings.push({ code: "invalid-model-format", model });
-				}
-			}
-
-			fields.parsedModels = parsedModels;
-			fields.parsedModel = parsedModels[0];
-		} else if (options.warnOnInvalidType) {
-			warnings.push({
-				code: "invalid-type",
-				fieldName: "model",
-				expected: "string or YAML string array",
-			});
+		const parsed = parseModelDeclaration(record.model);
+		if (parsed.model !== undefined) {
+			fields.model = parsed.model;
+		}
+		if (parsed.parsedModels.length > 0) {
+			fields.parsedModels = parsed.parsedModels;
+			const firstModel = parsed.parsedModels[0];
+			if (firstModel) fields.parsedModel = firstModel;
+		}
+		for (const issue of parsed.issues) {
+			warnings.push({ code: "invalid-model-format", model: issue.value });
 		}
 	}
 
@@ -304,7 +289,7 @@ const formatFieldWarning = (
 		case "invalid-type":
 			return `${prefix}: field "${warning.fieldName}" must be a ${warning.expected}, ignoring`;
 		case "invalid-model-format":
-			return `${prefix}: invalid model format "${warning.model}" (expected "provider/model-id"), ignoring model`;
+			return `${prefix}: invalid model format ${JSON.stringify(warning.model)} (expected "provider/query" with an alphanumeric query token), ignoring model`;
 		case "invalid-thinking-level":
 			return `${prefix}: invalid thinking level "${warning.thinking}", ignoring`;
 	}

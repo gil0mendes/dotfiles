@@ -34,6 +34,14 @@ const mergeConfigFiles = (configFiles: AgentDefinitionFile[]): ConfigParseResult
 
 		try {
 			const parsed = loadTeamConfig(configFile.content);
+			for (const warning of parsed.warnings) {
+				warnings.push(
+					createDiscoveryWarning(
+						configFile.filePath,
+						`Subagent override ${JSON.stringify(warning.agentName)}: invalid model declaration ${JSON.stringify(warning.issue.value)} (expected "provider/query" with an alphanumeric query token), ignoring model`,
+					),
+				);
+			}
 			for (const [name, config] of Object.entries(parsed.agents)) {
 				overrides[name] = config;
 				overridesSources[name] = configFile.filePath;

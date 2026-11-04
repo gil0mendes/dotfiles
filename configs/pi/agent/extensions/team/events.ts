@@ -6,6 +6,7 @@ export const TEAM_WARNING_EVENT = "team:warning";
 export type TeamRuntimeChangeReason =
 	| "activated"
 	| "spawned"
+	| "model_updated"
 	| "progressed"
 	| "responded"
 	| "settled"
@@ -39,6 +40,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 const isRuntimeChangeReason = (value: unknown): value is TeamRuntimeChangeReason =>
 	value === "activated" ||
 	value === "spawned" ||
+	value === "model_updated" ||
 	value === "progressed" ||
 	value === "responded" ||
 	value === "settled" ||

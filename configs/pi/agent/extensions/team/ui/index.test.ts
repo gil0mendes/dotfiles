@@ -61,6 +61,23 @@ describe("team status presentation", () => {
 		expect(presentation.hasRunningAgents).toBe(true);
 	});
 
+	it("shows a compact selected model when available", () => {
+		const presentation = buildAgentStatusPresentation(
+			[{ ...agent("model", "running"), model: "anthropic/claude-opus-4-5" }],
+			20_000,
+			"⠋",
+		);
+
+		expect(presentation.rows[0]).toContain("anthropic/claude-op…");
+		expect(presentation.rows[0]?.length).toBeLessThanOrEqual(80);
+	});
+
+	it("omits the model segment when no model is available", () => {
+		const presentation = buildAgentStatusPresentation([agent("none", "running")], 20_000, "⠋");
+
+		expect(presentation.rows[0]).not.toContain("undefined");
+	});
+
 	it("truncates long agent names before rendering", () => {
 		const longNamedAgent = {
 			...agent("long", "waiting"),

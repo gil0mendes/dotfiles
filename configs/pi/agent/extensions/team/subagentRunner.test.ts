@@ -1,6 +1,9 @@
+import { AuthStorage, ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
-import { resolveTools } from "./subagentRunner";
+import { resolveModel, resolveTools } from "./subagentRunner";
 import type { AgentConfig } from "./loader/types";
+
+const modelRegistry = ModelRegistry.inMemory(AuthStorage.inMemory());
 
 const createAgentConfig = (tools?: string[]): AgentConfig => ({
 	name: "worker",
@@ -9,6 +12,33 @@ const createAgentConfig = (tools?: string[]): AgentConfig => ({
 	systemPrompt: "Complete the task.",
 	filePath: "/tmp/worker.md",
 	...(tools === undefined ? {} : { tools }),
+});
+
+describe("resolveModel", () => {
+	it("falls back once after every declared preference is unavailable", () => {
+		const result = resolveModel(
+			{
+				...createAgentConfig(),
+				parsedModels: [
+					{ provider: "provider", modelId: "missing-one" },
+					{ provider: "provider", modelId: "missing-two" },
+				],
+			},
+			{
+				model: undefined,
+				modelRegistry,
+				agentDir: "/agents",
+				availableToolNames: [],
+			},
+		);
+
+		expect(result).toEqual({
+			model: undefined,
+			warnings: [
+				'Model preferences "provider/missing-one", "provider/missing-two" not available, using current session model',
+			],
+		});
+	});
 });
 
 describe("resolveTools", () => {

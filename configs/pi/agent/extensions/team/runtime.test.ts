@@ -1,6 +1,11 @@
 import { AuthStorage, createEventBus, ModelRegistry } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
-import { isTeamWarningPayload, TEAM_WARNING_EVENT } from "./events";
+import {
+	isTeamWarningPayload,
+	isTeamRuntimeChangedPayload,
+	TEAM_RUNTIME_CHANGED_EVENT,
+	TEAM_WARNING_EVENT,
+} from "./events";
 import type { AgentConfig } from "./loader/types";
 import { Runtime } from "./runtime";
 
@@ -70,6 +75,79 @@ describe("Runtime session bindings", () => {
 		await new Promise((resolve) => setTimeout(resolve, 0));
 
 		expect(deliveredMessages).toEqual([expect.stringContaining("completed")]);
+	});
+
+	it("settles a rejected runner start as an error", async () => {
+		const runtime = new Runtime({
+			createRunner: () => ({
+				start: () => Promise.reject(new Error("bootstrap failed")),
+				respond: () => {},
+				abort: () => {},
+			}),
+		});
+		const events = createEventBus();
+		const changes: string[] = [];
+		events.on(TEAM_RUNTIME_CHANGED_EVENT, (payload) => {
+			if (isTeamRuntimeChangedPayload(payload)) changes.push(payload.reason);
+		});
+		runtime.activateSession({
+			cwd: "/root",
+			sessionId: "owner",
+			sendMessage: () => {},
+			isIdle: () => true,
+			events,
+		});
+		runtime.spawn(agentConfig, "task", "/root", "owner", {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+		});
+
+		await Promise.resolve();
+		await Promise.resolve();
+		expect(changes).toContain("settled");
+		expect(runtime.getActiveSummariesForOwner("owner")).toEqual([]);
+	});
+
+	it("emits an owner runtime change when an attached session exposes its model", async () => {
+		let attach: (() => void) | undefined;
+		const runtime = new Runtime({
+			createRunner: (callbacks) => ({
+				start: (state) => {
+					attach = () => {
+						state.model = "provider/model-id";
+						callbacks.onSessionAttached(state, "subagent-session");
+					};
+					return Promise.resolve();
+				},
+				respond: () => {},
+				abort: () => {},
+			}),
+		});
+		const events = createEventBus();
+		const changes: string[] = [];
+		const sessionId = "owner";
+		events.on(TEAM_RUNTIME_CHANGED_EVENT, (payload) => {
+			if (isTeamRuntimeChangedPayload(payload)) changes.push(payload.reason);
+		});
+		runtime.activateSession({
+			cwd: "/root",
+			sessionId,
+			sendMessage: () => {},
+			isIdle: () => true,
+			events,
+		});
+		runtime.spawn(agentConfig, "task", "/root", sessionId, {
+			model: undefined,
+			modelRegistry,
+			agentDir: "/agents",
+			availableToolNames: [],
+		});
+
+		if (!attach) throw new Error("Fake runner did not start the agent");
+		attach();
+		expect(changes).toContain("model_updated");
 	});
 
 	it("keeps a parent session bound while a child session starts and stops", () => {

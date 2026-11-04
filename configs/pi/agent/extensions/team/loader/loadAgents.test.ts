@@ -1,12 +1,24 @@
 import { describe, expect, it } from "vitest";
 import { loadTeamConfig } from "../config";
 import { loadAgentDefinitionFromFile } from "./loadAgents";
+import { parseModel } from "./utils";
 
 const loadAgentFromContent = (content: string) =>
 	loadAgentDefinitionFromFile({
 		filePath: "/tmp/test-agent.md",
 		content,
 	});
+
+describe("model declaration parsing", () => {
+	it("rejects bare selectors and queries without alphanumeric tokens", () => {
+		expect(parseModel("gpt-5")).toBeNull();
+		expect(parseModel("provider/---")).toBeNull();
+		expect(parseModel("provider/path/to-model")).toEqual({
+			provider: "provider",
+			modelId: "path/to-model",
+		});
+	});
+});
 
 describe("loadAgentDefinitionFromFile", () => {
 	it("keeps single string model declarations compatible", () => {
@@ -26,6 +38,19 @@ Prompt
 		});
 		expect(result.agent?.parsedModels).toEqual([{ provider: "openai-codex", modelId: "gpt-5.5" }]);
 		expect(result.warnings).toEqual([]);
+	});
+
+	it("warns consistently for invalid frontmatter model declarations", () => {
+		const result = loadAgentFromContent(`---
+name: scout
+description: Investigates codebase
+model: provider/---
+---
+Prompt
+`);
+
+		expect(result.agent?.parsedModels).toBeUndefined();
+		expect(result.warnings[0]?.message).toContain("alphanumeric query token");
 	});
 
 	it("accepts orchestrator type declarations", () => {
@@ -113,6 +138,21 @@ Prompt
 });
 
 describe("loadTeamConfig", () => {
+	it("warns for invalid YAML model declarations instead of silently dropping them", () => {
+		const config = loadTeamConfig(`agents:
+  oracle:
+    model: provider/---
+`);
+
+		expect(config.agents.oracle?.parsedModels).toBeUndefined();
+		expect(config.warnings).toEqual([
+			{
+				agentName: "oracle",
+				issue: { value: "provider/---", reason: "invalid-selector" },
+			},
+		]);
+	});
+
 	it("parses ordered model preference arrays in overrides", () => {
 		const config = loadTeamConfig(`agents:
   oracle:

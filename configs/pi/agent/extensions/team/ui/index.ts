@@ -12,6 +12,7 @@ const WIDGET_ID = "team-subagents";
 const STATUS_ID = "team-subagents";
 const MAX_VISIBLE_AGENTS = 4;
 const MAX_AGENT_NAME_LENGTH = 24;
+const MAX_MODEL_LABEL_LENGTH = 20;
 
 type AgentStatusPresentation = {
 	rows: string[];
@@ -55,8 +56,9 @@ export const buildAgentStatusPresentation = (
 		const progress = agent.contextTokens
 			? `${agent.turns}t · ${agent.contextTokens} tok`
 			: `${agent.turns}t`;
+		const model = agent.model ? ` · ${truncate(agent.model, MAX_MODEL_LABEL_LENGTH)}` : "";
 		return truncate(
-			`${icon} ${name} · ${agent.status} · ${progress} · ${formatElapsed(agent.startedAt, now)}`,
+			`${icon} ${name}${model} · ${agent.status} · ${progress} · ${formatElapsed(agent.startedAt, now)}`,
 			80,
 		);
 	});
