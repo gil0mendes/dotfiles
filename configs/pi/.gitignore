@@ -35,6 +35,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 agent/auth.json
 agent/models.json
+agent/mcp-auth.json
 agent/sessions/*
 agent/trust.json
 agent/models-store.json

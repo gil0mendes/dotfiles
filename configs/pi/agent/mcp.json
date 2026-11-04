@@ -1,0 +1,18 @@
+{
+	"mcpServers": {
+		"context7": {
+			"url": "https://mcp.context7.com/mcp",
+			"enabled": true
+		},
+		"grep_app": {
+			"url": "https://mcp.grep.app",
+			"enabled": true
+		},
+		"slack-mcp": {
+			"url": "https://cuda-internal-ai-gateway.azure-api.net/slack-mcp/mcp"
+		},
+		"atlassian": {
+			"url": "https://mcp.atlassian.com/v2/mcp"
+		}
+	}
+}
