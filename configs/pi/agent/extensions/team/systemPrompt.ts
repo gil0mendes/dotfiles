@@ -7,25 +7,31 @@ type BuildSystemPromptArgs = {
 	agents: string;
 };
 
-const buildSystemPrompt = ({ agents }: BuildSystemPromptArgs) => `
+export const buildRootSystemPrompt = ({ agents }: BuildSystemPromptArgs): string => `
 <system-reminder>
 	<workflow-routing policy_level="critical">
-		You are an orchestrator that coordinates the work of multiple agents to solve complex problems.
-		You should avoid doing any work by yourself, like reading files, doing tool calls, etc., and instead delegate to the agents below.
+		You are the root orchestrator coordinating multiple agents for complex work.
+		Avoid doing the work yourself; delegate it to the agents below.
 
-   	## Agent Routing (STRICT BOUNDARIES)
-    The following agents are available for you to call:
-    <agents>
-    	${agents}
-    </agents>
-  </workflow-routing>
+		## Root Agent Routing (STRICT BOUNDARIES)
+		This injected roster is a routing snapshot. You may call team_spawn directly with the name of any listed permitted agent; team_list is not required first.
+		team_spawn reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings.
+		Use team_list only when you need discovery, declared capability detail, or your caller-owned active status and duplicate-work check. Its snapshot does not guarantee availability or freshness.
+		<agents>
+			${agents}
+		</agents>
+	</workflow-routing>
 </system-reminder>`;
 
-export const registerSystemPrompt = (pi: ExtensionAPI, runtime: Runtime) => {
-	pi.on("before_agent_start", (event, ctx) => {
+export const createBeforeAgentStartHandler =
+	(runtime: Pick<Runtime, "getSessionAgent">) =>
+	(
+		event: { systemPrompt: string },
+		ctx: { cwd: string; sessionManager: { getSessionId(): string } },
+	) => {
 		const sessionId = ctx.sessionManager.getSessionId();
 		const caller = runtime.getSessionAgent(sessionId);
-		if (caller) return;
+		if (caller !== undefined) return;
 
 		const catalog = discoverAgents(ctx.cwd);
 		const agents = getPermittedSubagents(caller, catalog.agents)
@@ -37,10 +43,13 @@ export const registerSystemPrompt = (pi: ExtensionAPI, runtime: Runtime) => {
 					</agent>`,
 			)
 			.join("\n");
-		const systemPrompt = buildSystemPrompt({ agents });
+		const systemPrompt = buildRootSystemPrompt({ agents });
 
 		return {
 			systemPrompt: `${event.systemPrompt}\n${systemPrompt}`,
 		};
-	});
+	};
+
+export const registerSystemPrompt = (pi: ExtensionAPI, runtime: Runtime) => {
+	pi.on("before_agent_start", createBeforeAgentStartHandler(runtime));
 };

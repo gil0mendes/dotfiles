@@ -6,26 +6,37 @@ import { canSpawnSubagent } from "../delegationPolicy";
 import type { Runtime } from "../runtime";
 import { getToolContext, toolError, toolSuccess } from "./shared";
 
+export const teamSpawnToolMetadata = {
+	description:
+		"Spawn a non-blocking subagent in an isolated session. team_spawn reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings. Results return as steering messages.",
+	subagentParameterDescription:
+		"Known permitted subagent name; root may use its injected routing roster, or use a name discovered with team_list",
+	briefParameterDescription:
+		"Concise task label for session lists, ideally under 80 characters. This is not the full task.",
+	taskParameterDescription: "Task to delegate to the subagent",
+	promptSnippet:
+		"Spawn a non-blocking subagent directly by a known permitted name. Root may use its injected routing roster; team_list is not required first.",
+	promptGuidelines: [
+		"team_spawn: Spawn directly by a known permitted name. For root, the injected routing roster is one source; do not call team_list first solely to authorize a spawn.",
+		"team_spawn: Reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings.",
+		"team_spawn: Use team_list only when you need discovery, declared capability detail, or your caller-owned active status to avoid duplicate work; its snapshot does not guarantee availability or freshness.",
+		"team_spawn: Keep brief short; put necessary context and criteria in task.",
+		"team_spawn: Do not duplicate delegated work; wait for steering results.",
+	],
+};
+
 export const registerTeamSpawnTool = (pi: ExtensionAPI, runtime: Runtime): void => {
 	pi.registerTool({
 		name: "team_spawn",
 		label: "Spawn team agent",
-		description:
-			"Spawn a non-blocking subagent that runs in an isolated session. The subagent works independently while your session stays interactive. Results are delivered back to your session as steering messages.",
+		description: teamSpawnToolMetadata.description,
 		parameters: Type.Object({
-			subagent: Type.String({ description: "Subagent name from team_list" }),
-			brief: Type.String({
-				description:
-					"Concise task label for session lists, ideally under 80 characters. This is not the full task.",
-			}),
-			task: Type.String({ description: "Task to delegate to the subagent" }),
+			subagent: Type.String({ description: teamSpawnToolMetadata.subagentParameterDescription }),
+			brief: Type.String({ description: teamSpawnToolMetadata.briefParameterDescription }),
+			task: Type.String({ description: teamSpawnToolMetadata.taskParameterDescription }),
 		}),
-		promptSnippet: "Spawn a non-blocking subagent. Use team_list first to see available subagents.",
-		promptGuidelines: [
-			"team_spawn: Use only after team_list, for one bounded self-contained task.",
-			"team_spawn: Keep brief short; put necessary context and criteria in task.",
-			"team_spawn: Do not duplicate delegated work; wait for steering results.",
-		],
+		promptSnippet: teamSpawnToolMetadata.promptSnippet,
+		promptGuidelines: teamSpawnToolMetadata.promptGuidelines,
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const toolCtx = getToolContext(ctx);
 			const catalog = discoverAgents(toolCtx.cwd);

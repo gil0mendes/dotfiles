@@ -16,6 +16,17 @@ const STATUS_ICON: Record<ActiveAgentSummary["status"], string> = {
 	aborted: "🛑",
 };
 
+export const teamListToolMetadata = {
+	description:
+		"List declared subagent definitions and caller-owned active subagents as a snapshot.",
+	promptSnippet:
+		"Discover subagents, inspect their declared capabilities, or check your caller-owned active work; this snapshot does not guarantee availability or freshness.",
+	promptGuidelines: [
+		"team_list: Recommended only for discovery, declared capability detail, or a caller-owned active status and duplicate-work check.",
+		"team_list: Its results are a snapshot and do not guarantee availability or freshness; team_spawn reloads configuration and enforces agent existence and delegation permission, while model and tool resolution occurs during asynchronous runner startup with fallback or warnings.",
+	],
+};
+
 const formatAvailableAgents = (agents: AgentConfig[], hasConfiguredAgents: boolean): string[] => {
 	if (agents.length === 0) {
 		if (hasConfiguredAgents) {
@@ -71,10 +82,10 @@ export const registerTeamListTool = (pi: ExtensionAPI, runtime: Runtime): void =
 	pi.registerTool({
 		name: "team_list",
 		label: "List team",
-		description: "List subagent definitions and active subagents",
+		description: teamListToolMetadata.description,
 		parameters: Type.Object({}),
-		promptSnippet: "List available subagents and active subagents.",
-		promptGuidelines: ["team_list: Use for discovery or a requested one-time status snapshot."],
+		promptSnippet: teamListToolMetadata.promptSnippet,
+		promptGuidelines: teamListToolMetadata.promptGuidelines,
 		execute: async (_toolCallId, _params, _signal, _onUpdate, ctx) => {
 			const toolCtx = getToolContext(ctx);
 			const catalog = discoverAgents(toolCtx.cwd);
