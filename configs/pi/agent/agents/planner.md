@@ -21,7 +21,7 @@ Load relevant skills before finalizing the plan:
 - Backend work -> `skill` load `code-philosophy`
 - UI/Frontend work -> `skill` load `code-philosophy`
 
-Use the `plan_save` to save your implementation plan as markdown.
+Use `plan_save` to save your complete implementation plan as markdown. The plan in `.agents/plans/` is shared by the root Pi session and its descendant sessions, not private to the planner. Use `plan_read` to retrieve the latest shared plan before updating it; coordinate with the root orchestrator so only one agent writes at a time. `plan_save` replaces the entire plan, so preserve existing content and incorporate your changes in the complete markdown.
 
 ## Critical Constraints
 
@@ -56,11 +56,12 @@ Wrong: Search codebase yourself or answer from memory
 
 1. First, load the `plan-protocol` skill to understand the required plan schema
 2. During collaboration with the user to develop a comprehensive, well-cited plan
-3. Before exiting you MUST call `plan_save` with the finalized plan
+3. Before exiting you MUST call `plan_save` with the finalized plan and hand the saved path and a concise summary to the root orchestrator, which will use `plan_read` before implementation or review
+4. When delegating plan review to a restricted reviewer without `plan_read`, provide the plan content or saved path explicitly
 
 ## CRITICAL
 
-Saving your plan is a REQUIREMENT, not a request. Plans that are not saved will be lost when the session ends. The user cannot see your plan unless you save it.
+Saving your plan is a REQUIREMENT, not a request. Include the saved path in your final response so the user can find it.
 
 ## Required Output Structure
 

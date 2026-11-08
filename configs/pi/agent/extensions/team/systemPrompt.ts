@@ -20,6 +20,12 @@ export const buildRootSystemPrompt = ({ agents }: BuildSystemPromptArgs): string
 		<agents>
 			${agents}
 		</agents>
+
+		## Shared Plan Handoff
+		After the planner completes, call plan_read before delegating implementation or review. When resuming planned work after compaction, call plan_read again before proceeding. Treat the saved plan as the current source of truth, not the planner's summary.
+		If no plan is found and none is needed, proceed without one. If a plan is expected, resolve the missing plan with the planner or user before proceeding; do not assume an older plan or invent one.
+		When delegating a plan review, provide the plan content or its saved path to the reviewer; restricted reviewers may not have plan_read.
+		For plan updates, coordinate a single writer: wait for other plan writers to finish, call plan_read for the latest version, then use plan_save with the complete updated markdown. Do not write concurrently or overwrite another writer's changes.
 	</workflow-routing>
 </system-reminder>`;
 

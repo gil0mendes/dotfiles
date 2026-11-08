@@ -31,6 +31,17 @@ describe("root team system prompt", () => {
 		).toBeUndefined();
 	});
 
+	it("instructs the root to retrieve and coordinate shared plans", () => {
+		const prompt = buildRootSystemPrompt({ agents: "" });
+
+		expect(prompt).toContain("After the planner completes, call plan_read before delegating implementation or review");
+		expect(prompt).toContain("When resuming planned work after compaction, call plan_read again");
+		expect(prompt).toContain("If no plan is found and none is needed, proceed without one");
+		expect(prompt).toContain("If a plan is expected, resolve the missing plan with the planner or user");
+		expect(prompt).toContain("provide the plan content or its saved path to the reviewer");
+		expect(prompt).toContain("wait for other plan writers to finish, call plan_read for the latest version, then use plan_save with the complete updated markdown");
+	});
+
 	it("defines the roster as a direct-spawn routing snapshot", () => {
 		const prompt = buildRootSystemPrompt({ agents: "<agent><name>worker</name></agent>" });
 
