@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { teamListToolMetadata } from "./list";
+import { teamRespondPromptGuidelines } from "./respond";
 import { teamSpawnToolMetadata } from "./spawn";
 
 describe("team tool prompt guidance", () => {
@@ -19,7 +20,8 @@ describe("team tool prompt guidance", () => {
 				"team_spawn: Reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings.",
 				"team_spawn: Use team_list only when you need discovery, declared capability detail, or your caller-owned active status to avoid duplicate work; its snapshot does not guarantee availability or freshness.",
 				"team_spawn: Keep brief short; put necessary context and criteria in task.",
-				"team_spawn: Do not duplicate delegated work; wait for steering results.",
+				"team_spawn: Do not duplicate delegated work. Continue useful independent work; otherwise end your turn and await steering results.",
+				"team_spawn: Do not sleep, repeatedly call team_list, or make placeholder tool calls solely to wait; a one-off status check when needed is fine.",
 			],
 		});
 	});
@@ -34,6 +36,14 @@ describe("team tool prompt guidance", () => {
 
 		expect(guidance).not.toMatch(/must call team_list before.*team_spawn/i);
 		expect(guidance).not.toMatch(/team_list.*(?:must|required).*before.*team_spawn/i);
+	});
+
+	it("guides follow-ups without polling for steering results", () => {
+		expect(teamRespondPromptGuidelines).toEqual([
+			"team_respond: Send a complete follow-up only to a waiting interactive subagent.",
+			"team_respond: Returns immediately; continue useful independent work, or end your turn and await the next steering result.",
+			"team_respond: Do not sleep, repeatedly call team_list, or make placeholder tool calls solely to wait; a one-off status check when needed is fine.",
+		]);
 	});
 
 	it("limits team_list to its snapshot use cases without claiming freshness", () => {

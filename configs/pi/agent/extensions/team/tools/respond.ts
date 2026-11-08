@@ -3,6 +3,12 @@ import type { Runtime } from "../runtime";
 import Type from "typebox";
 import { getToolContext, toolError, toolSuccess } from "./shared";
 
+export const teamRespondPromptGuidelines = [
+	"team_respond: Send a complete follow-up only to a waiting interactive subagent.",
+	"team_respond: Returns immediately; continue useful independent work, or end your turn and await the next steering result.",
+	"team_respond: Do not sleep, repeatedly call team_list, or make placeholder tool calls solely to wait; a one-off status check when needed is fine.",
+];
+
 export const registerTeamRespondTool = (pi: ExtensionAPI, runtime: Runtime): void =>
 	pi.registerTool({
 		name: "team_respond",
@@ -16,10 +22,7 @@ export const registerTeamRespondTool = (pi: ExtensionAPI, runtime: Runtime): voi
 			message: Type.String({ description: "Message to send to the subagent" }),
 		}),
 		promptSnippet: "Respond to a waiting interactive subagent.",
-		promptGuidelines: [
-			"team_respond: Send a complete follow-up only to a waiting interactive subagent.",
-			"team_respond: Returns immediately; wait for the next steering result and do not poll.",
-		],
+		promptGuidelines: teamRespondPromptGuidelines,
 		async execute(_toolCallId, params, _signal, _onUpdate, ctx) {
 			const toolCtx = getToolContext(ctx);
 			const message = params.message.trim();

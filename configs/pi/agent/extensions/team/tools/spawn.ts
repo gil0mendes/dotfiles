@@ -21,7 +21,8 @@ export const teamSpawnToolMetadata = {
 		"team_spawn: Reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings.",
 		"team_spawn: Use team_list only when you need discovery, declared capability detail, or your caller-owned active status to avoid duplicate work; its snapshot does not guarantee availability or freshness.",
 		"team_spawn: Keep brief short; put necessary context and criteria in task.",
-		"team_spawn: Do not duplicate delegated work; wait for steering results.",
+		"team_spawn: Do not duplicate delegated work. Continue useful independent work; otherwise end your turn and await steering results.",
+		"team_spawn: Do not sleep, repeatedly call team_list, or make placeholder tool calls solely to wait; a one-off status check when needed is fine.",
 	],
 };
 
