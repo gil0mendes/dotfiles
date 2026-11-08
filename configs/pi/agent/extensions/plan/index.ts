@@ -17,6 +17,23 @@ import { parse } from "yaml";
 
 const MAX_BYTES = 50 * 1024;
 
+function maskFencedCode(content: string): string {
+	let fence: { marker: string; length: number } | undefined;
+	return content.replace(/[^\n]+/g, (line) => {
+		if (fence) {
+			const closing = line.match(/^ {0,3}(`+|~+)[ \t]*$/);
+			if (closing && closing[1][0] === fence.marker && closing[1].length >= fence.length)
+				fence = undefined;
+			return " ".repeat(line.length);
+		}
+		const opening = line.match(/^ {0,3}(`{3,}|~{3,})(.*)$/);
+		if (!opening || (opening[1][0] === "`" && opening[2].includes("`")))
+			return line;
+		fence = { marker: opening[1][0], length: opening[1].length };
+		return " ".repeat(line.length);
+	});
+}
+
 function validatePlan(content: string): string[] {
 	if (!content.trim())
 		throw new Error(
@@ -52,14 +69,21 @@ function validatePlan(content: string): string[] {
 		!/^\d{4}-\d{2}-\d{2}$/.test(fields.updated)
 	)
 		throw new Error("Frontmatter updated must be YYYY-MM-DD.");
-	const goal = normalized
-		.match(/^## Goal\s*\n([\s\S]*?)(?=^#{1,2} |$)/m)?.[1]
-		?.trim();
+	const structuralContent = maskFencedCode(normalized);
+	const goalSection = structuralContent.match(
+		/^##[ \t]+Goal[ \t]*\n([\s\S]*?)(?=^#{1,2}[ \t]|(?![\s\S]))/m,
+	);
+	const goal = goalSection?.index === undefined || goalSection[1] === undefined
+		? undefined
+		: normalized.slice(
+				goalSection.index + goalSection[0].length - goalSection[1].length,
+				goalSection.index + goalSection[0].length,
+			).trim();
 	if (!goal || goal.length < 10)
 		throw new Error("A ## Goal section of at least 10 characters is required.");
 	const sections = [
-		...normalized.matchAll(
-			/^##[ \t]+([^\n]*)\n?([\s\S]*?)(?=^#{1,2}[ \t]|$)/gm,
+		...structuralContent.matchAll(
+			/^##[ \t]+([^\n]*)\n?([\s\S]*?)(?=^#{1,2}[ \t]|(?![\s\S]))/gm,
 		),
 	];
 	const phases = sections.filter((section) =>
@@ -81,7 +105,7 @@ function validatePlan(content: string): string[] {
 		if (!/^- \[[ x]\] (?:\*\*)?\d+\.\d+\s+\S/m.test(section[2] ?? ""))
 			throw new Error(`Phase ${phase[1]} requires a numbered task (e.g. 1.1).`);
 	}
-	if ((normalized.match(/← CURRENT/g) ?? []).length > 1)
+	if ((structuralContent.match(/← CURRENT/g) ?? []).length > 1)
 		throw new Error("Only one task may be marked ← CURRENT.");
 	return statuses.filter((status) => status === "IN PROGRESS").length > 1
 		? ["Multiple phases are IN PROGRESS; only one should be active."]

@@ -115,6 +115,76 @@ describe("session plans", () => {
 		await expect(a.save(`${plan}\n## ${heading}\nNo numbered task\n`)).rejects.toThrow();
 		expect((await a.read()).content[0]).toMatchObject({ text: plan });
 	});
+	it.each(["LF", "CRLF"])("validates multiline sections and subsections with %s endings", async (lineEnding) => {
+		const a = setup(await project(), "a");
+		const content = `---
+status: in-progress
+phase: 1
+updated: 2026-01-02
+---
+# Implementation Plan
+## Goal
+A short
+
+but sufficiently detailed goal.
+### Goal detail
+More context.
+## Phase 1: Work [IN PROGRESS]
+Introduction to the phase.
+
+### Tasks
+- [ ] 1.1 Do work
+## Phase 2: Finish [PENDING]
+More introduction.
+
+- [ ] 2.1 Finish work`;
+		const input = lineEnding === "CRLF" ? content.replace(/\n/g, "\r\n") : content;
+		await a.save(input);
+		expect((await a.read()).content[0]).toMatchObject({ text: input });
+	});
+	it.each(["\t", " \t "])("accepts a Goal heading separated by %j", async (separator) => {
+		const a = setup(await project(), "a");
+		await expect(a.save(plan.replace("## Goal", `##${separator}Goal`))).resolves.toBeDefined();
+	});
+	it("accepts a multiline goal at EOF", async () => {
+		const a = setup(await project(), "a");
+		const content = plan.replace("## Goal\nImplement a useful change.\n", "") + "\n## Goal\nFirst line.\n\nSecond line.";
+		await expect(a.save(content)).resolves.toBeDefined();
+	});
+	it.each([
+		["empty goal", plan.replace("Implement a useful change.", "")],
+		["short goal", plan.replace("Implement a useful change.", "Short")],
+		["goal followed by a level-one heading", plan.replace("Implement a useful change.\n## Phase", "Short\n# Long unrelated heading\n## Phase")],
+		["goal followed by a level-two heading", plan.replace("Implement a useful change.\n## Phase", "Short\n## Long unrelated heading\n## Phase")],
+		["goal followed by a tab-separated level-one heading", plan.replace("Implement a useful change.\n## Phase", "Short\n#\tLong unrelated heading\n## Phase")],
+		["goal followed by a tab-separated level-two heading", plan.replace("Implement a useful change.\n## Phase", "Short\n##\tLong unrelated heading\n## Phase")],
+	])("rejects %s", async (_description, content) => {
+		const a = setup(await project(), "a");
+		await expect(a.save(content)).rejects.toThrow("A ## Goal section of at least 10 characters is required.");
+	});
+	it.each(["# Other section", "## Other section", "## Phase 2: Next [PENDING]"])("does not take a task from the following heading: %s", async (heading) => {
+		const a = setup(await project(), "a");
+		const content = plan.replace("- [ ] **1.1 Do work** ← CURRENT", `Introduction only.\n\n${heading}\n- [ ] 2.1 A task in another section`);
+		await expect(a.save(content)).rejects.toThrow("Phase 1 requires a numbered task");
+	});
+	it.each(["```", "~~~"])("ignores headings inside %s fences in goals and phases", async (fence) => {
+		const a = setup(await project(), "a");
+		const content = plan
+			.replace("Implement a useful change.", `A sufficiently long goal.\n${fence}markdown\n# False boundary\n## Phase 9: Fake [UNKNOWN]\n${fence}\nMore goal context.`)
+			.replace("- [ ] **1.1 Do work** ← CURRENT", `${fence}\n# False boundary\n## Phase 9: Fake [UNKNOWN]\n${fence}\n- [ ] **1.1 Do work** ← CURRENT`);
+		await expect(a.save(content)).resolves.toBeDefined();
+	});
+	it.each(["```", "~~~"])("does not count tasks inside %s fences", async (fence) => {
+		const a = setup(await project(), "a");
+		const content = plan.replace("- [ ] **1.1 Do work** ← CURRENT", `${fence}\n- [ ] 1.1 Fake task\n${fence}`);
+		await expect(a.save(content)).rejects.toThrow("Phase 1 requires a numbered task");
+	});
+	it.each(["```", "~~~"])("counts CURRENT markers only outside %s fences", async (fence) => {
+		const a = setup(await project(), "a");
+		const example = `\n${fence}markdown\n- [ ] 1.2 Example ← CURRENT\n- [ ] 1.3 Example ← CURRENT\n${fence}\n`;
+		await expect(a.save(plan + example)).resolves.toBeDefined();
+		await expect(a.save(plan + example + "- [ ] 1.4 Real task ← CURRENT\n")).rejects.toThrow("Only one task");
+	});
 	it("refuses symlinked plan directories", async () => {
 		const dir = await project();
 		const outside = await project();

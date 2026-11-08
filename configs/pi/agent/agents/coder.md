@@ -5,7 +5,7 @@ rootOnly: true
 mode: subagent
 model: barracuda-iq/gpt-6-1-terra
 variant: xhigh
-tools: read, bash, edit, write, grep, find, ls
+tools: read, bash, edit, write, grep, find, ls, plan_read, todo
 ---
 
 # Coder Agent

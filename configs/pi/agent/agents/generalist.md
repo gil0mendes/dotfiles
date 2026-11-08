@@ -3,7 +3,7 @@ name: generalist
 description: General-purpose worker for bounded multi-step tasks outside specialist domains
 rootOnly: true
 model: barracuda-iq/gpt-6-1-terra
-tools: read, bash, edit, write, grep, find, ls
+tools: read, bash, edit, write, grep, find, ls, todo
 ---
 
 # Generalist Agent

@@ -19,4 +19,4 @@ configs/zsh/.zcompdump
 configs/zsh/.zsh_sessions/
 configs/zsh/.zcompcache/
 
-.pi/
+.agents/
