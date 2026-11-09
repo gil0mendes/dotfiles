@@ -5,19 +5,19 @@
 			"model": "litellm-barracuda-openai/gpt-6-1-sol"
 		},
 		"build": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+			"model": "litellm-barracuda-openai/gpt-6-1-terra"
 		},
 		"general": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+			"model": "litellm-barracuda-openai/gpt-6-1-terra"
 		},
 		"explore": {
 			"model": "litellm-barracuda-openai/gpt-6-luna"
 		},
 		"coder": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra#xhigh"
+			"model": "litellm-barracuda-openai/gpt-6-1-terra#xhigh"
 		},
 		"librarian": {
-			"model": "litellm-barracuda-openai/gpt-5-6-terra"
+			"model": "litellm-barracuda-openai/gpt-6-1-terra"
 		},
 		"oracle": {
 			"model": "litellm-barracuda/claude-opus-5-5"
@@ -90,8 +90,8 @@
 						"output": ["text"]
 					}
 				},
-				"gpt-5-6-terra": {
-					"modelID": "gpt-5-6-terra",
+				"gpt-6-1-terra": {
+					"modelID": "gpt-6-1-terra",
 					"capabilities": {
 						"tools": true,
 						"input": ["text", "image"],

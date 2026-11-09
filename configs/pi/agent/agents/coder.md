@@ -3,7 +3,7 @@ name: coder
 description: Technical implementation specialist for writing and modifying code
 rootOnly: true
 mode: subagent
-model: barracuda-iq/gpt-5-6-terra
+model: barracuda-iq/gpt-6-1-terra
 variant: xhigh
 tools: read, bash, edit, write, grep, find, ls
 ---
