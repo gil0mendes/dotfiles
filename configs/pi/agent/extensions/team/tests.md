@@ -1,5 +1,28 @@
 # Test suite for team extension
 
+## Conversation viewer
+
+Run the focused viewer, controller, capture, and runtime regressions from `configs/pi`:
+
+```sh
+bunx --no-install vitest run \
+  agent/extensions/team/ui/conversation/viewer.test.ts \
+  agent/extensions/team/ui/conversation/controller.test.ts \
+  agent/extensions/team/conversation/conversation.test.ts \
+  agent/extensions/team/runtime.test.ts
+```
+
+These are Vitest files run with the repository's `test` script runner (`vitest run`). This command was not run for the documentation update.
+
+Manual smoke checklist — **not yet run**:
+
+- In the regular interface, open an active and a recent conversation from `/team fleet`; close each and confirm the same fleet row remains selected.
+- Repeat in fullscreen interface mode; verify normal navigation works and do not expect fullscreen-specific controls.
+- Resize the terminal while the fleet and viewer are open; check layout and scrolling at narrow and short dimensions.
+- While output streams, verify follow-tail; scroll away, verify it pauses, then press `End` and verify it follows again.
+- Open a recent conversation and verify it becomes unavailable after the 30-second retention window.
+- Shut down the session with the viewer open; verify the overlay and conversation subscription are cleaned up and existing shutdown agent behavior is unchanged.
+
 ## Pi 1.5.1 bootstrap
 
 Run `bunx --no-install vitest run agent/extensions/team` from `configs/pi` for the offline team regressions. The bootstrap fixtures use synthetic credentials and do not send provider requests.

@@ -2,6 +2,9 @@ import { createEventBus } from "@earendil-works/pi-coding-agent";
 import { describe, expect, it } from "vitest";
 import {
 	emitTeamRuntimeChanged,
+	emitTeamConversationChanged,
+	isTeamConversationChangedPayload,
+	TEAM_CONVERSATION_CHANGED_EVENT,
 	emitTeamWarning,
 	isTeamRuntimeChangedPayload,
 	isTeamWarningPayload,
@@ -24,6 +27,16 @@ describe("team events", () => {
 		});
 
 		expect(isTeamRuntimeChangedPayload(received)).toBe(true);
+	});
+
+	it("emits content-free owner-scoped conversation changes", () => {
+		const events = createEventBus();
+		let received: unknown;
+		events.on(TEAM_CONVERSATION_CHANGED_EVENT, (payload) => { received = payload; });
+		emitTeamConversationChanged(events, { ownerSessionId: "owner", agentId: "agent" });
+		expect(received).toEqual({ ownerSessionId: "owner", agentId: "agent" });
+		expect(isTeamConversationChangedPayload(received)).toBe(true);
+		expect(isTeamConversationChangedPayload({ ownerSessionId: "owner" })).toBe(false);
 	});
 
 	it("emits and validates warnings", () => {

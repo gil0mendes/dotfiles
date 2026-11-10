@@ -1,16 +1,11 @@
 import { truncateToWidth } from "@earendil-works/pi-tui";
+import { sanitizeTerminalText } from "./sanitize";
 import { formatElapsed } from "./formatElapsed";
 import type { FleetState } from "./state";
 import type { FleetView } from "./types";
 
-const terminalEscapeSequence =
-	/\x1B(?:\][\s\S]*?(?:\x07|\x1B\\)|\[[0-?]*[ -/]*[@-~]|[()][0-2AB]|.)/g;
-const terminalControlCharacter = /[\u0000-\u001F\u007F-\u009F]/g;
-
 export const sanitizeFleetText = (value: string): string =>
-	value
-		.replace(terminalEscapeSequence, "")
-		.replace(terminalControlCharacter, " ")
+	sanitizeTerminalText(value.replace(/[\t\r]/g, " "))
 		.replace(/\s+/g, " ")
 		.trim();
 
@@ -59,6 +54,6 @@ export const buildFleetLines = (
 		const hiddenAfter = view.rows.length - state.windowStart - rows.length;
 		if (hiddenAfter > 0) lines.push(`… ${hiddenAfter} more row(s)`);
 	}
-	lines.push("↑/↓ select · r respond to waiting · a abort active · Esc close");
+	lines.push("↑/↓ select · Enter/v view · r respond · a abort · Esc close");
 	return lines.map((line) => truncateToWidth(line, width));
 };

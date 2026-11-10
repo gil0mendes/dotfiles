@@ -2,6 +2,13 @@ import type { EventBus } from "@earendil-works/pi-coding-agent";
 
 export const TEAM_RUNTIME_CHANGED_EVENT = "team:runtime:changed";
 export const TEAM_WARNING_EVENT = "team:warning";
+export const TEAM_CONVERSATION_CHANGED_EVENT = "team:conversation:changed";
+
+export type TeamConversationChangedPayload = { ownerSessionId: string; agentId: string };
+
+export const emitTeamConversationChanged = (events: EventBus, payload: TeamConversationChangedPayload): void => {
+	events.emit(TEAM_CONVERSATION_CHANGED_EVENT, payload);
+};
 
 export type TeamRuntimeChangeReason =
 	| "activated"
@@ -53,6 +60,9 @@ export const isTeamRuntimeChangedPayload = (value: unknown): value is TeamRuntim
 	typeof value.ownerSessionId === "string" &&
 	isRuntimeChangeReason(value.reason) &&
 	(value.agentId === undefined || typeof value.agentId === "string");
+
+export const isTeamConversationChangedPayload = (value: unknown): value is TeamConversationChangedPayload =>
+	isRecord(value) && typeof value.ownerSessionId === "string" && typeof value.agentId === "string";
 
 export const isTeamWarningPayload = (value: unknown): value is TeamWarningPayload =>
 	isRecord(value) && typeof value.ownerSessionId === "string" && typeof value.message === "string";

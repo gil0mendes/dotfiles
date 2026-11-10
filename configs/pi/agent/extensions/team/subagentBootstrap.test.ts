@@ -648,6 +648,93 @@ describe("child model runtime", () => {
 		expect(onSettled).not.toHaveBeenCalled();
 	});
 
+	it("forwards session message events only while the attached state is current", async () => {
+		const directory = await fixtureDirectory();
+		const registry = await parentRegistry();
+		registry.registerProvider("fixture", {
+			baseUrl: "https://base.invalid",
+			api: "openai-completions",
+			apiKey: "key",
+			models: [model],
+		});
+		const current = registry.find("fixture", model.id);
+		if (!current) throw new Error("Missing model fixture");
+		const state: SubagentState = {
+			id: "fixture",
+			agentConfig: config,
+			task: "task",
+			brief: "",
+			status: "running",
+			ownerSessionId: "owner",
+			startedAt: 0,
+			session: null,
+			turns: 0,
+			contextTokens: 0,
+		};
+		vi.spyOn(sdk.SessionManager, "create").mockImplementation((cwd) =>
+			sdk.SessionManager.inMemory(cwd),
+		);
+		const original = await vi.importActual<typeof sdk>("@earendil-works/pi-coding-agent");
+		let listener: sdk.AgentSessionEventListener | undefined;
+		let release: (() => void) | undefined;
+		let ready: (() => void) | undefined;
+		const started = new Promise<void>((resolve) => {
+			ready = resolve;
+		});
+		const gate = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		vi.mocked(sdk.createAgentSession).mockImplementationOnce(async (options) => {
+			const result = await original.createAgentSession(options);
+			vi.spyOn(result.session, "subscribe").mockImplementation((callback) => {
+				listener = callback;
+				return () => {};
+			});
+			vi.spyOn(result.session, "prompt").mockImplementation(async () => {
+				ready?.();
+				await gate;
+			});
+			return result;
+		});
+		let isCurrent = true;
+		const onConversationEvent = vi.fn();
+		const onConversationError = vi.fn();
+		const onProgress = vi.fn();
+		const runner = new SubagentSessionRunner({
+			isCurrent: () => isCurrent,
+			onConversationEvent,
+			onConversationError,
+			onProgress,
+			onSessionAttached: vi.fn(),
+			onSettled: vi.fn(),
+		});
+		const running = runner.start(state, {
+			cwd: directory,
+			ctx: { ...context(directory, registry), model: current },
+		});
+		await started;
+		if (!listener) throw new Error("Session did not subscribe");
+		const event = {
+			type: "message_start" as const,
+			message: { role: "user" as const, content: "task", timestamp: 0 },
+		};
+		listener(event);
+		expect(onConversationEvent).toHaveBeenCalledWith(state, event);
+		onConversationEvent.mockImplementationOnce(() => {
+			throw new Error("private payload");
+		});
+		listener({ type: "turn_end", message: event.message, toolResults: [] });
+		expect(onConversationError).toHaveBeenCalledWith(state);
+		expect(onProgress).toHaveBeenCalledWith(state);
+		expect(state.turns).toBe(1);
+		isCurrent = false;
+		listener(event);
+		expect(onConversationEvent).toHaveBeenCalledTimes(2);
+		release?.();
+		await running;
+		state.session?.dispose();
+	});
+
 	it("rejects a parent-only model when no child catalog reproduces it", async () => {
 		const directory = await fixtureDirectory();
 		const registry = await parentRegistry();

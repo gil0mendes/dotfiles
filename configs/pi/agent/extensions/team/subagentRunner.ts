@@ -8,6 +8,7 @@ import {
 	SessionManager,
 	SettingsManager,
 	type AgentSession,
+	type AgentSessionEvent,
 	type ModelRegistry,
 } from "@earendil-works/pi-coding-agent";
 import type { AgentConfig, ParsedModel } from "./loader/types";
@@ -28,7 +29,9 @@ export interface SubagentRunner {
 
 export interface SubagentRunnerCallbacks {
 	isCurrent: (state: SubagentState) => boolean;
-	onProgress: (ownerSessionId: string) => void;
+	onProgress: (state: SubagentState) => void;
+	onConversationEvent?: (state: SubagentState, event: AgentSessionEvent) => void;
+	onConversationError?: (state: SubagentState) => void;
 	onSessionAttached: (state: SubagentState, sessionId: string) => void;
 	onSettled: (
 		state: SubagentState,
@@ -452,6 +455,16 @@ export class SubagentSessionRunner implements SubagentRunner {
 
 	private attachSessionListeners(state: SubagentState, session: AgentSession): void {
 		state.unsubscribe = session.subscribe((event) => {
+			if (!this.callbacks.isCurrent(state) || state.session !== session) return;
+			try {
+				this.callbacks.onConversationEvent?.(state, event);
+			} catch {
+				try {
+					this.callbacks.onConversationError?.(state);
+				} catch {
+					/* Observability is non-critical. */
+				}
+			}
 			if (event.type === "turn_end") {
 				state.turns++;
 				const msg = event.message;
@@ -460,28 +473,29 @@ export class SubagentSessionRunner implements SubagentRunner {
 					state.contextTokens = assistantMsg.usage.totalTokens;
 					state.model = `${assistantMsg.provider}/${assistantMsg.model}`;
 				}
-				this.callbacks.onProgress(state.ownerSessionId);
+				this.callbacks.onProgress(state);
 				return;
 			}
 
 			if (event.type === "compaction_end" && event.result?.estimatedTokensAfter !== undefined) {
 				state.contextTokens = event.result.estimatedTokensAfter;
-				this.callbacks.onProgress(state.ownerSessionId);
+				this.callbacks.onProgress(state);
 			}
 		});
 	}
 
 	private async runPromptCycle(state: SubagentState, prompt: string): Promise<void> {
-		if (isAborted(state)) return;
+		const session = state.session;
+		if (isAborted(state) || !this.callbacks.isCurrent(state) || !session) return;
 
 		try {
-			await state.session!.prompt(prompt);
-			if (isAborted(state)) return;
+			await session.prompt(prompt);
+			if (isAborted(state) || !this.callbacks.isCurrent(state) || state.session !== session) return;
 
 			const outcome = getPromptOutcome(state);
 			this.callbacks.onSettled(state, outcome.status, outcome);
 		} catch (err) {
-			if (isAborted(state)) return;
+			if (isAborted(state) || !this.callbacks.isCurrent(state) || state.session !== session) return;
 			const error = err instanceof Error ? err.message : String(err);
 			this.callbacks.onSettled(state, "error", { error });
 		}

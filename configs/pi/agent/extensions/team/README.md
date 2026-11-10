@@ -1,3 +1,18 @@
+# Team conversation viewer
+
+Use `/team fleet` to open the team roster. Select an active or recent row and press `Enter` or `v` to inspect its conversation. Press `Escape`, `q`, or `Ctrl-C` to return to the fleet at the same selected row and window.
+
+In the viewer:
+
+- Use the arrow keys or `j`/`k` to scroll; use `PageUp`/`PageDown` for a page at a time.
+- `Home` jumps to the beginning. `End` jumps to the latest content and resumes following new output. Scrolling pauses follow-tail until `End` is pressed.
+- `Ctrl-O` or `t` expands/collapses tool arguments and output.
+- `m` toggles between Markdown rendering and raw text.
+
+The viewer is read-only: it does not provide mid-run steering, respond, or abort actions. Return to the fleet to use its existing controls: `r` requests a response for a waiting agent, and `a` asks for confirmation before aborting an active running or waiting agent. These actions retain the existing team runtime behavior. The viewer has no mouse or fullscreen-specific controls.
+
+Conversation capture and recent transcripts are kept in memory only; transcripts are not persisted or reloaded from session history. Capture is bounded to 200 items, 256 KiB per transcript, and 16 KiB per field. Recent transcripts expire after 30 seconds and are capped at 20 per owner, 100 globally, and 8 MiB globally. Access is restricted to the owning session. Agents spawned before the capture implementation is loaded (including before a runtime reload) may have no captured history; the viewer does not reconstruct their earlier conversation retroactively.
+
 # Team model preferences
 
 Team agents can declare an ordered `model` preference as a string or list of strings in agent frontmatter or in `team.yaml`. A preference can be a bare query or a provider-qualified `provider/model-id` selector. The examples below use illustrative model IDs; availability depends on the child runtime.

@@ -11,5 +11,6 @@ export type FleetView = {
 
 export type FleetAction =
 	| { kind: "close" }
+	| { kind: "view"; agentId: string }
 	| { kind: "respond"; agentId: string }
 	| { kind: "abort"; agentId: string };

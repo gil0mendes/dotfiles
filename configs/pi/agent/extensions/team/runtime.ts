@@ -15,11 +15,27 @@ import type {
 import type { AgentConfig } from "./loader/types";
 import type { Api, Model } from "@earendil-works/pi-ai";
 import { nanoid } from "nanoid";
-import { emitTeamRuntimeChanged, emitTeamWarning, type TeamRuntimeChangeReason } from "./events";
+import {
+	emitTeamRuntimeChanged,
+	emitTeamWarning,
+	emitTeamConversationChanged,
+	isTeamConversationChangedPayload,
+	TEAM_CONVERSATION_CHANGED_EVENT,
+	type TeamRuntimeChangeReason,
+} from "./events";
+import {
+	Conversation,
+	boundedText,
+	CONVERSATION_RECENT_TTL_MS,
+	CONVERSATION_RECENT_PER_OWNER,
+	CONVERSATION_RECENT_MAX_COUNT,
+	CONVERSATION_RECENT_MAX_BYTES,
+	type ConversationSnapshot,
+} from "./conversation";
 import { getSteeringMessagePayload } from "./message/steeringPayload";
 
 const PENDING_MESSAGE_TTL_MS = 86_400_000; // 24 hours
-export const RECENT_AGENT_TTL_MS = 30_000;
+export const RECENT_AGENT_TTL_MS = CONVERSATION_RECENT_TTL_MS;
 
 export type ActiveRuntimeBinding = {
 	/**
@@ -134,6 +150,15 @@ export class Runtime {
 	private readonly now: () => number;
 	private readonly bindings = new Map<string, ActiveRuntimeBinding>();
 	private readonly recentByOwner = new Map<string, RecentAgentSummary[]>();
+	private readonly conversations = new Map<string, Conversation>();
+	private readonly recentConversations = new Map<
+		string,
+		{ owner: string; conversation: Conversation; summary: RecentAgentSummary; size: number }
+	>();
+	private expiryTimer: ReturnType<typeof setTimeout> | undefined;
+	private readonly conversationSubscriptions = new Map<string, number>();
+	private readonly conversationUnsubscribers = new Map<string, Set<() => void>>();
+	private readonly conversationNotifications = new Map<string, ReturnType<typeof setTimeout>>();
 	private readonly sessionAgents = new Map<string, AgentConfig>();
 	private readonly scheduledFlushes = new Set<string>();
 	private pendingMessages: PendingMessage[] = [];
@@ -145,11 +170,38 @@ export class Runtime {
 		const callbacks: SubagentRunnerCallbacks = {
 			isCurrent: (state) => this.agents.get(state.id) === state,
 			onSessionAttached: (state, sessionId) => {
+				if (this.agents.get(state.id) !== state) return;
 				this.sessionAgents.set(sessionId, state.agentConfig);
+				this.observe(state.ownerSessionId, () => {
+					this.conversations.get(state.id)?.touch();
+					this.notifyConversation(state.ownerSessionId, state.id);
+				});
 				this.notifyRuntimeChanged(state.ownerSessionId, "model_updated", state.id);
 			},
-			onProgress: (ownerSessionId) => {
-				this.notifyRuntimeChanged(ownerSessionId, "progressed");
+			onConversationEvent: (state, event) => {
+				if (this.agents.get(state.id) !== state || state.status !== "running") return;
+				this.observe(state.ownerSessionId, () => {
+					if (this.conversations.get(state.id)?.capture(event))
+						this.notifyConversation(state.ownerSessionId, state.id);
+				});
+			},
+			onConversationError: (state) => {
+				try {
+					this.reportWarning(
+						state.ownerSessionId,
+						"Team conversation capture failed; agent execution continues.",
+					);
+				} catch {
+					/* Observability must not interrupt execution. */
+				}
+			},
+			onProgress: (state) => {
+				if (this.agents.get(state.id) !== state) return;
+				this.observe(state.ownerSessionId, () => {
+					this.conversations.get(state.id)?.touch();
+					this.notifyConversation(state.ownerSessionId, state.id);
+				});
+				this.notifyRuntimeChanged(state.ownerSessionId, "progressed");
 			},
 			onSettled: (
 				state: SubagentState,
@@ -203,15 +255,21 @@ export class Runtime {
 	}
 
 	activateSession(binding: ActiveRuntimeBinding): void {
+		if (this.bindings.get(binding.sessionId) !== binding)
+			this.clearConversationSubscriptions(binding.sessionId);
 		this.bindings.set(binding.sessionId, binding);
 		this.notifyRuntimeChanged(binding.sessionId, "activated");
 		this.schedulePendingFlushFor(binding.sessionId);
 	}
 
 	terminateSession(sessionId: string): void {
+		this.clearConversationSubscriptions(sessionId);
 		this.bindings.delete(sessionId);
 		this.sessionAgents.delete(sessionId);
-		this.recentByOwner.delete(sessionId);
+		for (const [id, entry] of this.recentConversations) {
+			if (entry.owner === sessionId) this.removeRecent(id);
+		}
+		this.scheduleExpiry();
 	}
 
 	reportWarning(ownerSessionId: string, message: string): void {
@@ -233,6 +291,11 @@ export class Runtime {
 	): string {
 		const agentState = createAgent(subagent, task, ctx.brief ?? "", ownerSessionId);
 		this.agents.set(agentState.id, agentState);
+		this.observe(ownerSessionId, () => {
+			const conversation = new Conversation();
+			conversation.prompt(task);
+			this.conversations.set(agentState.id, conversation);
+		});
 		this.notifyRuntimeChanged(ownerSessionId, "spawned", agentState.id);
 
 		void this.runner
@@ -255,6 +318,10 @@ export class Runtime {
 			return { error: transition.error };
 		}
 
+		this.observe(ownerSessionId, () => {
+			this.conversations.get(subagentId)?.prompt(message);
+			this.notifyConversation(ownerSessionId, subagentId);
+		});
 		this.notifyRuntimeChanged(ownerSessionId, "responded", subagentId);
 		this.runner.respond(transition.state, message);
 		return {};
@@ -266,8 +333,67 @@ export class Runtime {
 			return { error: transition.error };
 		}
 
+		transition.state.status = "done";
+		this.observe(transition.state.ownerSessionId, () => {
+			this.conversations.get(id)?.touch();
+			this.rememberSettledAgent(transition.state);
+			this.notifyConversation(transition.state.ownerSessionId, id);
+		});
 		this.disposeAgent(transition.state);
 		return {};
+	}
+
+	getConversationForOwner(
+		ownerSessionId: string,
+		agentId: string,
+	): ConversationSnapshot | undefined {
+		const state = this.agents.get(agentId);
+		if (state?.ownerSessionId === ownerSessionId)
+			return this.conversations.get(agentId)?.snapshot(buildActiveAgentSummary(state));
+		this.cleanRecent();
+		const recent = this.recentConversations.get(agentId);
+		if (!recent || recent.owner !== ownerSessionId) return undefined;
+		return recent.conversation.snapshot(
+			recent.summary,
+			recent.summary.settledAt + RECENT_AGENT_TTL_MS,
+		);
+	}
+
+	/** Subscribe through this method so streaming notifications are scheduled only for viewers. */
+	subscribeConversation(ownerSessionId: string, agentId: string, listener: () => void): () => void {
+		const binding = this.bindings.get(ownerSessionId);
+		if (!binding || !this.getConversationForOwner(ownerSessionId, agentId)) return () => {};
+		const count = this.conversationSubscriptions.get(agentId) ?? 0;
+		this.conversationSubscriptions.set(agentId, count + 1);
+		const unsubscribe = binding.events.on(TEAM_CONVERSATION_CHANGED_EVENT, (payload) => {
+			if (
+				isTeamConversationChangedPayload(payload) &&
+				payload.ownerSessionId === ownerSessionId &&
+				payload.agentId === agentId
+			)
+				listener();
+		});
+		let active = true;
+		const subscriptions =
+			this.conversationUnsubscribers.get(ownerSessionId) ?? new Set<() => void>();
+		this.conversationUnsubscribers.set(ownerSessionId, subscriptions);
+		const close = () => {
+			if (!active) return;
+			active = false;
+			unsubscribe();
+			subscriptions.delete(close);
+			if (!subscriptions.size) this.conversationUnsubscribers.delete(ownerSessionId);
+			const remaining = (this.conversationSubscriptions.get(agentId) ?? 1) - 1;
+			if (remaining > 0) this.conversationSubscriptions.set(agentId, remaining);
+			else {
+				this.conversationSubscriptions.delete(agentId);
+				const timer = this.conversationNotifications.get(agentId);
+				if (timer) clearTimeout(timer);
+				this.conversationNotifications.delete(agentId);
+			}
+		};
+		subscriptions.add(close);
+		return close;
 	}
 
 	getActiveSummariesForOwner(ownerSessionId: string): ActiveAgentSummary[] {
@@ -277,7 +403,7 @@ export class Runtime {
 	}
 
 	getFleetSnapshotForOwner(ownerSessionId: string): FleetSnapshot {
-		this.cleanRecentForOwner(ownerSessionId);
+		this.cleanRecent();
 		return {
 			active: this.getActiveSummariesForOwner(ownerSessionId),
 			recent: [...(this.recentByOwner.get(ownerSessionId) ?? [])],
@@ -461,25 +587,111 @@ export class Runtime {
 		}
 	}
 
-	private cleanRecentForOwner(ownerSessionId: string): void {
-		const cutoff = this.now() - RECENT_AGENT_TTL_MS;
-		const recent = (this.recentByOwner.get(ownerSessionId) ?? []).filter(
-			(agent) => agent.settledAt >= cutoff,
-		);
-		if (recent.length === 0) {
-			this.recentByOwner.delete(ownerSessionId);
-			return;
+	private clearConversationSubscriptions(owner: string): void {
+		for (const unsubscribe of this.conversationUnsubscribers.get(owner) ?? []) unsubscribe();
+	}
+
+	private observe(owner: string, operation: () => void): void {
+		try {
+			operation();
+		} catch {
+			try {
+				this.reportWarning(owner, "Team conversation capture failed; agent execution continues.");
+			} catch {
+				/* Observability must not interrupt execution. */
+			}
 		}
-		this.recentByOwner.set(ownerSessionId, recent);
+	}
+
+	private notifyConversation(owner: string, id: string): void {
+		if (!this.conversationSubscriptions.has(id) || this.conversationNotifications.has(id)) return;
+		const timer = setTimeout(() => {
+			this.conversationNotifications.delete(id);
+			const binding = this.bindings.get(owner);
+			if (binding && this.conversationSubscriptions.has(id))
+				emitTeamConversationChanged(binding.events, { ownerSessionId: owner, agentId: id });
+		}, 0);
+		this.conversationNotifications.set(id, timer);
+	}
+
+	private removeRecent(id: string): void {
+		const entry = this.recentConversations.get(id);
+		if (!entry) return;
+		this.recentConversations.delete(id);
+		const remaining = (this.recentByOwner.get(entry.owner) ?? []).filter(
+			(summary) => summary.id !== id,
+		);
+		if (remaining.length) this.recentByOwner.set(entry.owner, remaining);
+		else this.recentByOwner.delete(entry.owner);
+		this.notifyConversation(entry.owner, id);
+	}
+
+	private cleanRecent(): void {
+		for (const [id, entry] of this.recentConversations) {
+			if (entry.summary.settledAt + RECENT_AGENT_TTL_MS <= this.now()) this.removeRecent(id);
+		}
+		this.scheduleExpiry();
+	}
+
+	private scheduleExpiry(): void {
+		if (this.expiryTimer) clearTimeout(this.expiryTimer);
+		this.expiryTimer = undefined;
+		let nearest = Infinity;
+		for (const entry of this.recentConversations.values())
+			nearest = Math.min(nearest, entry.summary.settledAt + RECENT_AGENT_TTL_MS);
+		if (nearest === Infinity) return;
+		this.expiryTimer = setTimeout(() => this.cleanRecent(), Math.max(1, nearest - this.now()));
+		this.expiryTimer.unref?.();
 	}
 
 	private rememberSettledAgent(state: SubagentState): void {
+		this.cleanRecent();
+		const conversation = this.conversations.get(state.id);
+		if (!conversation) return;
+		const raw = buildActiveAgentSummary(state);
+		if (
+			[raw.agentName, raw.brief, raw.model, raw.result, raw.error].some(
+				(value) => value !== undefined && boundedText(value).truncated,
+			)
+		)
+			conversation.markTruncated();
 		const summary: RecentAgentSummary = {
-			...buildActiveAgentSummary(state),
+			...raw,
+			agentName: boundedText(raw.agentName).text,
+			brief: boundedText(raw.brief).text,
+			model: raw.model === undefined ? undefined : boundedText(raw.model).text,
+			result: raw.result === undefined ? undefined : boundedText(raw.result).text,
+			error: raw.error === undefined ? undefined : boundedText(raw.error).text,
 			settledAt: this.now(),
 		};
-		const recent = [summary, ...(this.recentByOwner.get(state.ownerSessionId) ?? [])].slice(0, 20);
-		this.recentByOwner.set(state.ownerSessionId, recent);
+		const size = Buffer.byteLength(JSON.stringify(conversation.snapshot(summary)));
+		this.recentConversations.set(state.id, {
+			owner: state.ownerSessionId,
+			conversation,
+			summary,
+			size,
+		});
+		this.recentByOwner.set(state.ownerSessionId, [
+			summary,
+			...(this.recentByOwner.get(state.ownerSessionId) ?? []),
+		]);
+		const ownerEntries = this.recentByOwner.get(state.ownerSessionId) ?? [];
+		for (const entry of ownerEntries.slice(CONVERSATION_RECENT_PER_OWNER))
+			this.removeRecent(entry.id);
+		let total = Array.from(this.recentConversations.values()).reduce(
+			(sum, entry) => sum + entry.size,
+			0,
+		);
+		for (const [id, entry] of this.recentConversations) {
+			if (
+				this.recentConversations.size <= CONVERSATION_RECENT_MAX_COUNT &&
+				total <= CONVERSATION_RECENT_MAX_BYTES
+			)
+				break;
+			total -= entry.size;
+			this.removeRecent(id);
+		}
+		this.scheduleExpiry();
 	}
 
 	private settleAgent(
@@ -492,7 +704,13 @@ export class Runtime {
 		state.status = nextStatus;
 		state.result = opts.result;
 		state.error = opts.error;
-		if (state.status !== "waiting") this.rememberSettledAgent(state);
+		this.observe(state.ownerSessionId, () => {
+			const conversation = this.conversations.get(state.id);
+			conversation?.endPromptCycle();
+			conversation?.touch();
+			if (state.status !== "waiting") this.rememberSettledAgent(state);
+			this.notifyConversation(state.ownerSessionId, state.id);
+		});
 		this.notifyRuntimeChanged(state.ownerSessionId, "settled", state.id);
 
 		this.deliver(state.ownerSessionId, {
@@ -510,9 +728,10 @@ export class Runtime {
 	}
 
 	private disposeAgent(state: SubagentState): void {
+		this.agents.delete(state.id);
+		this.conversations.delete(state.id);
 		state.unsubscribe?.();
 		state.session?.dispose();
-		this.agents.delete(state.id);
 		this.notifyRuntimeChanged(state.ownerSessionId, "removed", state.id);
 	}
 }
