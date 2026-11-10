@@ -1,9 +1,7 @@
-import { AuthStorage, ModelRegistry } from "@earendil-works/pi-coding-agent";
+import { getModel } from "@earendil-works/pi-ai/compat";
 import { describe, expect, it } from "vitest";
 import { resolveModel, resolveTools } from "./subagentRunner";
 import type { AgentConfig } from "./loader/types";
-
-const modelRegistry = ModelRegistry.inMemory(AuthStorage.inMemory());
 
 const createAgentConfig = (tools?: string[]): AgentConfig => ({
 	name: "worker",
@@ -16,6 +14,8 @@ const createAgentConfig = (tools?: string[]): AgentConfig => ({
 
 describe("resolveModel", () => {
 	it("falls back once after every declared preference is unavailable", () => {
+		const model = getModel("openai", "gpt-4o");
+		if (!model) throw new Error("Missing test model");
 		const result = resolveModel(
 			{
 				...createAgentConfig(),
@@ -25,19 +25,73 @@ describe("resolveModel", () => {
 				],
 			},
 			{
-				model: undefined,
-				modelRegistry,
-				agentDir: "/agents",
-				availableToolNames: [],
+				availableModels: [model],
 			},
 		);
 
 		expect(result).toEqual({
 			model: undefined,
+			usedCurrentModel: false,
 			warnings: [
 				'Model preferences "provider/missing-one", "provider/missing-two" not available, using current session model',
 			],
 		});
+	});
+	it("rejects an inherited model absent from the child catalog", () => {
+		const current = getModel("openai", "gpt-4o");
+		if (!current) throw new Error("Missing test model");
+		expect(() =>
+			resolveModel(createAgentConfig(), { model: current, availableModels: [] }),
+		).toThrow(/unavailable in the child runtime/);
+	});
+
+	it("rejects an empty catalog when no current model exists", () => {
+		expect(() => resolveModel(createAgentConfig(), { availableModels: [] })).toThrow(
+			/No authenticated models/,
+		);
+	});
+
+	it("falls back to a reproducible current model after missing preferences", () => {
+		const current = getModel("openai", "gpt-4o");
+		if (!current) throw new Error("Missing test model");
+		const child = { ...current };
+		const result = resolveModel(
+			{ ...createAgentConfig(), parsedModels: [{ provider: "missing", modelId: "model" }] },
+			{
+				model: current,
+				availableModels: [child],
+			},
+		);
+		expect(result.model).toBe(child);
+		expect(result.usedCurrentModel).toBe(true);
+		expect(result.warnings).toHaveLength(1);
+	});
+
+	it("selects an available preference before an unavailable current model", () => {
+		const current = getModel("anthropic", "claude-sonnet-4-5");
+		const preferred = getModel("openai", "gpt-4o");
+		if (!current || !preferred) throw new Error("Missing test model");
+		const result = resolveModel(
+			{
+				...createAgentConfig(),
+				parsedModels: [{ provider: preferred.provider, modelId: preferred.id }],
+			},
+			{
+				model: current,
+				availableModels: [preferred],
+			},
+		);
+		expect(result.model).toBe(preferred);
+		expect(result.usedCurrentModel).toBe(false);
+	});
+
+	it("uses the matching child model rather than the parent object", () => {
+		const current = getModel("openai", "gpt-4o");
+		if (!current) throw new Error("Missing test model");
+		const child = { ...current, baseUrl: "https://child.invalid" };
+		expect(
+			resolveModel(createAgentConfig(), { model: current, availableModels: [child] }).model,
+		).toBe(child);
 	});
 });
 

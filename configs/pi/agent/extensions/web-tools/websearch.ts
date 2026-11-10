@@ -1,4 +1,4 @@
-import { StringEnum, type TextContent } from "@earendil-works/pi-ai";
+import type { TextContent } from "@earendil-works/pi-ai";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { createOperationSignal, isAbortError } from "./network.ts";
@@ -31,7 +31,8 @@ export function createWebSearchTool() {
 				}),
 			),
 			depth: Type.Optional(
-				StringEnum([...SEARCH_DEPTHS], {
+				Type.Enum(SEARCH_DEPTHS, {
+					type: "string",
 					description:
 						"Search depth. Overrides the web-tools search default depth setting. 'deep' is accepted as a compatibility alias and mapped to 'fast' for the current Exa provider.",
 				}),

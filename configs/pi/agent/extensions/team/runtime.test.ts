@@ -1,5 +1,6 @@
-import { AuthStorage, createEventBus, ModelRegistry } from "@earendil-works/pi-coding-agent";
-import { describe, expect, it } from "vitest";
+import { InMemoryCredentialStore } from "@earendil-works/pi-ai";
+import { createEventBus, ModelRegistry, ModelRuntime } from "@earendil-works/pi-coding-agent";
+import { beforeAll, describe, expect, it } from "vitest";
 import {
 	isTeamWarningPayload,
 	isTeamRuntimeChangedPayload,
@@ -17,7 +18,16 @@ const agentConfig: AgentConfig = {
 	filePath: "/agents/worker.md",
 };
 
-const modelRegistry = ModelRegistry.inMemory(AuthStorage.inMemory());
+let modelRegistry: ModelRegistry;
+beforeAll(async () => {
+	modelRegistry = new ModelRegistry(
+		await ModelRuntime.create({
+			credentials: new InMemoryCredentialStore(),
+			modelsPath: null,
+			refreshOnCreate: false,
+		}),
+	);
+});
 
 describe("Runtime session bindings", () => {
 	it("keeps active agents and pending results across a session rebind", async () => {

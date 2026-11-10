@@ -38,7 +38,6 @@ import {
 	type ExtensionContext,
 	type Theme,
 } from "@earendil-works/pi-coding-agent";
-import { StringEnum } from "@earendil-works/pi-ai";
 import { Type } from "typebox";
 import path from "node:path";
 import fs from "node:fs/promises";
@@ -102,17 +101,10 @@ type KeybindingMatcher = {
 };
 
 const TodoParams = Type.Object({
-	action: StringEnum([
-		"list",
-		"list-all",
-		"get",
-		"create",
-		"update",
-		"append",
-		"delete",
-		"claim",
-		"release",
-	] as const),
+	action: Type.Enum(
+		["list", "list-all", "get", "create", "update", "append", "delete", "claim", "release"],
+		{ type: "string" },
+	),
 	id: Type.Optional(Type.String({ description: "Todo id (TODO-<hex> or raw hex filename)" })),
 	title: Type.Optional(Type.String({ description: "Short summary shown in lists" })),
 	status: Type.Optional(Type.String({ description: "Todo status" })),

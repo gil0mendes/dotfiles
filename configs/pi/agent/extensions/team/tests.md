@@ -1,5 +1,13 @@
 # Test suite for team extension
 
+## Pi 1.5.1 bootstrap
+
+Run `bunx --no-install vitest run agent/extensions/team` from `configs/pi` for the offline team regressions. The bootstrap fixtures use synthetic credentials and do not send provider requests.
+
+Each subagent reconstructs a model runtime from the configured agent directory and replays public native and legacy provider registrations. Explicit runtime API keys are copied into the child as in-memory snapshots at spawn time; later parent key changes affect only later spawns. File and environment credentials are resolved independently in the child, and OAuth refresh uses the child runtime's normal credential store.
+
+Public replay does not transfer arbitrary private parent credential-store contents or unreproducible provider state, such as parent-only virtual models. If a parent current model is set and no declared preference resolves (including when none are declared), startup can continue only if that exact model is reproduced and authenticated in the child; otherwise it fails rather than silently switching models. When the parent has no current model and no preference resolves, the SDK may select its normal available default. For a selected current model whose parent auth source is stored credentials, the child must use stored credentials or an explicitly inherited runtime key—`models.json`, environment, or other fallback auth cannot silently substitute. This guard applies to the selected current model, not every provider credential. Parent and child runtimes are not shared.
+
 ## Test 1 - test abort agent
 
 I need to test the team_abort tool, and for that we should:

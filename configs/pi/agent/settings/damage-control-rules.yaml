@@ -95,6 +95,9 @@ filesystem:
     - ~/.cache/uv
     - ~/.rustup
     - ~/.agent-browser
+    - ~/.dotfiles/configs/pi/
+    - ~/.dotfiles/.jj/
+    - ~/.dotfiles/.git/
 
   denyWrite:
     - .env

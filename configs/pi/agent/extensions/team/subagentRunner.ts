@@ -1,8 +1,10 @@
+import { join } from "node:path";
 import type { Api, AssistantMessage, Model } from "@earendil-works/pi-ai";
 import type { SettledSubagentStatus, SubagentState, SubagentStatus } from "./types";
 import {
 	createAgentSession,
 	DefaultResourceLoader,
+	ModelRuntime,
 	SessionManager,
 	SettingsManager,
 	type AgentSession,
@@ -47,6 +49,7 @@ type BootstrapOptions = {
 	cwd: string;
 	ctx: BootstrapContext;
 	model?: Model<Api>;
+	modelRuntime: ModelRuntime;
 	tools?: string[];
 };
 
@@ -179,33 +182,97 @@ export const resolveModelPreferences = (
 
 export const resolveModel = (
 	agentConfig: AgentConfig,
-	ctx: BootstrapContext,
-): { model?: Model<Api>; warnings: string[] } => {
+	input: { model?: Model<Api>; availableModels: readonly Model<Api>[] },
+): { model?: Model<Api>; warnings: string[]; usedCurrentModel: boolean } => {
 	const preferences = agentConfig.parsedModels?.length
 		? agentConfig.parsedModels
 		: agentConfig.parsedModel
 			? [agentConfig.parsedModel]
 			: [];
-	if (preferences.length === 0) return { model: ctx.model, warnings: [] };
-
-	const availableModels = ctx.modelRegistry.getAvailable();
+	const { availableModels } = input;
 	const resolution = resolveModelPreferences(preferences, availableModels);
 	if (resolution.model) {
 		const model = availableModels.find(
 			(candidate) =>
 				candidate.provider === resolution.model?.provider && candidate.id === resolution.model.id,
 		);
-		if (model) return { model, warnings: resolution.warnings };
+		if (model) return { model, warnings: resolution.warnings, usedCurrentModel: false };
 	}
 
+	const current =
+		input.model &&
+		availableModels.find(
+			(candidate) =>
+				candidate.provider === input.model?.provider && candidate.id === input.model.id,
+		);
+	if (input.model && !current) {
+		throw new Error(
+			`Current model ${JSON.stringify(formatModelIdentity(input.model))} is unavailable in the child runtime; private credentials or virtual models cannot be inherited`,
+		);
+	}
+	if (!current && availableModels.length === 0) {
+		throw new Error(
+			"No authenticated models are available in the child runtime; configure a provider and credentials",
+		);
+	}
 	return {
-		model: ctx.model,
-		warnings: [
-			...resolution.warnings,
-			`Model preferences ${preferences.map(formatSelector).join(", ")} not available, using current session model`,
-		],
+		model: current,
+		usedCurrentModel: Boolean(current),
+		warnings: preferences.length
+			? [
+					...resolution.warnings,
+					`Model preferences ${preferences.map(formatSelector).join(", ")} not available, using current session model`,
+				]
+			: resolution.warnings,
 	};
 };
+
+export async function createChildModelRuntime(ctx: BootstrapContext): Promise<ModelRuntime> {
+	let runtime: ModelRuntime;
+	try {
+		runtime = await ModelRuntime.create({
+			authPath: join(ctx.agentDir, "auth.json"),
+			modelsPath: join(ctx.agentDir, "models.json"),
+			allowModelNetwork: false,
+		});
+	} catch {
+		throw new Error("Failed to initialize child model runtime");
+	}
+	if (ctx.modelRegistry.getError() || runtime.getError()) {
+		throw new Error("Invalid parent or child model configuration");
+	}
+	const registeredIds = ctx.modelRegistry.getRegisteredProviderIds();
+	for (const id of registeredIds) {
+		try {
+			const native = ctx.modelRegistry.getRegisteredNativeProvider(id);
+			const config = ctx.modelRegistry.getRegisteredProviderConfig(id);
+			if (native) runtime.registerNativeProvider(native);
+			else if (config) runtime.registerProvider(id, config);
+			else throw new Error("Missing registration");
+		} catch {
+			throw new Error(`Failed to replay provider registration ${JSON.stringify(id)}`);
+		}
+	}
+	const providerIds = new Set([
+		...registeredIds,
+		...ctx.modelRegistry.getAll().map((model) => model.provider),
+		...(ctx.model ? [ctx.model.provider] : []),
+	]);
+	for (const id of providerIds) {
+		if (ctx.modelRegistry.getProviderAuthStatus(id).source !== "runtime") continue;
+		try {
+			const auth = await ctx.modelRegistry.getProviderAuth(id);
+			if (!auth?.auth.apiKey) throw new Error("Missing runtime API key");
+			await runtime.setRuntimeApiKey(id, auth.auth.apiKey);
+		} catch {
+			throw new Error(`Failed to inherit runtime API key for provider ${JSON.stringify(id)}`);
+		}
+	}
+	if (runtime.getError()) {
+		throw new Error("Invalid child model configuration after provider registration");
+	}
+	return runtime;
+}
 
 export const resolveTools = (
 	agentConfig: AgentConfig,
@@ -294,10 +361,9 @@ async function bootstrapSession({
 	ctx,
 	cwd,
 	model,
+	modelRuntime,
 	tools,
 }: BootstrapOptions): Promise<BootstrapResult> {
-	const { modelRegistry } = ctx;
-	const { authStorage } = modelRegistry;
 	const warnings: string[] = [];
 
 	const resourceLoader = new DefaultResourceLoader({
@@ -332,10 +398,10 @@ async function bootstrapSession({
 		resourceLoader,
 		sessionManager,
 		settingsManager,
-		authStorage,
-		modelRegistry,
+		modelRuntime,
 	});
 
+	if (result.modelFallbackMessage) warnings.push(result.modelFallbackMessage);
 	return { session: result.session, warnings };
 }
 
@@ -348,7 +414,32 @@ export class SubagentSessionRunner implements SubagentRunner {
 				return;
 			}
 
-			const modelResolution = resolveModel(state.agentConfig, opts.ctx);
+			const modelRuntime = await createChildModelRuntime(opts.ctx);
+			if (isAborted(state) || !this.callbacks.isCurrent(state)) return;
+			let availableModels: readonly Model<Api>[];
+			try {
+				availableModels = await modelRuntime.getAvailable();
+			} catch {
+				throw new Error("Failed to resolve child model availability");
+			}
+			if (isAborted(state) || !this.callbacks.isCurrent(state)) return;
+			if (modelRuntime.getError()) throw new Error("Failed to resolve child model availability");
+			const modelResolution = resolveModel(state.agentConfig, {
+				model: opts.ctx.model,
+				availableModels,
+			});
+			if (
+				opts.ctx.model &&
+				modelResolution.usedCurrentModel &&
+				opts.ctx.modelRegistry.getProviderAuthStatus(opts.ctx.model.provider).source === "stored" &&
+				!["stored", "runtime"].includes(
+					modelRuntime.getProviderAuthStatus(opts.ctx.model.provider).source ?? "",
+				)
+			) {
+				throw new Error(
+					`Stored credentials for current model ${JSON.stringify(formatModelIdentity(opts.ctx.model))} are unavailable in the child runtime`,
+				);
+			}
 			const toolResolution = resolveTools(state.agentConfig, opts.ctx.availableToolNames);
 			for (const warning of [...modelResolution.warnings, ...toolResolution.warnings]) {
 				opts.onWarning?.(warning);
@@ -359,20 +450,21 @@ export class SubagentSessionRunner implements SubagentRunner {
 				cwd: opts.cwd,
 				ctx: opts.ctx,
 				model: modelResolution.model,
+				modelRuntime,
 				tools: toolResolution.tools,
 			});
 
-			for (const warning of warnings) {
-				opts.onWarning?.(warning);
-			}
 			if (!this.attachSpawnedSession(state, session)) {
 				return;
+			}
+			for (const warning of warnings) {
+				opts.onWarning?.(warning);
 			}
 
 			this.attachSessionListeners(state, session);
 			await this.runPromptCycle(state, state.task);
 		} catch (error) {
-			if (isAborted(state)) {
+			if (isAborted(state) || !this.callbacks.isCurrent(state)) {
 				return;
 			}
 			this.callbacks.onSettled(state, "error", {
@@ -389,7 +481,7 @@ export class SubagentSessionRunner implements SubagentRunner {
 	}
 
 	private attachSpawnedSession(state: SubagentState, session: AgentSession): boolean {
-		if (!this.callbacks.isCurrent(state)) {
+		if (isAborted(state) || !this.callbacks.isCurrent(state)) {
 			session.dispose();
 			return false;
 		}
