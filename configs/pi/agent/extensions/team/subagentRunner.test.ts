@@ -2,6 +2,13 @@ import { getModel } from "@earendil-works/pi-ai/compat";
 import { describe, expect, it } from "vitest";
 import { resolveModel, resolveTools } from "./subagentRunner";
 import type { AgentConfig } from "./loader/types";
+import { parseModel } from "./loader/utils";
+
+const selector = (value: string) => {
+	const parsed = parseModel(value);
+	if (!parsed) throw new Error(`Invalid test selector: ${value}`);
+	return parsed;
+};
 
 const createAgentConfig = (tools?: string[]): AgentConfig => ({
 	name: "worker",
@@ -13,16 +20,24 @@ const createAgentConfig = (tools?: string[]): AgentConfig => ({
 });
 
 describe("resolveModel", () => {
+	it("treats explicit bare selection of the current identity as a preference, not inheritance", () => {
+		const current = getModel("openai", "gpt-4o");
+		if (!current) throw new Error("Missing test model");
+		const child = { ...current };
+		const result = resolveModel(
+			{ ...createAgentConfig(), parsedModels: [selector("gpt-4o")] },
+			{ model: current, availableModels: [child] },
+		);
+		expect(result.model).toBe(child);
+		expect(result.usedCurrentModel).toBe(false);
+	});
 	it("falls back once after every declared preference is unavailable", () => {
 		const model = getModel("openai", "gpt-4o");
 		if (!model) throw new Error("Missing test model");
 		const result = resolveModel(
 			{
 				...createAgentConfig(),
-				parsedModels: [
-					{ provider: "provider", modelId: "missing-one" },
-					{ provider: "provider", modelId: "missing-two" },
-				],
+				parsedModels: [selector("provider/missing-one"), selector("provider/missing-two")],
 			},
 			{
 				availableModels: [model],
@@ -33,6 +48,8 @@ describe("resolveModel", () => {
 			model: undefined,
 			usedCurrentModel: false,
 			warnings: [
+				'Model selector "provider/missing-one" is unavailable, skipping',
+				'Model selector "provider/missing-two" is unavailable, skipping',
 				'Model preferences "provider/missing-one", "provider/missing-two" not available, using current session model',
 			],
 		});
@@ -56,7 +73,7 @@ describe("resolveModel", () => {
 		if (!current) throw new Error("Missing test model");
 		const child = { ...current };
 		const result = resolveModel(
-			{ ...createAgentConfig(), parsedModels: [{ provider: "missing", modelId: "model" }] },
+			{ ...createAgentConfig(), parsedModels: [selector("missing/model")] },
 			{
 				model: current,
 				availableModels: [child],
@@ -64,7 +81,7 @@ describe("resolveModel", () => {
 		);
 		expect(result.model).toBe(child);
 		expect(result.usedCurrentModel).toBe(true);
-		expect(result.warnings).toHaveLength(1);
+		expect(result.warnings).toHaveLength(2);
 	});
 
 	it("selects an available preference before an unavailable current model", () => {
@@ -74,7 +91,7 @@ describe("resolveModel", () => {
 		const result = resolveModel(
 			{
 				...createAgentConfig(),
-				parsedModels: [{ provider: preferred.provider, modelId: preferred.id }],
+				parsedModels: [selector(`${preferred.provider}/${preferred.id}`)],
 			},
 			{
 				model: current,

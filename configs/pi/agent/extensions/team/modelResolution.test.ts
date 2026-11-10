@@ -12,6 +12,29 @@ const selector = (value: string): ParsedModel => {
 const model = (provider: string, id: string) => ({ provider, id });
 
 describe("resolveModelPreferences", () => {
+	it("uses ordered bare matches after neutral warnings and preserves raw selector spelling", () => {
+		const chosen = { provider: "q", id: "opaque", name: "Sonnet model" };
+		const result = resolveModelPreferences(
+			[selector(" missing "), selector("  Sonnet  "), selector("q/exact")],
+			[chosen, model("q", "exact")],
+		);
+		expect(result.model).toBe(chosen);
+		expect(result.warnings).toEqual([
+			'Model selector "missing" is unavailable, skipping',
+			'Model selector "Sonnet" resolved to "q/opaque"',
+		]);
+	});
+
+	it("skips bare ambiguity before a later qualified exact preference", () => {
+		const result = resolveModelPreferences(
+			[selector("foo"), selector("q/foo")],
+			[model("q", "foo"), model("p", "foo")],
+		);
+		expect(result.model).toEqual(model("q", "foo"));
+		expect(result.warnings).toEqual([
+			'Model selector "foo" is ambiguous among "p/foo", "q/foo", skipping',
+		]);
+	});
 	it("keeps exact provider/id matches case-sensitive and ahead of fuzzy matching", () => {
 		const result = resolveModelPreferences(
 			[selector("openai/gpt-5")],
@@ -92,9 +115,19 @@ describe("resolveModelPreferences", () => {
 		expect(forward.warnings).toEqual(reverse.warnings);
 	});
 
+	it("sorts canonical labels before JSON escaping and retains internal selector spaces", () => {
+		const result = resolveModelPreferences(
+			[selector(" p / foo ")],
+			[model("p", "foo\\x"), model("p", 'foo"x')],
+		);
+		expect(result.warnings).toEqual([
+			`Model selector ${JSON.stringify("p / foo")} is ambiguous among ${JSON.stringify('p/foo"x')}, ${JSON.stringify("p/foo\\x")}, skipping`,
+		]);
+	});
+
 	it("returns no resolution when every preference is unavailable", () => {
 		expect(resolveModelPreferences([selector("provider/gpt")], [model("other", "gpt-5")])).toEqual({
-			warnings: [],
+			warnings: ['Model selector "provider/gpt" is unavailable, skipping'],
 		});
 	});
 });

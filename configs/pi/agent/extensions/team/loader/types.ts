@@ -1,9 +1,8 @@
 import type { ThinkingLevel } from "@earendil-works/pi-ai";
 
-export type ParsedModel = {
-	provider: string;
-	modelId: string;
-};
+export type ParsedModel =
+	| { kind: "qualified"; raw: string; provider: string; modelId: string }
+	| { kind: "bare"; raw: string; query: string };
 
 export type AgentType = "orchestrator" | "agent";
 

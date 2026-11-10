@@ -10,12 +10,39 @@ const loadAgentFromContent = (content: string) =>
 	});
 
 describe("model declaration parsing", () => {
-	it("rejects bare selectors and queries without alphanumeric tokens", () => {
-		expect(parseModel("gpt-5")).toBeNull();
+	it("accepts bare selectors and rejects qualified queries without alphanumeric tokens", () => {
+		expect(parseModel("gpt-5")).toEqual({ kind: "bare", raw: "gpt-5", query: "gpt-5" });
 		expect(parseModel("provider/---")).toBeNull();
 		expect(parseModel("provider/path/to-model")).toEqual({
+			kind: "qualified",
+			raw: "provider/path/to-model",
 			provider: "provider",
 			modelId: "path/to-model",
+		});
+	});
+});
+
+describe("mixed declarations", () => {
+	it("preserves raw spelling and rejects malformed entries consistently in both sources", () => {
+		const declarations =
+			'["  claude sonnet 4_5  ", " P / path/to:model ", "---", "/x", "p/", "p/---", 42]';
+		const agent = loadAgentFromContent(
+			`---\nname: scout\ndescription: test\nmodel: ${declarations}\n---\nPrompt\n`,
+		);
+		const team = loadTeamConfig(`agents:\n  scout:\n    model: ${declarations}\n`);
+		const expected = [
+			{ kind: "bare", raw: "claude sonnet 4_5", query: "claude sonnet 4_5" },
+			{ kind: "qualified", raw: "P / path/to:model", provider: "P", modelId: "path/to:model" },
+			{ kind: "bare", raw: "---", query: "---" },
+		];
+		expect(agent.agent?.parsedModels).toEqual(expected);
+		expect(team.agents.scout?.parsedModels).toEqual(expected);
+		expect(team.warnings).toHaveLength(4);
+		for (const value of ["", " ", "/", "/id", "p/", "p/---"]) expect(parseModel(value)).toBeNull();
+		expect(parseModel("x*[a]:2024")).toEqual({
+			kind: "bare",
+			raw: "x*[a]:2024",
+			query: "x*[a]:2024",
 		});
 	});
 });
@@ -33,10 +60,12 @@ Prompt
 		expect(result.agent?.type).toBe("agent");
 		expect(result.agent?.model).toBe("openai-codex/gpt-5.5");
 		expect(result.agent?.parsedModel).toEqual({
+			kind: "qualified",
+			raw: "openai-codex/gpt-5.5",
 			provider: "openai-codex",
 			modelId: "gpt-5.5",
 		});
-		expect(result.agent?.parsedModels).toEqual([{ provider: "openai-codex", modelId: "gpt-5.5" }]);
+		expect(result.agent?.parsedModels).toEqual([parseModel("openai-codex/gpt-5.5")]);
 		expect(result.warnings).toEqual([]);
 	});
 
@@ -126,12 +155,14 @@ Prompt
 
 		expect(result.agent?.model).toEqual(["anthropic/claude-opus-4-5", "openai-codex/gpt-5.5"]);
 		expect(result.agent?.parsedModel).toEqual({
+			kind: "qualified",
+			raw: "anthropic/claude-opus-4-5",
 			provider: "anthropic",
 			modelId: "claude-opus-4-5",
 		});
 		expect(result.agent?.parsedModels).toEqual([
-			{ provider: "anthropic", modelId: "claude-opus-4-5" },
-			{ provider: "openai-codex", modelId: "gpt-5.5" },
+			parseModel("anthropic/claude-opus-4-5"),
+			parseModel("openai-codex/gpt-5.5"),
 		]);
 		expect(result.warnings).toEqual([]);
 	});
@@ -166,8 +197,8 @@ describe("loadTeamConfig", () => {
 			"openai-codex/gpt-5.5",
 		]);
 		expect(config.agents.oracle?.parsedModels).toEqual([
-			{ provider: "anthropic", modelId: "claude-opus-4-5" },
-			{ provider: "openai-codex", modelId: "gpt-5.5" },
+			parseModel("anthropic/claude-opus-4-5"),
+			parseModel("openai-codex/gpt-5.5"),
 		]);
 	});
 });

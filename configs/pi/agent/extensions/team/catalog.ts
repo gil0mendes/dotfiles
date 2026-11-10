@@ -38,7 +38,7 @@ const mergeConfigFiles = (configFiles: AgentDefinitionFile[]): ConfigParseResult
 				warnings.push(
 					createDiscoveryWarning(
 						configFile.filePath,
-						`Subagent override ${JSON.stringify(warning.agentName)}: invalid model declaration ${JSON.stringify(warning.issue.value)} (expected "provider/query" with an alphanumeric query token), ignoring model`,
+						`Subagent override ${JSON.stringify(warning.agentName)}: invalid model declaration ${JSON.stringify(warning.issue.value)} (expected a nonempty bare query or "provider/query" with a nonempty provider and an alphanumeric query token), ignoring model`,
 					),
 				);
 			}

@@ -289,7 +289,7 @@ const formatFieldWarning = (
 		case "invalid-type":
 			return `${prefix}: field "${warning.fieldName}" must be a ${warning.expected}, ignoring`;
 		case "invalid-model-format":
-			return `${prefix}: invalid model format ${JSON.stringify(warning.model)} (expected "provider/query" with an alphanumeric query token), ignoring model`;
+			return `${prefix}: invalid model format ${JSON.stringify(warning.model)} (expected a nonempty bare query or "provider/query" with a nonempty provider and an alphanumeric query token), ignoring model`;
 		case "invalid-thinking-level":
 			return `${prefix}: invalid thinking level "${warning.thinking}", ignoring`;
 	}

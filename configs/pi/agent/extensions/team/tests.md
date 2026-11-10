@@ -6,7 +6,28 @@ Run `bunx --no-install vitest run agent/extensions/team` from `configs/pi` for t
 
 Each subagent reconstructs a model runtime from the configured agent directory and replays public native and legacy provider registrations. Explicit runtime API keys are copied into the child as in-memory snapshots at spawn time; later parent key changes affect only later spawns. File and environment credentials are resolved independently in the child, and OAuth refresh uses the child runtime's normal credential store.
 
-Public replay does not transfer arbitrary private parent credential-store contents or unreproducible provider state, such as parent-only virtual models. If a parent current model is set and no declared preference resolves (including when none are declared), startup can continue only if that exact model is reproduced and authenticated in the child; otherwise it fails rather than silently switching models. When the parent has no current model and no preference resolves, the SDK may select its normal available default. For a selected current model whose parent auth source is stored credentials, the child must use stored credentials or an explicitly inherited runtime key—`models.json`, environment, or other fallback auth cannot silently substitute. This guard applies to the selected current model, not every provider credential. Parent and child runtimes are not shared.
+Public replay does not transfer arbitrary private parent credential-store contents or unreproducible provider state, such as parent-only virtual models. If a parent current model is set and no declared preference resolves (including when none are declared), startup can continue only if that exact model is reproduced and authenticated in the child; otherwise it fails rather than silently switching models. When the parent has no current model and no preference resolves, the SDK may select its normal available default. For a selected current model whose parent auth source is stored credentials, the child must use stored credentials or an explicitly inherited runtime key—`models.json`, environment, or other fallback auth cannot silently substitute. This guard applies to the selected current model, not every provider credential. A successful explicit preference is not treated as inherited current-model fallback and does not pass through that guard. Parent and child runtimes are not shared.
+
+## Model preference regression checks
+
+Run from `configs/pi`. These focused Vitest commands exercise the pure selector helper, declaration loaders, ordered preference/wrapper behavior, and isolated bootstrap integration:
+
+```sh
+bunx --no-install vitest run \
+  agent/extensions/team/modelSelection.test.ts \
+  agent/extensions/team/loader/loadAgents.test.ts \
+  agent/extensions/team/modelResolution.test.ts \
+  agent/extensions/team/subagentRunner.test.ts \
+  agent/extensions/team/subagentBootstrap.test.ts
+```
+
+Run the full team suite as well:
+
+```sh
+bunx --no-install vitest run agent/extensions/team
+```
+
+The selection and loader tests use synthetic declarations and model catalogs. Bootstrap coverage uses isolated temporary fixtures, in-memory credentials, fake providers, and mocked session creation; these checks do not require real user credentials or settings and do not send provider requests. Keep fallback, credential-source, runtime replay, abort, and disposal regressions covered alongside the new preference cases.
 
 ## Test 1 - test abort agent
 

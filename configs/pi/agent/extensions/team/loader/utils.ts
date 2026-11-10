@@ -26,16 +26,18 @@ export type ParsedModelDeclaration = {
 
 const hasAlphanumericToken = (value: string): boolean => /[a-z0-9]/i.test(value);
 
-/** Parses the provider/query syntax shared by frontmatter and team.yaml. */
+/** Parses model selectors shared by frontmatter and team.yaml. */
 export const parseModel = (value: unknown): ParsedModel | null => {
 	if (typeof value !== "string") return null;
-	const slashIndex = value.indexOf("/");
-	if (slashIndex === -1) return null;
+	const raw = value.trim();
+	if (!raw) return null;
+	const slashIndex = raw.indexOf("/");
+	if (slashIndex === -1) return { kind: "bare", raw, query: raw };
 
-	const provider = value.slice(0, slashIndex).trim();
-	const modelId = value.slice(slashIndex + 1).trim();
+	const provider = raw.slice(0, slashIndex).trim();
+	const modelId = raw.slice(slashIndex + 1).trim();
 	if (!provider || !modelId || !hasAlphanumericToken(modelId)) return null;
-	return { provider, modelId };
+	return { kind: "qualified", raw, provider, modelId };
 };
 
 export const parseModelDeclaration = (value: unknown): ParsedModelDeclaration => {

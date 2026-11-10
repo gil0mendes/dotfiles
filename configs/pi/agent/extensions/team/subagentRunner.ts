@@ -11,6 +11,7 @@ import {
 	type ModelRegistry,
 } from "@earendil-works/pi-coding-agent";
 import type { AgentConfig, ParsedModel } from "./loader/types";
+import { selectAvailableModel } from "./modelSelection";
 import type { AgentMessage } from "@earendil-works/pi-agent-core";
 
 type StartOptions = {
@@ -83,6 +84,7 @@ const getSkillWarnings = (
 export type AvailableModelIdentity = {
 	provider: string;
 	id: string;
+	name?: string;
 };
 
 export type ModelResolution = {
@@ -94,88 +96,46 @@ const MAX_AMBIGUITY_CANDIDATES = 3;
 
 const formatModelIdentity = (model: AvailableModelIdentity): string =>
 	`${model.provider}/${model.id}`;
-const formatSelector = (selector: ParsedModel): string =>
-	JSON.stringify(`${selector.provider}/${selector.modelId}`);
-
-const tokenizeModelId = (modelId: string): string[] =>
-	modelId
-		.toLowerCase()
-		.split(/[^a-z0-9]+/i)
-		.filter(Boolean);
-
-const isFuzzyModelMatch = (selector: ParsedModel, candidate: AvailableModelIdentity): boolean => {
-	if (selector.provider !== candidate.provider) return false;
-
-	const queryTokens = tokenizeModelId(selector.modelId);
-	const candidateTokens = tokenizeModelId(candidate.id);
-	let candidateIndex = 0;
-	for (const queryToken of queryTokens) {
-		while (
-			candidateIndex < candidateTokens.length &&
-			!candidateTokens[candidateIndex]?.startsWith(queryToken)
-		) {
-			candidateIndex++;
-		}
-		if (candidateIndex === candidateTokens.length) return false;
-		candidateIndex++;
-	}
-	return true;
-};
-
-const uniqueAvailableModels = (
-	availableModels: readonly AvailableModelIdentity[],
-): AvailableModelIdentity[] => {
-	const models: AvailableModelIdentity[] = [];
-	const identities = new Set<string>();
-	for (const model of availableModels) {
-		const identity = formatModelIdentity(model);
-		if (identities.has(identity)) continue;
-		identities.add(identity);
-		models.push(model);
-	}
-	return models;
-};
+const formatSelector = (selector: ParsedModel): string => JSON.stringify(selector.raw);
 
 const formatAmbiguousCandidates = (candidates: readonly AvailableModelIdentity[]): string => {
 	const formattedCandidates = candidates
-		.map((candidate) => JSON.stringify(formatModelIdentity(candidate)))
-		.sort();
+		.map(formatModelIdentity)
+		.sort()
+		.map((identity) => JSON.stringify(identity));
 	const visibleCandidates = formattedCandidates.slice(0, MAX_AMBIGUITY_CANDIDATES);
 	const remaining = formattedCandidates.length - visibleCandidates.length;
 	return `${visibleCandidates.join(", ")}${remaining > 0 ? `, … ${remaining} more` : ""}`;
 };
 
-/**
- * Resolves provider-qualified selectors against authenticated available models only.
- * Fuzzy model-id matching is case-insensitive: selector tokens are an ordered
- * subsequence and each token must prefix its aligned candidate token.
- */
-export const resolveModelPreferences = (
+export const resolveModelPreferences = <T extends AvailableModelIdentity>(
 	preferences: readonly ParsedModel[],
-	availableModels: readonly AvailableModelIdentity[],
-): ModelResolution => {
-	const models = uniqueAvailableModels(availableModels);
+	availableModels: readonly T[],
+): { model?: T; warnings: string[] } => {
 	const warnings: string[] = [];
 	for (const selector of preferences) {
-		const exact = models.find(
-			(candidate) => candidate.provider === selector.provider && candidate.id === selector.modelId,
-		);
-		if (exact) return { model: exact, warnings };
-
-		const fuzzyMatches = models.filter((candidate) => isFuzzyModelMatch(selector, candidate));
-		if (fuzzyMatches.length === 1) {
-			const fuzzyMatch = fuzzyMatches[0];
-			if (!fuzzyMatch) continue;
-			warnings.push(
-				`Model selector ${formatSelector(selector)} resolved to ${JSON.stringify(formatModelIdentity(fuzzyMatch))}`,
-			);
-			return { model: fuzzyMatch, warnings };
+		const result = selectAvailableModel(selector, availableModels);
+		if (result.kind === "unavailable") {
+			warnings.push(`Model selector ${formatSelector(selector)} is unavailable, skipping`);
+			continue;
 		}
-		if (fuzzyMatches.length > 1) {
+		if (result.kind === "ambiguous") {
 			warnings.push(
-				`Model selector ${formatSelector(selector)} is ambiguous among ${formatAmbiguousCandidates(fuzzyMatches)}, skipping`,
+				`Model selector ${formatSelector(selector)} is ambiguous among ${formatAmbiguousCandidates(result.candidates)}, skipping`,
+			);
+			continue;
+		}
+		const { model } = result;
+		const isExact =
+			selector.kind === "qualified"
+				? selector.provider === model.provider && selector.modelId === model.id
+				: selector.query.trim().toLowerCase() === model.id.trim().toLowerCase();
+		if (!isExact) {
+			warnings.push(
+				`Model selector ${formatSelector(selector)} resolved to ${JSON.stringify(formatModelIdentity(model))}`,
 			);
 		}
+		return { model, warnings };
 	}
 	return { warnings };
 };
@@ -192,11 +152,7 @@ export const resolveModel = (
 	const { availableModels } = input;
 	const resolution = resolveModelPreferences(preferences, availableModels);
 	if (resolution.model) {
-		const model = availableModels.find(
-			(candidate) =>
-				candidate.provider === resolution.model?.provider && candidate.id === resolution.model.id,
-		);
-		if (model) return { model, warnings: resolution.warnings, usedCurrentModel: false };
+		return { model: resolution.model, warnings: resolution.warnings, usedCurrentModel: false };
 	}
 
 	const current =

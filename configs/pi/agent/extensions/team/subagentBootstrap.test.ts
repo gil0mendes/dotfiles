@@ -12,6 +12,7 @@ import {
 } from "./subagentRunner";
 import type { SubagentState } from "./types";
 import type { AgentConfig } from "./loader/types";
+import { parseModel } from "./loader/utils";
 import teamExtension from "./index";
 
 vi.mock("@earendil-works/pi-coding-agent", async (importOriginal) => {
@@ -479,6 +480,38 @@ describe("child model runtime", () => {
 		expect(onSettled).toHaveBeenCalledWith(state, "error", {
 			error: expect.stringMatching(/Stored credentials .* unavailable/),
 		});
+
+		const preference = parseModel("fixture mod");
+		if (!preference) throw new Error("Missing test selector");
+		const explicitState: SubagentState = {
+			...state,
+			status: "running",
+			agentConfig: { ...config, parsedModels: [preference] },
+		};
+		const onWarning = vi.fn();
+		vi.spyOn(sdk.SessionManager, "create").mockImplementation((cwd) =>
+			sdk.SessionManager.inMemory(cwd),
+		);
+		const original = await vi.importActual<typeof sdk>("@earendil-works/pi-coding-agent");
+		createSpy.mockImplementationOnce(async (options) => {
+			const result = await original.createAgentSession(options);
+			vi.spyOn(result.session, "prompt").mockResolvedValue(undefined);
+			return result;
+		});
+		await runner.start(explicitState, {
+			cwd: directory,
+			ctx: { ...context(directory, registry), model: current },
+			onWarning,
+		});
+		expect(createSpy).toHaveBeenCalledOnce();
+		const selected = createSpy.mock.calls[0]?.[0]?.model;
+		expect(selected).toMatchObject({ provider: "fixture", id: model.id });
+		expect(selected).not.toBe(current);
+		expect(explicitState.model).toBe("fixture/fixture-model");
+		expect(onWarning).toHaveBeenCalledWith(
+			'Model selector "fixture mod" resolved to "fixture/fixture-model"',
+		);
+		explicitState.session?.dispose();
 	});
 
 	it("does not start a session when aborted during runtime creation", async () => {
