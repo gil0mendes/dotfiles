@@ -1,4 +1,4 @@
-import { keyHint } from "@earendil-works/pi-coding-agent";
+import type { KeybindingHints } from "@earendil-works/pi-coding-agent";
 
 export function getTextContent(
 	content: Array<{ type: string; text?: string }> | undefined,
@@ -33,7 +33,11 @@ export function appendExpandedPreview(
 	return base;
 }
 
-export function appendExpandHint(base: string, expanded: boolean): string {
+export function appendExpandHint(
+	base: string,
+	expanded: boolean,
+	hints: Pick<KeybindingHints, "keyHint">,
+): string {
 	if (expanded) return base;
-	return `${base} ${keyHint("app.tools.expand" as any, "for details")}`;
+	return `${base} ${hints.keyHint("app.tools.expand", "for details")}`;
 }

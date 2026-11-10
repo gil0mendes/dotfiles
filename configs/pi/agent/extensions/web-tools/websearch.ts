@@ -1,4 +1,5 @@
 import type { TextContent } from "@earendil-works/pi-ai";
+import type { KeybindingHints } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
 import { createOperationSignal, isAbortError } from "./network.ts";
@@ -129,6 +130,7 @@ export function createWebSearchTool() {
 			},
 			options: { expanded: boolean; isPartial: boolean },
 			theme: any,
+			context: Pick<KeybindingHints, "keyHint">,
 		) {
 			if (options.isPartial) {
 				return new Text(theme.fg("warning", "Searching..."), 0, 0);
@@ -149,7 +151,7 @@ export function createWebSearchTool() {
 			if (details?.truncated) {
 				text += theme.fg("warning", " [truncated]");
 			}
-			text = appendExpandHint(text, options.expanded);
+			text = appendExpandHint(text, options.expanded, context);
 
 			if (options.expanded) {
 				text = appendExpandedPreview(text, getTextContent(result.content), theme, {

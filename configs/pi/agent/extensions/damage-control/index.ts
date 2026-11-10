@@ -154,18 +154,24 @@ async function promptForFilesystemAccess(
 	target: string,
 	showFileOptions: boolean,
 	grantOnceForSandboxRetry = false,
+	signal?: AbortSignal,
 ): Promise<boolean> {
-	if (!ctx.hasUI) return false;
+	if (!ctx.hasUI || ctx.mode !== "tui" || ctx.signal?.aborted || signal?.aborted) return false;
 	const parentDir = path.dirname(target);
-	const result = await ctx.ui.custom<PromptResult>(
+	const displayTarget = normalizeForDisplay(target, ctx.cwd);
+	const result = await ctx.ui.custom<PromptResult | undefined>(
 		createPathAccessPromptComponent(
 			`${tool} ${kind}`,
-			normalizeForDisplay(target, ctx.cwd),
+			displayTarget,
 			normalizeForDisplay(parentDir, ctx.cwd),
 			ctx.cwd,
 			showFileOptions,
 		),
+		{
+			blocked: { kind: "permission", message: `Allow ${tool} ${kind} access to ${displayTarget}?` },
+		},
 	);
+	if (result === undefined || ctx.signal?.aborted || signal?.aborted) return false;
 	const scope = promptScope(result);
 	if (!scope) return false;
 
@@ -421,7 +427,7 @@ function registerSandboxedBash(pi: ExtensionAPI): void {
 		execute: async (id, params, signal, onUpdate, ctx) => {
 			const startedAt = new Date();
 			const result = await bashTool.execute(id, params, signal, onUpdate, ctx);
-			if (!ctx.hasUI) return result;
+			if (!ctx.hasUI || ctx.mode !== "tui" || ctx.signal?.aborted || signal?.aborted) return result;
 
 			const violationLines = SandboxManager.getSandboxViolationStore()
 				.getViolationsForCommand(params.command)
@@ -442,10 +448,12 @@ function registerSandboxedBash(pi: ExtensionAPI): void {
 					access.path,
 					true,
 					true,
+					signal,
 				);
 				if (!allowed) return result;
 			}
 
+			if (ctx.signal?.aborted || signal?.aborted) return result;
 			onUpdate?.({
 				content: [
 					{

@@ -1,4 +1,5 @@
 import { formatSize } from "@earendil-works/pi-coding-agent";
+import type { KeybindingHints } from "@earendil-works/pi-coding-agent";
 import type { ImageContent, TextContent } from "@earendil-works/pi-ai";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
@@ -213,6 +214,7 @@ export function createWebFetchTool() {
 			},
 			options: { expanded: boolean; isPartial: boolean },
 			theme: any,
+			context: Pick<KeybindingHints, "keyHint">,
 		) {
 			if (options.isPartial) {
 				return new Text(theme.fg("warning", "Fetching..."), 0, 0);
@@ -239,7 +241,7 @@ export function createWebFetchTool() {
 			if (details?.image) {
 				text += theme.fg("muted", " [image]");
 			}
-			text = appendExpandHint(text, options.expanded);
+			text = appendExpandHint(text, options.expanded, context);
 
 			if (options.expanded) {
 				if (details?.image) {
