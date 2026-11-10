@@ -1,7 +1,7 @@
 ---
 name: librarian
 description: Multi-repository codebase expert for understanding library internals and remote code. Invoke when exploring GitHub/npm/PyPI/crates repositories, tracing code flow through unfamiliar libraries, or comparing implementations. Show its response in full — do not summarize.
-model: gpt-6-1-terra
+model: claude-sonnet-5-5
 permission:
   "*": allow
   edit: deny

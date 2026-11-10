@@ -3,7 +3,7 @@ name: coder
 description: Technical implementation specialist for writing and modifying code
 rootOnly: true
 mode: subagent
-model: gpt-6-1-terra
+model: claude-sonnet-5-5
 variant: xhigh
 tools: read, bash, edit, write, grep, find, ls, plan_read, todo
 ---

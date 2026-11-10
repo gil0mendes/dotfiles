@@ -1,7 +1,7 @@
 ---
 name: explorer
 description: Investigates codebase and returns structured findings. Read-only.
-model: gpt-6-1-terra
+model: claude-sonnet-5-5
 tools: read, grep, find, ls, bash
 ---
 

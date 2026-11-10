@@ -14,6 +14,7 @@ permissionGate: true
 # mirrored for Pi read/write/edit tools. allowRead overrides denyRead; denyWrite
 # takes precedence over allowWrite.
 filesystem:
+  allowGitConfig: true
   denyRead:
     - .env
     - .env.*

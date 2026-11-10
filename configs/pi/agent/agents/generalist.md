@@ -2,7 +2,7 @@
 name: generalist
 description: General-purpose worker for bounded multi-step tasks outside specialist domains
 rootOnly: true
-model: gpt-6-1-terra
+model: claude-sonnet-5-5
 tools: read, bash, edit, write, grep, find, ls, todo
 ---
 
