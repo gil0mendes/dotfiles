@@ -4,7 +4,7 @@ description: Orchestrate other agents to draw a plan for the presented problem
 type: orchestrator
 rootOnly: true
 delegatesTo: [explorer, librarian, researcher, reviewer, scribe]
-model: barracuda-iq/gpt-6-1-sol
+model: gpt-6-1-sol
 ---
 
 # Planner Agent

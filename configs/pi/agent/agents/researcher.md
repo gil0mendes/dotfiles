@@ -1,7 +1,7 @@
 ---
 name: researcher
 description: Knowledge architect for external research and documentation
-model: barracuda-iq/gpt-6-luna
+model: gpt-6-luna
 tools: webfetch, websearch
 ---
 

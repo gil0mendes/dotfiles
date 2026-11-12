@@ -1,7 +1,7 @@
 ---
 name: scribe
 description: Human-facing content specialist for documentation and prose
-model: barracuda-iq/gpt-6-luna
+model: gpt-6-luna
 tools: read, edit, write, ls
 ---
 
