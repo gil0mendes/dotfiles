@@ -4,21 +4,23 @@ Token-efficient skill design through staged information loading.
 
 ## Three-Tier Loading Model
 
+The Agent Skills client guide describes three tiers. Check the target client's discovery, filtering, and activation behavior.
+
 ```
 Tier 1: Metadata (~100 tokens)
 ├── name + description
-├── Loaded at agent startup for ALL skills
+├── May be exposed during skill discovery
 └── Used to decide: "Is this skill relevant?"
 
-Tier 2: SKILL.md Body (<2000 tokens)
+Tier 2: SKILL.md Body (<5000 tokens recommended)
 ├── Full instructions
-├── Loaded when skill is triggered
+├── May be loaded when the skill is invoked
 └── Contains navigation to Tier 3
 
 Tier 3: Bundled Resources (on-demand)
 ├── references/, scripts/, assets/
-├── Loaded only when explicitly needed
-└── No token cost until accessed
+├── Can be read when needed
+└── Context cost depends on how the harness accesses them
 ```
 
 ## Context Window Economics
@@ -31,7 +33,7 @@ Tier 3: Bundled Resources (on-demand)
 | Full implementation       | SKILL.md + 2-3 refs | ~4000   |
 | **Worst case**            | Everything          | 10000+  |
 
-**Key insight:** Proper navigation keeps budget at 2-5K. Poor navigation explodes to 10K+.
+**Key insight:** Clear navigation can reduce context load; actual costs depend on the harness and task.
 
 ## File Decomposition Strategy
 
@@ -89,7 +91,7 @@ Basic usage here...
 **Batch processing**: See [batch.md](./references/batch.md)
 ```
 
-Agent loads forms.md or batch.md only when needed.
+The pointers guide the agent to forms.md or batch.md when needed; loading behavior depends on the harness.
 
 ### Don't: Duplicate Content
 
@@ -107,7 +109,7 @@ As mentioned above, to process PDFs... # BAD: duplicates content
 
 ### "In This Reference" Section
 
-Always include in SKILL.md:
+For skills with several references, consider an index in SKILL.md:
 
 ```markdown
 ## In This Reference

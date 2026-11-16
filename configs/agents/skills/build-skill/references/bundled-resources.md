@@ -98,13 +98,9 @@ Agent copies/uses files without loading into context.
 | references/ | Documentation | When read  | Read         |
 | assets/     | Output files  | Zero       | Copy/use     |
 
-## Not Supported in OpenCode
+## Client-Specific Resources
 
-| Feature             | Status                   |
-| ------------------- | ------------------------ |
-| `toolbox/` protocol | Not supported            |
-| `mcp.json` bundling | Not supported            |
-| Per-skill MCP       | Use global opencode.json |
+Check the target client's documentation before relying on resource protocols, bundled MCP configuration, or per-skill tool integrations.
 
 ## See Also
 

@@ -1,11 +1,13 @@
 ---
 name: build-skill
-description: Create effective skills for OpenCode agents. Load FIRST before writing any SKILL.md. Provides required format, naming conventions, progressive disclosure patterns, and validation. Use when building, reviewing, or debugging skills.
+description: Create and review Agent Skills. Use when building, reviewing, or debugging skills or writing a SKILL.md; covers the specification, progressive disclosure, and validation.
 ---
 
 # Building Skills
 
 Skills extend agent capabilities with specialized knowledge, workflows, and tools.
+
+For instruction quality, trigger wording, and when to split instructions, load [writing-for-agents](../productivity/writing-for-agents/SKILL.md).
 
 ## Quick Start
 
@@ -24,7 +26,7 @@ Instructions go here.
 EOF
 ```
 
-Place in `.opencode/skills/` (project) or `~/.config/opencode/skills/` (global).
+Place the skill in a directory scanned by the target client; see Skill Locations below.
 
 ## Skill Type Decision Tree
 
@@ -103,20 +105,16 @@ Before using a skill:
 - [ ] `name:` field present, matches directory name
 - [ ] `description:` includes what + when to use
 - [ ] Closing `---` after frontmatter
-- [ ] SKILL.md under 200 lines (use references/ for more)
+- [ ] SKILL.md is concise; move task-specific detail to references/
 - [ ] All internal links resolve
 
-Run: `./scripts/validate_skill.sh ./my-skill`
+Run this skill's `scripts/validate_skill.sh` with the target skill directory. It performs limited heuristic checks, not full YAML or specification validation; review the specification and target client separately.
 
 ## Skill Locations
 
-| Priority | Location                                     |
-| -------- | -------------------------------------------- |
-| 1        | `.opencode/skills/<name>/` (project)         |
-| 2        | `~/.config/opencode/skills/<name>/` (global) |
-| 3        | `.claude/skills/<name>/` (Claude-compat)     |
+The specification does not mandate installation locations. The client guide recommends considering `.agents/skills/` in the project and `~/.agents/skills/` for the user, alongside client-specific locations. Check the target client for supported paths and collision handling; the guide describes project-level precedence over user-level skills.
 
-Discovery walks up from CWD to git root. First-wins for duplicate names.
+Clients may filter disabled or inaccessible skills from the model's catalog. The guide gives `disable-model-invocation` as an example of an opt-out flag, not a standard frontmatter requirement; use it only if the target client supports it.
 
 ## See Also
 

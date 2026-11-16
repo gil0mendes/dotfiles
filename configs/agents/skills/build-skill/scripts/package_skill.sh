@@ -200,6 +200,5 @@ zip -r "$ZIP_FILE" "$SKILL_NAME" "${EXCLUDE_ARGS[@]}" -x "*.git*" > /dev/null
 
 echo -e "${GREEN}Success!${NC} Created $ZIP_FILE"
 echo ""
-echo "To install, extract to:"
-echo "  Project: .opencode/skills/"
-echo "  Global:  ~/.config/opencode/skills/"
+echo "To install, extract to a skill directory scanned by your client."
+echo "Common cross-client locations: .agents/skills/ and ~/.agents/skills/"

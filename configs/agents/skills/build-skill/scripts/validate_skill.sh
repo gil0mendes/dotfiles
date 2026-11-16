@@ -189,11 +189,6 @@ else
     fi
 fi
 
-# Check for XML tags in frontmatter
-if [[ "$FRONTMATTER" =~ \<[a-zA-Z]+\> ]]; then
-    log_error "Frontmatter contains XML tags (use YAML syntax only)"
-fi
-
 # Check file size
 LINE_COUNT="$(wc -l < "$SKILL_MD" | tr -d ' ')"
 if [[ "$LINE_COUNT" -gt 500 ]]; then

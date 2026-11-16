@@ -17,12 +17,12 @@ description: What this skill does and when to use it.
 
 ### name
 
-| Constraint | Value                      |
-| ---------- | -------------------------- |
-| Required   | Yes                        |
-| Max length | 64 characters              |
-| Pattern    | `^[a-z0-9]+(-[a-z0-9]+)*$` |
-| Must match | Directory name             |
+| Constraint | Value                               |
+| ---------- | ----------------------------------- |
+| Required   | Yes                                 |
+| Max length | 64 characters                       |
+| Characters | Lowercase letters, numbers, hyphens |
+| Must match | Directory name                      |
 
 **Rules:**
 
@@ -63,7 +63,7 @@ description: What this skill does and when to use it.
 
 **Rules:**
 
-- Write in third person ("Processes files" not "I process files")
+- Prefer clear, impersonal wording
 - Include WHAT the skill does
 - Include WHEN to use it (activation triggers)
 - Be specific with key terms
@@ -119,15 +119,13 @@ metadata:
 
 String-to-string map. Arbitrary key-value pairs.
 
-### references (OpenCode-specific)
+### allowed-tools
 
-```yaml
-references:
-  - references/api.md
-  - references/schemas.md
-```
+The specification includes experimental `allowed-tools` for pre-approved tools. Support varies by client; consult the specification and client documentation before using it.
 
-Hints for pre-loading. Agent may use these to proactively load files.
+### Client extensions
+
+Fields beyond the standard need client-specific support. The client guide mentions `disable-model-invocation` as an example of a model-driven activation opt-out, not a standard field or requirement. Check the target client before using it. Link bundled references from the Markdown body rather than assuming a `references` frontmatter field.
 
 ## Complete Example
 
@@ -140,9 +138,6 @@ compatibility: Requires git and gh CLI
 metadata:
   author: dmmulroy
   version: "2.0"
-references:
-  - references/changelog-format.md
-  - references/versioning.md
 ---
 # Release Manager
 
@@ -151,16 +146,16 @@ Instructions here...
 
 ## Validation Checklist
 
-| Check               | Requirement                                          |
-| ------------------- | ---------------------------------------------------- |
-| Starts with `---`   | Line 1, no preceding blank lines                     |
-| Has `name:`         | Required                                             |
-| Name format         | Lowercase, hyphens, no `--`, no leading/trailing `-` |
-| Name matches dir    | `my-skill/SKILL.md` has `name: my-skill`             |
-| Has `description:`  | Required                                             |
-| Description quality | 50+ chars, third person, includes triggers           |
-| Closes with `---`   | Required                                             |
-| No XML tags         | `<purpose>`, `<refs>` invalid                        |
+| Check               | Requirement                                                |
+| ------------------- | ---------------------------------------------------------- |
+| Starts with `---`   | Line 1, no preceding blank lines                           |
+| Has `name:`         | Required                                                   |
+| Name format         | Lowercase, hyphens, no `--`, no leading/trailing `-`       |
+| Name matches dir    | `my-skill/SKILL.md` has `name: my-skill`                   |
+| Has `description:`  | Required                                                   |
+| Description quality | Specific purpose and usage context recommended             |
+| Closes with `---`   | Required                                                   |
+| YAML validity       | Parse frontmatter as YAML; check specification constraints |
 
 ## See Also
 

@@ -103,13 +103,13 @@ my-platform/
 
 ## File Size Guidelines
 
-| File Type       | Target        | Max       |
-| --------------- | ------------- | --------- |
-| SKILL.md        | 150-200 lines | 500 lines |
-| Reference file  | 100-150 lines | 200 lines |
-| Any single file | -             | 500 lines |
+| File Type       | Target        | Max                         |
+| --------------- | ------------- | --------------------------- |
+| SKILL.md        | 150-200 lines | 500 lines (recommended)     |
+| Reference file  | 100-150 lines | 200 lines (local guideline) |
+| Any single file | -             | 500 lines (local guideline) |
 
-**Why these limits?**
+These are recommendations, not format requirements. **Why use them?**
 
 - Agent loads full file into context when reading
 - Large files = context rot = worse performance

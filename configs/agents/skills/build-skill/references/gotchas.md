@@ -9,7 +9,7 @@ Issues, causes, and fixes for skill creation.
 | No opening `---`         | Must start at line 1      |
 | Blank lines before `---` | Frontmatter must be first |
 | No closing `---`         | Add `---` after fields    |
-| XML tags `<description>` | Use YAML only             |
+| Invalid YAML             | Quote ambiguous values or use a block scalar |
 
 ## Name Field Errors
 
@@ -22,7 +22,7 @@ Issues, causes, and fixes for skill creation.
 | Double hyphens  | `my--skill`              | `my-skill` |
 | Dir mismatch    | Dir: `foo/`, name: `bar` | Match both |
 
-**Valid pattern:** `^[a-z0-9]+(-[a-z0-9]+)*$`
+For the full character rules, consult the Agent Skills specification; the bundled validator uses a narrower ASCII-only pattern.
 
 ## Description Errors
 
@@ -36,7 +36,7 @@ Issues, causes, and fixes for skill creation.
 
 | Error                | Fix                  |
 | -------------------- | -------------------- |
-| SKILL.md > 500 lines | Split to references/ |
+| Long SKILL.md        | Consider splitting task-specific content into references/ |
 | Duplicated content   | Link, don't copy     |
 | Broken links         | Verify paths exist   |
 
