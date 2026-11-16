@@ -202,10 +202,13 @@ bashToolPatterns:
     reason: deletes Cloudflare resources
   - pattern: '\bTRUNCATE\s+TABLE\b'
     reason: SQL TRUNCATE deletes all rows
+    ask: true
   - pattern: '\bDROP\s+(TABLE|DATABASE|SCHEMA)\b'
     reason: SQL DROP removes database objects
+    ask: true
   - pattern: 'DELETE\s+FROM\s+\w+\s*;'
     reason: SQL DELETE without WHERE deletes all rows
+    ask: true
 
 # If strictMode is true, every bash command must match at least one regex here.
 strictModeAllowedList:
