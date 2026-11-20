@@ -19,3 +19,4 @@
 - [frontend-philosophy](frontend-philosophy/SKILL.md) — Apply visual and UI design principles.
 - [plan-review](plan-review/SKILL.md) — Review implementation plans against quality criteria.
 - [prototype](prototype/SKILL.md) — Build a throwaway prototype to explore a logic or UI design question.
+- [tdd](tdd/SKILL.md) — Develop features and fixes test-first through incremental red–green cycles.
