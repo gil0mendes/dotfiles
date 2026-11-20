@@ -1,0 +1,13 @@
+# Engineering skills
+
+## User-invoked
+
+- [grill-with-docs](grill-with-docs/SKILL.md) — Sharpen a plan or design through an interview while recording glossary entries and decisions.
+- [setup-my-skills](setup-my-skills/SKILL.md) — Configure a repository's issue tracker, triage labels, and domain documentation layout.
+- [triage](triage/SKILL.md) — Categorize and verify issues and external pull requests, and prepare agent-ready briefs.
+- [wayfinder](wayfinder/SKILL.md) — Map large efforts into decision tickets and resolve them incrementally.
+
+## Model-invoked
+
+- [domain-modeling](domain-modeling/SKILL.md) — Develop a project's domain terminology, glossary, and architectural decisions.
+- [prototype](prototype/SKILL.md) — Build a throwaway prototype to explore a logic or UI design question.
