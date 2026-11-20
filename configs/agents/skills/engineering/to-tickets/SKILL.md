@@ -1,32 +1,26 @@
 ---
 name: to-tickets
-description: Break a plan, spec, PRD, or the current conversation into a set of tracer-bullet tickets, each declaring its blocking edges, published to the configured tracker (edges as text in one file per ticket locally, or native blocking links on a real tracker).
+description: Break a plan, spec, PRD, or the current conversation into tracer-bullet tickets with blocking edges. Use when publishing a ticket breakdown to the configured tracker.
 disable-model-invocation: true
 ---
 
-# To Issues
+# To Tickets
 
 Break a plan, spec, PRD, or the current conversation into a set of **tickets**: tracer-bullet vertical slides, each declaring the tickets that **block** it.
 
 Published to the configured tracker (edges as text in one file per ticket locally, or native blocking links on a real tracker).
 
+The issue tracker and triage label vocabulary should have been provided to you. If not, tell the user to run `/setup-my-skills`.
+
 ## Process
 
 ### 1. Gather context
 
-Work from whatever is already in the conversation context.
-
-**If the user uses GitHub issues**
-If the user gives you a GitHub issue number or an URL as an argument, fetch it with `gh issue view <number>` (with coments).
-
-**If the user uses Jira tickets**
-If the user gives you a Jira ticket identifier or an URL as an argument, fetch it with Jira tool.
-
-The same applies to when the user gives you a Confluence page.
+Work from whatever is already in the conversation context. If the user passes a reference (a spec path, an issue number or URL) as an argument, fetch it and read its full body and comments.
 
 ### 2. Explore the codebase (optional)
 
-If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles are descriptions should use the project's domain glossary vocabulary, and respect ADRs in the are you're touching.
+If you have not already explored the codebase, do so to understand the current state of the code. Ticket titles and descriptions should use the project's domain glossary vocabulary, and respect ADRs in the area you're touching.
 
 Look for opportunities to prefactor the code to make the implementation easier. "Make the change easy, then make the easy change."
 
@@ -47,7 +41,7 @@ Give each ticket its **blocking edges**: the other tickets that must complete be
 
 ### 4. Quiz the user
 
-Present the proposed breakdown as a numbered list. For each slice, show:
+Present the proposed breakdown as a numbered list. For each ticket, show:
 
 - **Title:** short descriptive name
 - **Blocked by:** which other tickets (if any) must complete first
@@ -66,7 +60,7 @@ Iterate until the user approves the breakdown.
 Publish the approved tickets. The tickets are the same either way, only the shape of the blocking edges changes:
 
 - **Local files** → write one file per ticket under `.agents/<feature-slug>/issues/<NN>-<slug>.md`, numbered from `01` in dependency order (blockers first). Each file's "Blocked by" lists the numbers/titles it depends on. Use the per-ticket file template below: one ticket per file, never a single combined file.
-- **A real issue tracker (GitHub, Jira, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking / sub-issue relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
+- **A real issue tracker (GitHub, Jira, Linear, …)** → publish one issue per ticket in dependency order (blockers first) so each ticket's blocking edges can reference real identifiers. Use the platform's native blocking relationship where it has one; otherwise set each ticket's "Blocked by" to the blocking issues. If the source was an existing issue, make each ticket its sub-issue using the tracker configuration's operation. Apply the `ready-for-agent` triage label unless instructed otherwise; the tickets are agent-grabbable by construction.
 
 Work the **frontier**: any ticket whose blockers are all done. For a purely linear chain that means top to bottom.
 
@@ -103,7 +97,7 @@ The end-to-end behaviour this ticket makes work, from the user's perspective, no
 
 ## Blocked by
 
-- A reference to each blocking ticket, or "None (can start immediately)".
+- A reference to each blocking ticket, or "None (can start immediately)". Omit this section when blockers were set as native edges.
 
 </issue-template>
 

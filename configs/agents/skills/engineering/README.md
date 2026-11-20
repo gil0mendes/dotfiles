@@ -5,6 +5,7 @@
 - [grill-with-docs](grill-with-docs/SKILL.md) — Sharpen a plan or design through an interview while recording glossary entries and decisions.
 - [setup-my-skills](setup-my-skills/SKILL.md) — Configure a repository's issue tracker, triage labels, and domain documentation layout.
 - [to-spec](to-spec/SKILL.md) — Synthesize the current conversation into a spec and publish it to the issue tracker.
+- [to-tickets](to-tickets/SKILL.md) — Break a plan or spec into tracer-bullet tickets with blocking relationships.
 - [triage](triage/SKILL.md) — Categorize and verify issues and external pull requests, and prepare agent-ready briefs.
 - [wayfinder](wayfinder/SKILL.md) — Map large efforts into decision tickets and resolve them incrementally.
 
