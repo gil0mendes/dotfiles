@@ -1,6 +1,13 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { discoverAgents } from "./catalog";
 import { buildRootSystemPrompt, createBeforeAgentStartHandler } from "./systemPrompt";
 import type { AgentConfig } from "./loader/types";
+
+vi.mock("./catalog", () => ({
+	discoverAgents: vi.fn(() => ({
+		agents: [{ name: "worker", description: "Completes a bounded task" }],
+	})),
+}));
 
 const subagent: AgentConfig = {
 	name: "worker",
@@ -10,54 +17,43 @@ const subagent: AgentConfig = {
 	filePath: "/tmp/worker.md",
 };
 
-describe("root team system prompt", () => {
-	it("injects routing guidance only through the root before-agent-start hook", () => {
-		const handler = createBeforeAgentStartHandler({
-			getSessionAgent: (sessionId) => (sessionId === "subagent-session" ? subagent : undefined),
-		});
-		const context = {
-			cwd: "/tmp",
-			sessionManager: { getSessionId: () => "root-session" },
-		};
-
-		expect(handler({ systemPrompt: "base prompt" }, context)?.systemPrompt).toContain(
-			"You are the root orchestrator",
-		);
-		expect(
-			handler(
-				{ systemPrompt: "base prompt" },
-				{ ...context, sessionManager: { getSessionId: () => "subagent-session" } },
-			),
-		).toBeUndefined();
+const createHandler = () =>
+	createBeforeAgentStartHandler({
+		getSessionAgent: (sessionId) => (sessionId === "subagent-session" ? subagent : undefined),
 	});
 
-	it("instructs the root to retrieve and coordinate shared plans", () => {
+const contextFor = (sessionId: string) => ({
+	cwd: "/tmp",
+	sessionManager: { getSessionId: () => sessionId },
+});
+
+const event = { systemPrompt: "base prompt" };
+
+describe("root team system prompt", () => {
+	it("preserves the base prompt and injects the discovered routing roster for root", () => {
+		const result = createHandler()(event, contextFor("root-session"));
+
+		expect(discoverAgents).toHaveBeenCalledWith("/tmp");
+		expect(result?.systemPrompt).toMatch(/^base prompt\n/);
+		expect(result?.systemPrompt).toMatch(
+			/<agents>\s*<agent>\s*<name>worker<\/name>\s*<description>Completes a bounded task<\/description>\s*<\/agent>\s*<\/agents>/,
+		);
+	});
+
+	it("does not inject root routing into subagent sessions", () => {
+		vi.mocked(discoverAgents).mockClear();
+
+		expect(createHandler()(event, contextFor("subagent-session"))).toBeUndefined();
+		expect(discoverAgents).not.toHaveBeenCalled();
+	});
+
+	it("covers shared plan handoff, ephemeral fallback, and coordinated updates", () => {
 		const prompt = buildRootSystemPrompt({ agents: "" });
 
-		expect(prompt).toContain("After the planner completes, call plan_read before delegating implementation or review");
-		expect(prompt).toContain("When resuming planned work after compaction, call plan_read again");
-		expect(prompt).toContain("If no plan is found and none is needed, proceed without one");
-		expect(prompt).toContain("If a plan is expected, resolve the missing plan with the planner or user");
-		expect(prompt).toContain("provide the plan content or its saved path to the reviewer");
-		expect(prompt).toContain("wait for other plan writers to finish, call plan_read for the latest version, then use plan_save with the complete updated markdown");
-	});
-
-	it("defines the roster as a direct-spawn routing snapshot", () => {
-		const prompt = buildRootSystemPrompt({ agents: "<agent><name>worker</name></agent>" });
-
-		expect(prompt).toContain(
-			"You are the root orchestrator coordinating multiple agents for complex work.",
-		);
-		expect(prompt).toContain(
-			"This injected roster is a routing snapshot. You may call team_spawn directly with the name of any listed permitted agent; team_list is not required first.",
-		);
-		expect(prompt).toContain(
-			"team_spawn reloads configuration and enforces agent existence and delegation permission before asynchronous runner startup. During startup, model and tool resolution may fall back and emit warnings.",
-		);
-		expect(prompt).toContain(
-			"Use team_list only when you need discovery, declared capability detail, or your caller-owned active status and duplicate-work check. Its snapshot does not guarantee availability or freshness.",
-		);
-		expect(prompt).not.toMatch(/must call team_list before.*team_spawn/i);
-		expect(prompt).not.toMatch(/team_list.*(?:must|required).*before.*team_spawn/i);
+		expect(prompt).toMatch(/plan_read before implementation or review/);
+		expect(prompt).toMatch(/ephemeral parent\s+session\), read the planner's reported path/);
+		expect(prompt).toMatch(/plan tools are unavailable, plan inline/);
+		expect(prompt).toMatch(/After compaction, reload the current plan/);
+		expect(prompt).toMatch(/single writer[\s\S]*?plan_read[\s\S]*?plan_save/);
 	});
 });

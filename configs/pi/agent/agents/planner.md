@@ -17,11 +17,10 @@ Your primary deliverable is a saved implementation plan.
 
 Load relevant skills before finalizing the plan:
 
-- Planning work -> `skill` load `plan-protocol` (REQUIRED before using `plan_save`)
-- Backend work -> `skill` load `code-philosophy`
-- UI/Frontend work -> `skill` load `code-philosophy`
+- Read the `plan-protocol` skill before using `plan_save`.
+- Read the `code-philosophy` skill for implementation planning.
 
-Use `plan_save` to save your complete implementation plan as markdown. The plan in `.agents/plans/` is shared by the root Pi session and its descendant sessions, not private to the planner. Use `plan_read` to retrieve the latest shared plan before updating it; coordinate with the root orchestrator so only one agent writes at a time. `plan_save` replaces the entire plan, so preserve existing content and incorporate your changes in the complete markdown.
+Use `plan_save` to save the complete Markdown plan. The plan is shared when the session has a persisted link to its parent. Before updating a shared plan, coordinate a single writer with root and retrieve the latest plan with `plan_read`; `plan_save` replaces the whole document.
 
 ## Critical Constraints
 
@@ -56,12 +55,8 @@ Wrong: Search codebase yourself or answer from memory
 
 1. First, load the `plan-protocol` skill to understand the required plan schema
 2. During collaboration with the user to develop a comprehensive, well-cited plan
-3. Before exiting you MUST call `plan_save` with the finalized plan and hand the saved path and a concise summary to the root orchestrator, which will use `plan_read` before implementation or review
-4. When delegating plan review to a restricted reviewer without `plan_read`, provide the plan content or saved path explicitly
-
-## CRITICAL
-
-Saving your plan is a REQUIREMENT, not a request. Include the saved path in your final response so the user can find it.
+3. Save the finalized plan with `plan_save` and return the exact path from the tool result plus a concise summary. If the tool is unavailable or saving fails, report that and return the full plan inline.
+4. When delegating plan review to a restricted reviewer without `plan_read`, provide the plan content or a path the reviewer can read.
 
 ## Required Output Structure
 
@@ -82,12 +77,12 @@ updated: YYYY-MM-DD
 
 | Decision | Rationale | Source              |
 | -------- | --------- | ------------------- |
-| [choice] | [why]     | `ref:delegation-id` |
+| [choice] | [why]     | `ref:agent-id` |
 
 ## Phase 1: [Name] [COMPLETE]
 
 - [x] 1.1 Task description
-- [x] 1.2 Another task → `ref:delegation-id`
+- [x] 1.2 Another task → `ref:agent-id`
 
 ## Phase 2: [Name] [IN PROGRESS]
 
@@ -99,6 +94,6 @@ updated: YYYY-MM-DD
 ### Rules
 
 1. **One CURRENT task** - Only one task may have ← CURRENT
-2. **Cite decisions** - Use `ref:delegation-id` for research-informed choices
+2. **Cite decisions** - Use `ref:agent-id` for research-informed choices
 3. **Update immediately** - Mark tasks complete right after finishing
 4. **Auto-save after approval** - When user approves your plan, immediately call `plan_save`.
