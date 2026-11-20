@@ -1826,7 +1826,7 @@ export default function todosExtension(pi: ExtensionAPI) {
 				let actionMenu: TodoActionMenuComponent | null = null;
 				let deleteConfirm: TodoDeleteConfirmComponent | null = null;
 				let activeComponent: {
-					render: (width: number) => string[];
+					render: (width: number) => readonly string[];
 					invalidate: () => void;
 					handleInput?: (data: string) => void;
 					focused?: boolean;
@@ -1835,7 +1835,7 @@ export default function todosExtension(pi: ExtensionAPI) {
 
 				const setActiveComponent = (
 					component: {
-						render: (width: number) => string[];
+						render: (width: number) => readonly string[];
 						invalidate: () => void;
 						handleInput?: (data: string) => void;
 						focused?: boolean;

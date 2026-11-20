@@ -20,7 +20,7 @@ const theme = { fg: (_name: string, value: string) => value };
 const collapsed = { expanded: false, isPartial: false };
 const expanded = { expanded: true, isPartial: false };
 const partial = { expanded: false, isPartial: true };
-const text = (component: { render(width: number): string[] }) => component.render(1000).join("\n");
+const text = (component: { render(width: number): readonly string[] }) => component.render(1000).join("\n");
 const lines = Array.from({ length: 18 }, (_, index) => `line-${index + 1}`).join("\n");
 const fetchDetails = {
 	requestedUrl: "https://example.test/start",
