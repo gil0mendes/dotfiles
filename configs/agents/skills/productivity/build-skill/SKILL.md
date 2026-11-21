@@ -7,7 +7,7 @@ description: Create and review Agent Skills. Use when building, reviewing, or de
 
 Skills extend agent capabilities with specialized knowledge, workflows, and tools.
 
-For instruction quality, trigger wording, and when to split instructions, load [writing-for-agents](../productivity/writing-for-agents/SKILL.md).
+For instruction quality, trigger wording, and when to split instructions, load `writing-for-agents` skill.
 
 ## Quick Start
 
