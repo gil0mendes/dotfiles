@@ -22,7 +22,8 @@ in
 
   # Reuses the OpenCode OTLP secrets. Their endpoint is a collector base URL (the OpenCode plugin
   # appends /v1/<signal>), while OTEL_EXPORTER_OTLP_METRICS_ENDPOINT is used as is, so the metrics
-  # URL is derived here. Metrics-specific variables keep other OpenTelemetry apps unaffected.
+  # URL is derived here. Metrics-specific variables keep other OpenTelemetry apps unaffected, except
+  # OTEL_RESOURCE_ATTRIBUTES, which is the only way to attach identity to the Pi OTLP resource.
   programs.fish.interactiveShellInit = lib.mkAfter (
     lib.optionalString isWork ''
       set -l piOtelIdentity "${config.home.homeDirectory}/Library/Application Support/sops/age/keys.txt"
@@ -47,6 +48,7 @@ in
         set --global --export OTEL_EXPORTER_OTLP_METRICS_PROTOCOL http/json
         set --global --export OTEL_EXPORTER_OTLP_METRICS_ENDPOINT "$piOtelMetricsEndpoint"
         set --global --export OTEL_EXPORTER_OTLP_METRICS_HEADERS "$piOtelHeaders"
+        set --global --export OTEL_RESOURCE_ATTRIBUTES "user.email=${config.home.user-info.email}"
       end
     ''
   );
