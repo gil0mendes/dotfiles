@@ -13,6 +13,8 @@ permissionGate: true
 # Filesystem access is enforced for bash with @carderne/sandbox-runtime and
 # mirrored for Pi read/write/edit tools. allowRead overrides denyRead; denyWrite
 # takes precedence over allowWrite.
+# When cwd is a git repo or linked worktree, its git-dir and common dir are added to
+# allowWrite at startup (hooks/ stays denied), so no per-repo entries are needed here.
 filesystem:
   allowGitConfig: true
   denyRead:

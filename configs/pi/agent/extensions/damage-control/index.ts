@@ -32,6 +32,12 @@ import {
 	type DamageControlBlockSource,
 	type DamageControlFeatureId,
 } from "./events";
+import {
+	NO_GIT_METADATA_ACCESS,
+	resolveGitMetadataAccess,
+	withGitMetadataAccess,
+	type GitMetadataAccess,
+} from "./git-worktree";
 import { createPathAccessPromptComponent, type PromptResult } from "./prompt";
 import { evaluateBash } from "./shell/analysis";
 
@@ -42,12 +48,15 @@ type SandboxState = {
 	initialized: boolean;
 	sessionRead: string[];
 	sessionWrite: string[];
+	/** Git dirs of the session cwd; they live outside cwd when it is a linked worktree. */
+	gitMetadata: GitMetadataAccess;
 };
 
 const sandboxState: SandboxState = {
 	initialized: false,
 	sessionRead: [],
 	sessionWrite: [],
+	gitMetadata: NO_GIT_METADATA_ACCESS,
 };
 
 function sandboxRuntimeConfig(): SandboxRuntimeConfig {
@@ -59,10 +68,13 @@ function sandboxRuntimeConfig(): SandboxRuntimeConfig {
 			allowedDomains: ["*"],
 			deniedDomains: [],
 		},
-		filesystem: withSessionAllowances(
-			configs.current.filesystem,
-			sandboxState.sessionRead,
-			sandboxState.sessionWrite,
+		filesystem: withGitMetadataAccess(
+			withSessionAllowances(
+				configs.current.filesystem,
+				sandboxState.sessionRead,
+				sandboxState.sessionWrite,
+			),
+			sandboxState.gitMetadata,
 		),
 		enableWeakerNetworkIsolation: true,
 	};
@@ -290,6 +302,7 @@ function statusText(): string {
 function setupSessionStart(pi: ExtensionAPI): void {
 	pi.on("session_start", async (_event, ctx) => {
 		const { error: configsError } = configs.load(ctx.cwd);
+		sandboxState.gitMetadata = resolveGitMetadataAccess(ctx.cwd);
 		ctx.ui.setStatus("damage-control", statusText());
 		for (const feature of ["commands", "paths", "policies"] as const) {
 			emitFeatureRegister(pi, feature);
@@ -326,6 +339,7 @@ function registerCommands(pi: ExtensionAPI): void {
 		description: "Reload Damage Control rules from settings YAML",
 		handler: async (_args, ctx) => {
 			const { error: configsError } = configs.load(ctx.cwd);
+			sandboxState.gitMetadata = resolveGitMetadataAccess(ctx.cwd);
 			await reinitializeSandbox();
 			ctx.ui.setStatus("damage-control", statusText());
 			ctx.ui.notify(
