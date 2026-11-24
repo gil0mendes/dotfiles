@@ -51,11 +51,7 @@ function registerPiHooks(pi: ExtensionAPI, disposeFleetOverlay: () => void) {
 	pi.on("session_shutdown", (event, ctx) => {
 		disposeFleetOverlay();
 		const sessionId = ctx.sessionManager.getSessionId();
-		team.terminateSession(sessionId);
-
-		if (event.reason === "quit") {
-			team.abortAll();
-		}
+		team.terminateSession(sessionId, event.reason === "quit" ? "Aborted during shutdown" : undefined);
 	});
 }
 

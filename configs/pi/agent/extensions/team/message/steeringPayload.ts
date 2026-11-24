@@ -18,6 +18,7 @@ export type SteeringMessagePayload = {
 export const STATUS_ICON: Record<SubagentStatus, string> = {
 	running: "⏳",
 	waiting: "⏳",
+	"waiting-for-children": "⏳",
 	done: "✅",
 	error: "❌",
 	aborted: "⏹️",
@@ -26,6 +27,7 @@ export const STATUS_ICON: Record<SubagentStatus, string> = {
 export const STATUS_LABEL: Record<SubagentStatus, string> = {
 	running: "running",
 	waiting: "waiting for response",
+	"waiting-for-children": "waiting for children",
 	done: "done",
 	error: "failed",
 	aborted: "aborted",

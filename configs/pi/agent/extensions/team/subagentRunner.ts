@@ -489,7 +489,14 @@ export class SubagentSessionRunner implements SubagentRunner {
 		if (isAborted(state) || !this.callbacks.isCurrent(state) || !session) return;
 
 		try {
-			await session.prompt(prompt);
+			await session.prompt(prompt, {
+				// Pi calls this after async preflight, immediately before starting the run.
+				preflightResult: (accepted) => {
+					if (accepted && (isAborted(state) || !this.callbacks.isCurrent(state) || state.session !== session)) {
+						throw new Error("Subagent closed during prompt preflight");
+					}
+				},
+			});
 			if (isAborted(state) || !this.callbacks.isCurrent(state) || state.session !== session) return;
 
 			const outcome = getPromptOutcome(state);

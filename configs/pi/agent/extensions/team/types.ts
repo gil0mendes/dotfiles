@@ -1,7 +1,7 @@
 import type { AgentSession } from "@earendil-works/pi-coding-agent";
 import type { AgentConfig } from "./loader/types";
 
-export type SubagentStatus = "running" | "waiting" | "done" | "error" | "aborted";
+export type SubagentStatus = "running" | "waiting" | "waiting-for-children" | "done" | "error" | "aborted";
 
 export type SettledSubagentStatus = Extract<
 	SubagentStatus,
@@ -17,6 +17,7 @@ export type SubagentState = {
 	ownerSessionId: string;
 	startedAt: number;
 	session: AgentSession | null;
+	sessionId?: string;
 	turns: number;
 	contextTokens: number;
 	model?: string;

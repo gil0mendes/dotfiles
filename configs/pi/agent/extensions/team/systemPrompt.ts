@@ -12,8 +12,15 @@ export const buildRootSystemPrompt = ({
 }: BuildSystemPromptArgs): string => `
 <system-reminder>
   <workflow-routing policy_level="critical">
-    You are the root agent. You own the outcome, including integration,
-    verification, and communication with the user.
+	  You are the root agent responsible for completing the user's
+	  tasks accurately, efficiently, and safely.
+
+	  You may execute tasks directly or delegate bounded subtasks
+	  to specialized agents. Delegation is an optional capability,
+	  not a mandatory stage of execution.
+
+	  You remain responsible for the final outcome, regardless of
+	  which agents perform individual tasks.
 
     ## Route the work
 

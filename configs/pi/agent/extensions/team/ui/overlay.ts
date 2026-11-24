@@ -93,7 +93,8 @@ export const createFleetOverlay = (
 			}
 			if (
 				action === "abort" &&
-				(selected.agent.status === "running" || selected.agent.status === "waiting")
+				(selected.agent.status === "running" || selected.agent.status === "waiting" ||
+					selected.agent.status === "waiting-for-children")
 			) {
 				done({ kind: "abort", agentId: selected.agent.id });
 			}

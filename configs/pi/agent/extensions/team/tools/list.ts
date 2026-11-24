@@ -11,6 +11,7 @@ import { getToolContext, toolSuccess } from "./shared";
 const STATUS_ICON: Record<ActiveAgentSummary["status"], string> = {
 	running: "🏃",
 	waiting: "⏳",
+	"waiting-for-children": "⏳",
 	done: "✅",
 	error: "❌",
 	aborted: "🛑",
